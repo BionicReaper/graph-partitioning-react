@@ -4,13 +4,16 @@ import Sidebar from './components/Sidebar';
 import AddButton from './components/AddButton';
 import PlayButton from './components/PlayButton';
 import './App.css';
-import { Network } from 'vis-network/standalone/esm/vis-network';
-import { algorithms, visOptions } from './utils/constants';
+import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
+import { algorithms, defaultVisOptions } from './utils/constants';
 import { Plus, Cable } from 'lucide-react';
+import { highlightEdges } from './utils/animations';
 
 type ActiveMode = 'node' | 'edge' | null;
 
 function App() {
+  const nodesRef = useRef(new DataSet<any, "id">([]));
+  const edgesRef = useRef(new DataSet<any, "id">([]));
   // VisJS network
   const containerRef = useRef<HTMLDivElement | null>(null);
   const networkRef = useRef<Network>();
@@ -22,7 +25,7 @@ function App() {
   useEffect(() => {
     if (containerRef.current) {
       // Create network after the container is available
-      networkRef.current = new Network(containerRef.current, {}, visOptions);
+      networkRef.current = new Network(containerRef.current, {nodes: nodesRef.current, edges: edgesRef.current}, defaultVisOptions);
 
       // Add event listeners to document for adding nodes and edges
       document.addEventListener('addNode', () => {
@@ -112,6 +115,9 @@ function App() {
   const runAlgorithm = (): void => {
     console.log('Running algorithm:', currentAlgorithmId);
     // TODO: Implement algorithm execution
+    networkRef.current?.unselectAll();
+    highlightEdges(edgesRef.current, [edgesRef.current.get()[0].id], '#00FF00', 5, {color:{ highlight: 700, hold: 500, fade: 0 }, width:{ highlight: 0, hold: 1000, fade: 100 }});
+    highlightEdges(edgesRef.current, [edgesRef.current.get()[1].id], '#FF0000', 10, {color:{ highlight: 150, hold: 1350, fade: 300 }, width:{ highlight: 1000, hold: 500, fade: 100 }});
   };
 
   // Select algorithm handler
