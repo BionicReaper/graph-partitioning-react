@@ -128,6 +128,9 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                     • Press the Cable button or E on your keyboard and drag from one node to another to create an edge
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
+                    • Left click on a node or an edge to select it and DELETE to remove it
+                  </Text>
+                  <Text fontSize="sm" color="gray.600" lineHeight="1.5">
                     • Drag nodes to reposition
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
