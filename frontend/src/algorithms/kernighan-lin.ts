@@ -1,4 +1,5 @@
-import { DataSet } from "vis-network/standalone/esm/vis-network";
+import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
+import { moveNode } from "../utils/animations";
 
 export interface KLNode {
     index: number;
@@ -17,9 +18,18 @@ export interface KLEdge {
 
 
 export function runKernighanLin(
+    network: Network,
     nodeDataSet: DataSet<any, "id">,
     edgeDataSet: DataSet<any, "id">
-): any {
+): {
+    partition: { [key: string]: number };
+    cutSize: number;
+    animation: Array<{
+        animationCallback: () => () =>void;
+        description: string;
+        timeBeforeNext: number;
+    }>;
+} {
     // Convert DataSet to array format with index mapping
     // Time complexity: O(n + m) where n = nodes, m = edges
 
@@ -171,5 +181,24 @@ export function runKernighanLin(
         }
     });
 
-    return partitionResult;
+    return {
+        partition: partitionResult,
+        cutSize: cutSize,
+        animation: [
+            {
+                animationCallback: () => {
+                    return moveNode(network, nodes[0].id, 100, 100, 1000);
+                },
+                description: "Move node animation",
+                timeBeforeNext: 4000
+            },
+            {
+                animationCallback: () => {
+                    return moveNode(network, nodes[1].id, 200, 200, 1000);
+                },
+                description: "Move another node animation",
+                timeBeforeNext: 1500
+            }
+        ] // Placeholder for animation steps
+    };
 }
