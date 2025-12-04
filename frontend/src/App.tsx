@@ -7,7 +7,8 @@ import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import { algorithms, defaultVisOptions } from './utils/constants';
 import { Plus, Cable } from 'lucide-react';
-import { highlightEdges } from './utils/animations';
+import { highlightEdges, highlightNodes, moveNode } from './utils/animations';
+import { runKernighanLin } from './algorithms/kernighan-lin';
 
 type ActiveMode = 'node' | 'edge' | null;
 
@@ -116,8 +117,12 @@ function App() {
     console.log('Running algorithm:', currentAlgorithmId);
     // TODO: Implement algorithm execution
     networkRef.current?.unselectAll();
+    console.log(nodesRef.current.get(), edgesRef.current.get());
+    runKernighanLin(nodesRef.current, edgesRef.current);
     highlightEdges(edgesRef.current, [edgesRef.current.get()[0].id], '#00FF00', 5, {color:{ highlight: 700, hold: 500, fade: 0 }, width:{ highlight: 0, hold: 1000, fade: 100 }});
     highlightEdges(edgesRef.current, [edgesRef.current.get()[1].id], '#FF0000', 10, {color:{ highlight: 150, hold: 1350, fade: 300 }, width:{ highlight: 1000, hold: 500, fade: 100 }});
+    highlightNodes(nodesRef.current, [nodesRef.current.get()[0].id], '#FF0000', '#FF7074', 4, {color:{ highlight: 300, hold: 1500, fade: 300 }, width:{ highlight: 400, hold: 0, fade: 400 }});
+    moveNode(networkRef.current, nodesRef.current.get()[0].id, 500, 500, 1000);
   };
 
   // Select algorithm handler
