@@ -131,7 +131,8 @@ function App() {
           dragView: false,
           zoomView: false,
           multiselect: false,
-          hover: false
+          hover: false,
+          selectable: false,
         }
       }
     );
