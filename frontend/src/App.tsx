@@ -7,8 +7,8 @@ import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import { algorithms, defaultVisOptions } from './utils/constants';
 import { Plus, Cable } from 'lucide-react';
-import { highlightEdges, highlightNodes, moveNode } from './utils/animations';
 import { runKernighanLin } from './algorithms/kernighan-lin';
+import { runAnimationSequence } from './utils/animationRunner';
 
 type ActiveMode = 'node' | 'edge' | null;
 
@@ -26,7 +26,7 @@ function App() {
   useEffect(() => {
     if (containerRef.current) {
       // Create network after the container is available
-      networkRef.current = new Network(containerRef.current, {nodes: nodesRef.current, edges: edgesRef.current}, defaultVisOptions);
+      networkRef.current = new Network(containerRef.current, { nodes: nodesRef.current, edges: edgesRef.current }, defaultVisOptions);
 
       // Add event listeners to document for adding nodes and edges
       document.addEventListener('addNode', () => {
@@ -113,16 +113,37 @@ function App() {
   }, []);
 
   // Run algorithm handler (placeholder for now)
-  const runAlgorithm = (): void => {
+  const runAlgorithm = async (): Promise<void> => {
     console.log('Running algorithm:', currentAlgorithmId);
-    // TODO: Implement algorithm execution
-    networkRef.current?.unselectAll();
+    if (!networkRef.current) return;
+
     console.log(nodesRef.current.get(), edgesRef.current.get());
-    runKernighanLin(nodesRef.current, edgesRef.current);
-    highlightEdges(edgesRef.current, [edgesRef.current.get()[0].id], '#00FF00', 5, {color:{ highlight: 700, hold: 500, fade: 0 }, width:{ highlight: 0, hold: 1000, fade: 100 }});
-    highlightEdges(edgesRef.current, [edgesRef.current.get()[1].id], '#FF0000', 10, {color:{ highlight: 150, hold: 1350, fade: 300 }, width:{ highlight: 1000, hold: 500, fade: 100 }});
-    highlightNodes(nodesRef.current, [nodesRef.current.get()[0].id], '#FF0000', '#FF7074', 4, {color:{ highlight: 300, hold: 1500, fade: 300 }, width:{ highlight: 400, hold: 0, fade: 400 }});
-    moveNode(networkRef.current, nodesRef.current.get()[0].id, 500, 500, 1000);
+
+    networkRef.current?.unselectAll();
+    networkRef.current?.disableEditMode();
+    networkRef.current?.setOptions(
+      {
+        physics: {
+          enabled: false
+        },
+        interaction: {
+          dragNodes: false,
+          dragView: false,
+          zoomView: false,
+          multiselect: false,
+          hover: false
+        }
+      }
+    );
+    networkRef.current?.fit();
+
+    const result = runKernighanLin(networkRef.current, nodesRef.current, edgesRef.current);
+    console.log('Algorithm result:', result);
+
+    await runAnimationSequence(result.animation);
+    console.log('Animation sequence completed');
+
+    networkRef.current?.setOptions(defaultVisOptions);
   };
 
   // Select algorithm handler
