@@ -12,3 +12,9 @@ export const calcInterpolationMultiplier = (
         return 0;
     }
 }
+
+export const easeInOutCubic = (t: number) => {
+  return t < 0.5 
+    ? 4 * t * t * t 
+    : 1 + (--t) * (2 * t) * (2 * t);
+}
