@@ -271,7 +271,7 @@ export function runKernighanLin(
         timeBeforeNext: 0
     });
 
-    animation[animation.length - 1].timeBeforeNext = 150 * (exchangePairs.length - k) + 1250 + 5000;
+    animation[animation.length - 1].timeBeforeNext = 150 * (exchangePairs.length - k) + 1250 + 20000;
 
     // Map partitions back to original IDs
     const partitionResult: { [key: string]: number } = {};
