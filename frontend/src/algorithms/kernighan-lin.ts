@@ -1,6 +1,7 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
+import { timeDecayFactor } from "../utils/interpolation";
 
 export interface KLNode {
     index: number;
@@ -32,6 +33,9 @@ export function runKernighanLin(
     cutSize: number;
     animation: Animation[];
 } {
+    let decayFactor: number;
+    let time: number;
+
     const animation: Animation[] = [];
 
     animation.push({
@@ -111,6 +115,8 @@ export function runKernighanLin(
     const partitionA: number[] = [];
     const partitionB: number[] = [];
 
+    decayFactor = timeDecayFactor(1000, 100);
+    time = 100;
     nodes.forEach(node => {
         if (node.partition === 0) {
             partitionA.push(node.index);
@@ -120,7 +126,7 @@ export function runKernighanLin(
                     return moveNode(network, node.id, calculateX(currentIndex, 0, nodes.length), calculateY(currentIndex, 0, nodes.length), 500);
                 },
                 description: `Move node ${node.id} to partition A`,
-                timeBeforeNext: 100
+                timeBeforeNext: time > 1 ? time : 1
             });
         } else {
             partitionB.push(node.index);
@@ -130,9 +136,10 @@ export function runKernighanLin(
                     return moveNode(network, node.id, calculateX(currentIndex, 1, nodes.length), calculateY(currentIndex, 1, nodes.length), 500);
                 },
                 description: `Move node ${node.id} to partition B`,
-                timeBeforeNext: 100
+                timeBeforeNext: time > 1 ? time : 1
             });
         }
+        time = time * decayFactor;
     });
 
     animation[animation.length - 1].timeBeforeNext = 500;
@@ -161,6 +168,8 @@ export function runKernighanLin(
         timeBeforeNext: 1000
     });
 
+    decayFactor = timeDecayFactor(30000, 1500);
+    time = 1500;
     for (let i = 0; i < Math.floor(nodes.length / 2); i++) {
         let maxGain = undefined;
         partitionA.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
@@ -219,8 +228,10 @@ export function runKernighanLin(
                 return swapNodePositions(network, nodes[bestSwap!.a].id, nodes[bestSwap!.b].id, 1000);
             },
             description: `Swap nodes ${nodes[bestSwap!.a].id} and ${nodes[bestSwap!.b].id}`,
-            timeBeforeNext: 1500
+            timeBeforeNext: time > 1 ? time : 1
         });
+
+        time = time * decayFactor;
     }
 
     // Calculate cumulative gains
@@ -242,18 +253,23 @@ export function runKernighanLin(
     });
 
     // Undo swaps beyond k
+    decayFactor = timeDecayFactor(3000, 300);
+    time = 300;
     for (let i = exchangePairs.length - 1; i > k; i--) {
+        console.log(time);
         const pair = exchangePairs[i];
         nodes[pair.a].partition = 0;
         nodes[pair.b].partition = 1;
 
         animation.push({
             animationCallback: () => {
-                return swapNodePositions(network, nodes[pair.a].id, nodes[pair.b].id, 300);
+                return swapNodePositions(network, nodes[pair.a].id, nodes[pair.b].id, time > 2 ? time : 2);
             },
             description: `Swap nodes ${nodes[pair.a].id} and ${nodes[pair.b].id}`,
-            timeBeforeNext: 150
+            timeBeforeNext: time / 2 > 1 ? time / 2 : 1
         });
+
+        time = time * decayFactor;
     }
 
     // Unlock all nodes and changes colors back to normal after highlighting to light green (border is a little darker)

@@ -18,3 +18,7 @@ export const easeInOutCubic = (t: number) => {
     ? 4 * t * t * t 
     : 1 + (--t) * (2 * t) * (2 * t);
 }
+
+export const timeDecayFactor = (maxTime: number, singleTime: number) => {
+    return 1 - singleTime / maxTime;
+}
