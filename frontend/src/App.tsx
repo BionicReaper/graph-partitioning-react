@@ -19,10 +19,6 @@ function App() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const networkRef = useRef<Network>();
 
-  // Keys Pressed
-  const keysPressed = useRef<Set<string>>(new Set());
-
-
   useEffect(() => {
     if (containerRef.current) {
       // Create network after the container is available
@@ -30,45 +26,16 @@ function App() {
 
       // Add event listeners to document for adding nodes and edges
       document.addEventListener('addNode', () => {
-        console.log('Node added, resetting active mode');
         setActiveMode(null);
       });
       document.addEventListener('addEdge', () => {
-        console.log('Edge added, resetting active mode');
         setActiveMode(null);
-      });
-
-      // Add event listener for hotkeys
-      document.addEventListener('keydown', (event) => {
-        if (keysPressed.current.has(event.key)) return; // already pressed, ignore
-        keysPressed.current.add(event.key);
-        if (event.key === 'n') {
-          event.preventDefault();
-          toggleAddNode();
-        } else if (event.key === 'e') {
-          event.preventDefault();
-          toggleAddEdge();
-        } else if (event.key === 'Escape') {
-          event.preventDefault();
-          setActiveMode(null);
-          networkRef.current?.disableEditMode();
-        } else if (event.key === 'Delete') {
-          event.preventDefault();
-          networkRef.current?.deleteSelected();
-        }
-      });
-
-      // Prevent holding keys from firing multiple times
-      document.addEventListener('keyup', (event) => {
-        keysPressed.current.delete(event.key);
       });
 
       return () => {
         // Cleanup event listeners on unmount
         document.removeEventListener('addNode', () => { });
         document.removeEventListener('addEdge', () => { });
-        document.removeEventListener('keydown', () => { });
-        document.removeEventListener('keyup', () => { });
       };
     }
   }, []);
@@ -77,6 +44,51 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [activeMode, setActiveMode] = useState<ActiveMode>(null);
   const [currentAlgorithmId, setCurrentAlgorithmId] = useState<string>('kernighan-lin');
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+
+  // Control keys whether an algorithm is running
+  
+  // Keys Pressed
+  const keysPressed = useRef<Set<string>>(new Set());
+
+  const keyDownFunction = useCallback((event: KeyboardEvent) => {
+    if (keysPressed.current.has(event.key)) return; // already pressed, ignore
+    keysPressed.current.add(event.key);
+    if (event.key === 'n') {
+      event.preventDefault();
+      toggleAddNode();
+    } else if (event.key === 'e') {
+      event.preventDefault();
+      toggleAddEdge();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      setActiveMode(null);
+      networkRef.current?.disableEditMode();
+    } else if (event.key === 'Delete') {
+      event.preventDefault();
+      networkRef.current?.deleteSelected();
+    }
+  }, []);
+
+  const keyUpFunction = useCallback((event: KeyboardEvent) => {
+    keysPressed.current.delete(event.key);
+  }, []);
+
+  useEffect(() => {
+    if (isRunning) {
+      document.removeEventListener('keydown', keyDownFunction);
+      document.removeEventListener('keyup', keyUpFunction);
+      setActiveMode(null);
+      networkRef.current?.disableEditMode();
+    } else {
+      // Re-add event listener for hotkeys
+      document.addEventListener('keydown', keyDownFunction);
+
+      // Prevent holding keys from firing multiple times
+      document.addEventListener('keyup', keyUpFunction);
+
+    }
+  }, [isRunning]);
 
   // Sidebar toggle handler
 
@@ -115,28 +127,10 @@ function App() {
   // Run algorithm handler (placeholder for now)
   const runAlgorithm = async (): Promise<void> => {
     console.log('Running algorithm:', currentAlgorithmId);
-    if (!networkRef.current) return;
+    if (!networkRef.current || isRunning) return;
 
+    setIsRunning(true);
     console.log(nodesRef.current.get(), edgesRef.current.get());
-
-    networkRef.current?.unselectAll();
-    networkRef.current?.disableEditMode();
-    networkRef.current?.setOptions(
-      {
-        physics: {
-          enabled: false
-        },
-        interaction: {
-          dragNodes: false,
-          dragView: false,
-          zoomView: false,
-          multiselect: false,
-          hover: false,
-          selectable: false,
-        }
-      }
-    );
-    networkRef.current?.fit();
 
     const result = runKernighanLin(networkRef.current, nodesRef.current, edgesRef.current);
     console.log('Algorithm result:', result);
@@ -145,6 +139,7 @@ function App() {
     console.log('Animation sequence completed');
 
     networkRef.current?.setOptions(defaultVisOptions);
+    setIsRunning(false);
   };
 
   // Select algorithm handler
@@ -190,6 +185,7 @@ function App() {
         onSelectAlgorithm={selectAlgorithm}
         algorithms={algorithms}
         currentAlgorithmId={currentAlgorithmId}
+        disabled={isRunning}
       />
       <AddButton
         onClick={toggleAddEdge}
@@ -198,6 +194,7 @@ function App() {
         position="middle"
         colorPalette="teal"
         active={activeMode === 'edge'}
+        disabled={isRunning}
       />
       <AddButton
         onClick={toggleAddNode}
@@ -206,6 +203,7 @@ function App() {
         position="bottom"
         colorPalette="green"
         active={activeMode === 'node'}
+        disabled={isRunning}
       />
     </Box>
   );
