@@ -6,13 +6,17 @@ import {
   Box,
   Separator,
   Stack,
-  Drawer
+  Drawer,
+  Switch
 } from '@chakra-ui/react';
 import { Menu, GitBranch } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  disablePhysicsToggle?: boolean;
+  physicsEnabled: boolean;
+  onTogglePhysics: () => void;
 }
 
 const algorithms = [
@@ -21,7 +25,7 @@ const algorithms = [
   'METIS',
 ];
 
-const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
+const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnabled, onTogglePhysics }: SidebarProps) => {
   return (
     <>
       {/* Hamburger Button - Bottom Left */}
@@ -111,6 +115,38 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                     </Box>
                   ))}
                 </Stack>
+              </Box>
+
+              <Separator borderColor="gray.200" />
+
+              {/* Settings Section */}
+              <Box>
+                <Heading size="md" mb={4} color="gray.800" fontWeight="500">
+                  Settings
+                </Heading>
+                <Box
+                  p={3}
+                  bg="gray.50"
+                  borderRadius="md"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Text fontSize="sm" color="gray.700" fontWeight="500">
+                    Physics
+                  </Text>
+                  <Switch.Root
+                    checked={physicsEnabled}
+                    onCheckedChange={onTogglePhysics}
+                    disabled={disablePhysicsToggle}
+                  >
+                    <Switch.HiddenInput />
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                    <Switch.Label />
+                  </Switch.Root>
+                </Box>
               </Box>
 
               <Separator borderColor="gray.200" />
