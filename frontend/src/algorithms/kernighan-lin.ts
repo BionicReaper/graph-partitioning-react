@@ -232,10 +232,10 @@ export function runKernighanLin(
     });
 
     // Find k that maximizes the cumulative gain
-    let maxCumulativeGain: number | undefined = undefined;
+    let maxCumulativeGain: number = 0;
     let k = -1;
     cumulativeGains.forEach((gain, index) => {
-        if (maxCumulativeGain === undefined || gain > maxCumulativeGain) {
+        if (gain > maxCumulativeGain) {
             maxCumulativeGain = gain;
             k = index;
         }
