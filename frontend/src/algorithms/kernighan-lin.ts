@@ -1,5 +1,6 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { moveNode } from "../utils/animations";
+import { highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
+import { calculateX, calculateY } from "../utils/positioning";
 
 export interface KLNode {
     index: number;
@@ -16,6 +17,11 @@ export interface KLEdge {
     id: string; // Original edge ID for mapping back
 }
 
+export interface Animation {
+    animationCallback: () => () => void;
+    description: string;
+    timeBeforeNext: number;
+}
 
 export function runKernighanLin(
     network: Network,
@@ -24,12 +30,35 @@ export function runKernighanLin(
 ): {
     partition: { [key: string]: number };
     cutSize: number;
-    animation: Array<{
-        animationCallback: () => () =>void;
-        description: string;
-        timeBeforeNext: number;
-    }>;
+    animation: Animation[];
 } {
+    const animation: Animation[] = [];
+
+    animation.push({
+        animationCallback: () => {
+            network.unselectAll();
+            network.disableEditMode();
+            network.setOptions(
+                {
+                    physics: {
+                        enabled: false
+                    },
+                    interaction: {
+                        dragNodes: false,
+                        dragView: true,
+                        zoomView: true,
+                        multiselect: false,
+                        hover: false,
+                        selectable: false,
+                    }
+                }
+            );
+            return () => { };
+        },
+        description: `Disable interaction and physics`,
+        timeBeforeNext: 0
+    });
+
     // Convert DataSet to array format with index mapping
     // Time complexity: O(n + m) where n = nodes, m = edges
 
@@ -85,9 +114,51 @@ export function runKernighanLin(
     nodes.forEach(node => {
         if (node.partition === 0) {
             partitionA.push(node.index);
+            const currentIndex = partitionA.length - 1;
+            animation.push({
+                animationCallback: () => {
+                    return moveNode(network, node.id, calculateX(currentIndex, 0, nodes.length), calculateY(currentIndex, 0, nodes.length), 500);
+                },
+                description: `Move node ${node.id} to partition A`,
+                timeBeforeNext: 100
+            });
         } else {
             partitionB.push(node.index);
+            const currentIndex = partitionB.length - 1;
+            animation.push({
+                animationCallback: () => {
+                    return moveNode(network, node.id, calculateX(currentIndex, 1, nodes.length), calculateY(currentIndex, 1, nodes.length), 500);
+                },
+                description: `Move node ${node.id} to partition B`,
+                timeBeforeNext: 100
+            });
         }
+    });
+
+    animation[animation.length - 1].timeBeforeNext = 500;
+
+    animation.push({
+        animationCallback: () => {
+            network.setOptions(
+                {
+                    physics: {
+                        enabled: false
+                    },
+                    interaction: {
+                        dragNodes: false,
+                        dragView: false,
+                        zoomView: false,
+                        multiselect: false,
+                        hover: false,
+                        selectable: false,
+                    }
+                }
+            );
+            network.fit();
+            return () => { };
+        },
+        description: `Initial partitioning complete`,
+        timeBeforeNext: 1000
     });
 
     for (let i = 0; i < Math.floor(nodes.length / 2); i++) {
@@ -139,7 +210,17 @@ export function runKernighanLin(
         partitionA.splice(partitionA.indexOf(bestSwap!.a), 1);
         partitionB.splice(partitionB.indexOf(bestSwap!.b), 1);
 
-
+        animation.push({
+            animationCallback: () => {
+                nodeDataSet.update([
+                    { id: nodes[bestSwap!.a].id, color: { background: '#CCCCCC', border: '#999999' } },
+                    { id: nodes[bestSwap!.b].id, color: { background: '#CCCCCC', border: '#999999' } }
+                ]);
+                return swapNodePositions(network, nodes[bestSwap!.a].id, nodes[bestSwap!.b].id, 1000);
+            },
+            description: `Swap nodes ${nodes[bestSwap!.a].id} and ${nodes[bestSwap!.b].id}`,
+            timeBeforeNext: 1500
+        });
     }
 
     // Calculate cumulative gains
@@ -165,7 +246,32 @@ export function runKernighanLin(
         const pair = exchangePairs[i];
         nodes[pair.a].partition = 0;
         nodes[pair.b].partition = 1;
+
+        animation.push({
+            animationCallback: () => {
+                return swapNodePositions(network, nodes[pair.a].id, nodes[pair.b].id, 300);
+            },
+            description: `Swap nodes ${nodes[pair.a].id} and ${nodes[pair.b].id}`,
+            timeBeforeNext: 150
+        });
     }
+
+    // Unlock all nodes and changes colors back to normal after highlighting to light green (border is a little darker)
+
+    const nodeIds: string[] = nodes.map(node => node.id);
+    for (let i = 0; i < nodes.length; i++) {
+        nodes[i].locked = false;
+        nodeIds.push(nodes[i].id);
+    }
+    animation.push({
+        animationCallback: () => {
+            return highlightNodes(nodeDataSet, nodeIds, '#2EFF57', '#90FF90', 2, { color: { highlight: 600, hold: 50, fade: 600 }, width: { highlight: 600, hold: 50, fade: 600 } });
+        },
+        description: `Unlock nodes`,
+        timeBeforeNext: 0
+    });
+
+    animation[animation.length - 1].timeBeforeNext = 150 * (exchangePairs.length - k) + 1250 + 5000;
 
     // Map partitions back to original IDs
     const partitionResult: { [key: string]: number } = {};
@@ -184,21 +290,6 @@ export function runKernighanLin(
     return {
         partition: partitionResult,
         cutSize: cutSize,
-        animation: [
-            {
-                animationCallback: () => {
-                    return moveNode(network, nodes[0].id, 100, 100, 1000);
-                },
-                description: "Move node animation",
-                timeBeforeNext: 4000
-            },
-            {
-                animationCallback: () => {
-                    return moveNode(network, nodes[1].id, 200, 200, 1000);
-                },
-                description: "Move another node animation",
-                timeBeforeNext: 1500
-            }
-        ] // Placeholder for animation steps
+        animation
     };
 }
