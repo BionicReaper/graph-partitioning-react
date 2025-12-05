@@ -109,10 +109,12 @@ const PlayButton = ({
         h="60px"
         bg={disabled ? 'gray.400' : 'purple.600'}
         borderRadius="full"
-        boxShadow="lg"
+        boxShadow={disabled ? 'md' : 'lg'}
         overflow="hidden"
         transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
         w={isExpanded ? '230px' : '60px'}
+        opacity={disabled ? 0.6 : 1}
+        pointerEvents={disabled ? 'none' : 'auto'}
       >
         {/* Algorithm Name Section (extends to left) */}
         <Box

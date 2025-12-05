@@ -8,6 +8,7 @@ interface AddButtonProps {
   position: 'top' | 'middle' | 'bottom';
   colorPalette?: string;
   active?: boolean;
+  disabled?: boolean;
 }
 
 const positionMap = {
@@ -23,6 +24,7 @@ const AddButton = ({
   position,
   colorPalette = 'green',
   active = false,
+  disabled = false,
 }: AddButtonProps) => {
   return (
     <IconButton
@@ -41,6 +43,7 @@ const AddButton = ({
       aria-label={label}
       border={active ? '3px solid' : 'none'}
       borderColor={active ? `${colorPalette}.200` : 'transparent'}
+      disabled={disabled}
       _hover={{
         transform: active ? 'scale(1.02)' : 'scale(1.05)',
         boxShadow: '2xl',
