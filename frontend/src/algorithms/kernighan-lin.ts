@@ -1,6 +1,7 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
+import { timeFactorDecay } from "../utils/interpolation";
 
 export interface KLNode {
     index: number;
@@ -32,6 +33,9 @@ export function runKernighanLin(
     cutSize: number;
     animation: Animation[];
 } {
+    let decay: number; // Time decay to limit looped animations
+    let time: number; // Decayed time tracker
+
     const animation: Animation[] = [];
 
     animation.push({
@@ -111,28 +115,32 @@ export function runKernighanLin(
     const partitionA: number[] = [];
     const partitionB: number[] = [];
 
+    decay = timeFactorDecay(10000, 100); // Max time 30s
+    time = 100;
     nodes.forEach(node => {
+        const moveTime = (time > 1 ? time : 1);
         if (node.partition === 0) {
             partitionA.push(node.index);
             const currentIndex = partitionA.length - 1;
             animation.push({
                 animationCallback: () => {
-                    return moveNode(network, node.id, calculateX(currentIndex, 0, nodes.length), calculateY(currentIndex, 0, nodes.length), 500);
+                    return moveNode(network, node.id, calculateX(currentIndex, 0, nodes.length), calculateY(currentIndex, 0, nodes.length), 5 * moveTime);
                 },
                 description: `Move node ${node.id} to partition A`,
-                timeBeforeNext: 100
+                timeBeforeNext: moveTime
             });
         } else {
             partitionB.push(node.index);
             const currentIndex = partitionB.length - 1;
             animation.push({
                 animationCallback: () => {
-                    return moveNode(network, node.id, calculateX(currentIndex, 1, nodes.length), calculateY(currentIndex, 1, nodes.length), 500);
+                    return moveNode(network, node.id, calculateX(currentIndex, 1, nodes.length), calculateY(currentIndex, 1, nodes.length), 5 * moveTime);
                 },
                 description: `Move node ${node.id} to partition B`,
-                timeBeforeNext: 100
+                timeBeforeNext: moveTime
             });
         }
+        time = time * decay;
     });
 
     animation[animation.length - 1].timeBeforeNext = 500;
@@ -161,6 +169,8 @@ export function runKernighanLin(
         timeBeforeNext: 1000
     });
 
+    decay = timeFactorDecay(30000, 1000); // Max time 30s
+    time = 1000;
     for (let i = 0; i < Math.floor(nodes.length / 2); i++) {
         let maxGain = undefined;
         partitionA.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
@@ -209,6 +219,7 @@ export function runKernighanLin(
         // Remove locked nodes from partitions
         partitionA.splice(partitionA.indexOf(bestSwap!.a), 1);
         partitionB.splice(partitionB.indexOf(bestSwap!.b), 1);
+        const swapTime = (time > 1 ? time : 1);
 
         animation.push({
             animationCallback: () => {
@@ -216,11 +227,13 @@ export function runKernighanLin(
                     { id: nodes[bestSwap!.a].id, color: { background: '#CCCCCC', border: '#999999' } },
                     { id: nodes[bestSwap!.b].id, color: { background: '#CCCCCC', border: '#999999' } }
                 ]);
-                return swapNodePositions(network, nodes[bestSwap!.a].id, nodes[bestSwap!.b].id, 1000);
+                return swapNodePositions(network, nodes[bestSwap!.a].id, nodes[bestSwap!.b].id, swapTime * (0.6666666667));
             },
             description: `Swap nodes ${nodes[bestSwap!.a].id} and ${nodes[bestSwap!.b].id}`,
-            timeBeforeNext: 1500
+            timeBeforeNext: swapTime
         });
+
+        time = time * decay;
     }
 
     // Calculate cumulative gains
@@ -242,18 +255,23 @@ export function runKernighanLin(
     });
 
     // Undo swaps beyond k
+
+    decay = timeFactorDecay(10000, 150); // Max time 10s
+    time = 150;
     for (let i = exchangePairs.length - 1; i > k; i--) {
         const pair = exchangePairs[i];
         nodes[pair.a].partition = 0;
         nodes[pair.b].partition = 1;
 
+        const swapTime = (time > 1 ? time : 1);
         animation.push({
             animationCallback: () => {
-                return swapNodePositions(network, nodes[pair.a].id, nodes[pair.b].id, 300);
+                return swapNodePositions(network, nodes[pair.a].id, nodes[pair.b].id, 2 * swapTime);
             },
             description: `Swap nodes ${nodes[pair.a].id} and ${nodes[pair.b].id}`,
-            timeBeforeNext: 150
+            timeBeforeNext: swapTime
         });
+        time = time * decay;
     }
 
     // Unlock all nodes and changes colors back to normal after highlighting to light green (border is a little darker)
@@ -271,7 +289,7 @@ export function runKernighanLin(
         timeBeforeNext: 0
     });
 
-    animation[animation.length - 1].timeBeforeNext = 150 * (exchangePairs.length - k) + 1250 + 20000;
+    animation[animation.length - 1].timeBeforeNext = 10000 + 1250 + 8750;
 
     // Map partitions back to original IDs
     const partitionResult: { [key: string]: number } = {};
