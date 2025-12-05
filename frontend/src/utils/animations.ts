@@ -79,13 +79,13 @@ export const highlightNodes = (
             widthInterpolationMultiplier * (highlightWidthMultiplier * defaultWidth - defaultWidth) + defaultWidth
         );
 
-        const updates: { id: String, color: {border: string, background: string, highlight: {border: string, background: string}} | null, borderWidth: number | null }[] = [];
+        const updates: { id: String, color: { border: string, background: string, highlight: { border: string, background: string } } | null, borderWidth: number | null }[] = [];
 
         const animationEnd: boolean = progress >= totalDuration;
         if (ids.length > 0) {
             if (!animationEnd) {
                 ids.forEach((nodeId) => {
-                    updates.push({ id: nodeId, color: {border: borderColorValue, background: bgColorValue, highlight: {border: borderColorValue, background: bgColorValue} }, borderWidth: width });
+                    updates.push({ id: nodeId, color: { border: borderColorValue, background: bgColorValue, highlight: { border: borderColorValue, background: bgColorValue } }, borderWidth: width });
                 });
             } else {
                 ids.forEach((nodeId) => {
@@ -95,7 +95,7 @@ export const highlightNodes = (
         } else {
             if (!animationEnd) {
                 nodes.get().forEach((node) => {
-                    updates.push({ id: node.id, color: {border: borderColorValue, background: bgColorValue, highlight: {border: borderColorValue, background: bgColorValue} }, borderWidth: width });
+                    updates.push({ id: node.id, color: { border: borderColorValue, background: bgColorValue, highlight: { border: borderColorValue, background: bgColorValue } }, borderWidth: width });
                 });
             } else {
                 nodes.get().forEach((node) => {
@@ -220,12 +220,11 @@ export const moveNode = (
     targetY: number,
     duration: number = 1000
 ) => {
-    if (!network) return () => {};
+    if (!network) return () => { };
     let startTime: DOMHighResTimeStamp | null = null;
     let frameId: number | null = null;
 
-    const {x: startingX, y: startingY} = network.getPosition(id);
-    
+    const { x: startingX, y: startingY } = network.getPosition(id);
 
     function step(timestamp: DOMHighResTimeStamp) {
         if (!network) return;
@@ -250,5 +249,26 @@ export const moveNode = (
     // Return a cancel function
     return () => {
         if (frameId) cancelAnimationFrame(frameId);
+    };
+}
+
+export const swapNodePositions = (
+    network: Network | undefined,
+    idA: string,
+    idB: string,
+    duration: number = 1000
+) => {
+    if (!network) return () => {};
+
+    const { x: startAx, y: startAy } = network.getPosition(idA);
+    const { x: startBx, y: startBy } = network.getPosition(idB);
+
+    const cancelFn1 = moveNode(network, idA, startBx, startBy, duration);
+    const cancelFn2 = moveNode(network, idB, startAx, startAy, duration);
+
+    // Return a cancel function
+    return () => {
+        cancelFn1();
+        cancelFn2();
     };
 }
