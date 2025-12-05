@@ -55,6 +55,7 @@ export const defaultVisOptions: any = {
     zoomView: true,
     hover: true,
     multiselect: true,
+    selectable: true,
   },
   manipulation: {
     enabled: false,
