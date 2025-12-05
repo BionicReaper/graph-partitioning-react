@@ -1,6 +1,6 @@
 export const calcInterpolationMultiplier = (
     progress: DOMHighResTimeStamp,
-    duration: {highlight: number, hold: number, fade: number}
+    duration: { highlight: number, hold: number, fade: number }
 ) => {
     if (progress < duration.highlight) {
         return progress / duration.highlight;
@@ -14,7 +14,11 @@ export const calcInterpolationMultiplier = (
 }
 
 export const easeInOutCubic = (t: number) => {
-  return t < 0.5 
-    ? 4 * t * t * t 
-    : 1 + (--t) * (2 * t) * (2 * t);
+    return t < 0.5
+        ? 4 * t * t * t
+        : 1 + (--t) * (2 * t) * (2 * t);
+}
+
+export const timeFactorDecay = (maxTime: number, singleTime: number) => {
+    return 1 - Math.min(singleTime / maxTime, 1);
 }
