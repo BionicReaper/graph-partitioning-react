@@ -45,9 +45,10 @@ function App() {
   const [activeMode, setActiveMode] = useState<ActiveMode>(null);
   const [currentAlgorithmId, setCurrentAlgorithmId] = useState<string>('kernighan-lin');
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [physicsEnabled, setPhysicsEnabled] = useState<boolean>(true);
 
   // Control keys whether an algorithm is running
-  
+
   // Keys Pressed
   const keysPressed = useRef<Set<string>>(new Set());
 
@@ -96,6 +97,11 @@ function App() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  // Toggle physics handler
+  const togglePhysics = useCallback((): void => {
+    setPhysicsEnabled((prev) => !prev);
+  }, [setPhysicsEnabled]);
+
   // Add node handler
   const toggleAddNode = useCallback((): void => {
     if (!networkRef.current) return;
@@ -138,7 +144,7 @@ function App() {
     await runAnimationSequence(result.animation);
     console.log('Animation sequence completed');
 
-    networkRef.current?.setOptions(defaultVisOptions);
+    networkRef.current?.setOptions({ ...defaultVisOptions, physics: { ...defaultVisOptions.physics, enabled: physicsEnabled } });
     setIsRunning(false);
   };
 
@@ -176,10 +182,27 @@ function App() {
     }
   }, [updateBackground]);
 
+  // Update physics when physicsEnabled changes
+  useEffect(() => {
+    if (networkRef.current) {
+      networkRef.current.setOptions({
+        physics: {
+          enabled: physicsEnabled
+        }
+      });
+    }
+  }, [physicsEnabled]);
+
   return (
     <Box className="app" w="100vw" h="100vh" bg="gray.50">
       <div ref={containerRef} className="graph-canvas" style={{ height: '100vh' }} />
-      <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onToggle={toggleSidebar}
+        disablePhysicsToggle={isRunning}
+        physicsEnabled={physicsEnabled}
+        onTogglePhysics={togglePhysics}
+      />
       <PlayButton
         onRun={runAlgorithm}
         onSelectAlgorithm={selectAlgorithm}

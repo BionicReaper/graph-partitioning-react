@@ -258,13 +258,15 @@ export const swapNodePositions = (
     idB: string,
     duration: number = 1000
 ) => {
-    if (!network) return () => {};
+    if (!network) return () => { };
+
+    const internalDuration = duration;
 
     const { x: startAx, y: startAy } = network.getPosition(idA);
     const { x: startBx, y: startBy } = network.getPosition(idB);
 
-    const cancelFn1 = moveNode(network, idA, startBx, startBy, duration);
-    const cancelFn2 = moveNode(network, idB, startAx, startAy, duration);
+    const cancelFn1 = moveNode(network, idA, startBx, startBy, internalDuration);
+    const cancelFn2 = moveNode(network, idB, startAx, startAy, internalDuration);
 
     // Return a cancel function
     return () => {
