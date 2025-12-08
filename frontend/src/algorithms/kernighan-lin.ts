@@ -1,5 +1,5 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
+import { highlightEdges, highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
 import { timeFactorDecay } from "../utils/interpolation";
 
@@ -8,6 +8,7 @@ export interface KLNode {
     id: string; // Original ID for mapping back
     dValue: number;
     cValue: Array<number>; // Cost of possible edges to nodes in the other partition
+    edges: Array<string | null>; // Original edge IDs for mapping back
     partition: number;
     locked: boolean;
 }
@@ -80,7 +81,8 @@ export function runKernighanLin(
         index: idx,
         id: node.id,
         dValue: 0,
-        cValue: Array(originalNodes.length).fill(0),
+        cValue: Array<number>(originalNodes.length).fill(0),
+        edges: Array<string | null>(originalNodes.length).fill(null),
         partition: idx % 2, // Initial partitioning: even index -> partition 0, odd index -> partition 1
         locked: false,
     }));
@@ -94,6 +96,9 @@ export function runKernighanLin(
 
             nodes[fromIdx!].cValue[toIdx!] = 1; // Assuming unweighted graph, cost = 1
             nodes[toIdx!].cValue[fromIdx!] = 1; // Undirected graph
+
+            nodes[fromIdx!].edges[toIdx!] = edge.id;
+            nodes[toIdx!].edges[fromIdx!] = edge.id;
 
             if (nodes[fromIdx!].partition !== nodes[toIdx!].partition) {
                 nodes[fromIdx!].dValue += 1;
@@ -115,7 +120,7 @@ export function runKernighanLin(
     const partitionA: number[] = [];
     const partitionB: number[] = [];
 
-    decay = timeFactorDecay(10000, 100); // Max time 30s
+    decay = timeFactorDecay(10000, 100); // Max time 10s
     time = 100;
     nodes.forEach(node => {
         const moveTime = (time > 1 ? time : 1);
@@ -169,8 +174,8 @@ export function runKernighanLin(
         timeBeforeNext: 1000
     });
 
-    decay = timeFactorDecay(30000, 1000); // Max time 30s
-    time = 1000;
+    decay = timeFactorDecay(30000, 2000); // Max time 30s
+    time = 2000;
     for (let i = 0; i < Math.floor(nodes.length / 2); i++) {
         let maxGain = undefined;
         partitionA.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
@@ -180,6 +185,17 @@ export function runKernighanLin(
         let idxB = 0;
 
         let bestSwap: { a: number, b: number };
+
+        const initialNodeA = nodes[partitionA[idxA]];
+        const initialNodeB = nodes[partitionB[idxB]];
+
+        animation.push({
+            animationCallback: () => {
+                return highlightNodes(nodeDataSet, [initialNodeA.id, initialNodeB.id], '#FFA500', '#FFFF40', 5, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 350, hold: 400, fade: 250 } }, true);
+            },
+            description: `Highlight nodes ${initialNodeA.id} and ${initialNodeB.id}`,
+            timeBeforeNext: 1000
+        });
 
         // TODO: RECHECK DECREASING LOGIC
         while (idxA < partitionA.length && idxB < partitionB.length && (!maxGain || nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue > maxGain)) {
@@ -192,12 +208,89 @@ export function runKernighanLin(
                 bestSwap = { a: nodeA.index, b: nodeB.index };
             }
 
-            if (nodeA.dValue - nodes[partitionA[idxA + 1]]?.dValue < nodeB.dValue - nodes[partitionB[idxB + 1]]?.dValue || idxB + 1 >= partitionA.length) {
+            const greenEdges: Array<string> = [];
+            const redEdges: Array<string> = [];
+            for (let j = 0; j < nodes.length; j++) {
+                if (j === nodeA.index || j === nodeB.index || nodeA.edges[j] === nodeB.edges[j]) continue;
+                if (nodeA.edges[j]) {
+                    const edgeId = nodeA.edges[j];
+                    const samePartition = nodes[j].partition === nodeA.partition;
+                    if (samePartition) {
+                        redEdges.push(edgeId!);
+                    } else {
+                        greenEdges.push(edgeId!);
+                    }
+                }
+                if (nodeB.edges[j]) {
+                    const edgeId = nodeB.edges[j];
+                    const samePartition = nodes[j].partition === nodeB.partition;
+                    if (samePartition) {
+                        redEdges.push(edgeId!);
+                    } else {
+                        greenEdges.push(edgeId!);
+                    }
+                }
+            }
+
+            if (greenEdges.length > 0) {
+                animation.push({
+                    animationCallback: () => {
+                        return highlightEdges(edgeDataSet, greenEdges, '#00FF00', 5, { color: { highlight: 600, hold: 2000, fade: 400 }, width: { highlight: 500, hold: 200, fade: 1600 } });
+                    },
+                    description: `Highlight green edges`,
+                    timeBeforeNext: 0
+                });
+            }
+            if (redEdges.length > 0) {
+                animation.push({
+                    animationCallback: () => {
+                        return highlightEdges(edgeDataSet, redEdges, '#FF0000', 5, { color: { highlight: 600, hold: 2000, fade: 400 }, width: { highlight: 500, hold: 200, fade: 1600 } });
+                    },
+                    description: `Highlight red edges`,
+                    timeBeforeNext: 3000
+                });
+            }
+
+            // TODO add cancel fn returning
+            if (idxA + 1 < partitionA.length && (idxB + 1 >= partitionB.length || nodeA.dValue - nodes[partitionA[idxA + 1]]?.dValue < nodeB.dValue - nodes[partitionB[idxB + 1]]?.dValue)) {
                 idxA++;
+                if(idxA >= partitionA.length) continue;
+                const nextIdx = idxA;
+                const highlightNodeId = nodes[partitionA[nextIdx]].id;
+                animation.push({
+                    animationCallback: () => {
+                        highlightNodes(nodeDataSet, [nodeA.id], '#2B7CE9', '#97C2FC', 1, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 1000, hold: 0, fade: 0 } });
+                        highlightNodes(nodeDataSet, [highlightNodeId], '#FFA500', '#FFFF40', 5, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 350, hold: 400, fade: 250 } }, true);
+                        return () => { };
+                    },
+                    description: `Unhighlight node ${nodeA.id} and highlight node ${highlightNodeId}`,
+                    timeBeforeNext: 1000
+                });
             } else {
                 idxB++;
+                if(idxB >= partitionB.length) continue;
+                const nextIdx = idxB;
+                const highlightNodeId = nodes[partitionB[nextIdx]].id;
+                animation.push({
+                    animationCallback: () => {
+                        highlightNodes(nodeDataSet, [nodeB.id], '#2B7CE9', '#97C2FC', 1, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 1000, hold: 0, fade: 0 } });
+                        highlightNodes(nodeDataSet, [highlightNodeId], '#FFA500', '#FFFF40', 5, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 350, hold: 400, fade: 250 } }, true);
+                        return () => { };
+                    },
+                    description: `Unhighlight node ${nodeB.id} and highlight node ${highlightNodeId}`,
+                    timeBeforeNext: 1000
+                });
             }
         }
+
+        const nodesToCleanUp = [...partitionA, ...partitionB]
+        animation.push({
+            animationCallback: () => {
+                return highlightNodes(nodeDataSet, nodesToCleanUp, '#FF0000', '#FF8080', 5, { color: { highlight: 0, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } }, false);
+            },
+            description: `Unhighlight all nodes except swapped ones`,
+            timeBeforeNext: 1000
+        })
 
         exchangePairs.push({ a: bestSwap!.a, b: bestSwap!.b, gain: maxGain! });
 
@@ -219,7 +312,7 @@ export function runKernighanLin(
         // Remove locked nodes from partitions
         partitionA.splice(partitionA.indexOf(bestSwap!.a), 1);
         partitionB.splice(partitionB.indexOf(bestSwap!.b), 1);
-        const swapTime = (time > 1 ? time : 1);
+        const swapTime = (time > 2 ? time : 2);
 
         animation.push({
             animationCallback: () => {
@@ -290,7 +383,7 @@ export function runKernighanLin(
         timeBeforeNext: 0
     });
 
-    animation[animation.length - 1].timeBeforeNext = 10000 + 1250 + 8750;
+    animation[animation.length - 1].timeBeforeNext = 5000 //10000 + 1250 + 8750;
 
     // Map partitions back to original IDs
     const partitionResult: { [key: string]: number } = {};

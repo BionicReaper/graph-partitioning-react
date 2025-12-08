@@ -8,7 +8,8 @@ export const highlightNodes = (
     highlightBorderColor: string = '#00FF00',
     highlightBackgroundColor: string = '#00FF00',
     highlightWidthMultiplier: number = 5,
-    duration: Record<string, { highlight: number, hold: number, fade: number }> = { color: { highlight: 500, hold: 0, fade: 500 }, width: { highlight: 500, hold: 0, fade: 500 } }
+    duration: Record<string, { highlight: number, hold: number, fade: number }> = { color: { highlight: 500, hold: 0, fade: 500 }, width: { highlight: 500, hold: 0, fade: 500 } },
+    keepColorAfterHighlight: boolean = false
 ) => {
     let startTime: DOMHighResTimeStamp | null = null;
     let frameId: number | null = null;
@@ -44,6 +45,22 @@ export const highlightNodes = (
 
     function step(timestamp: DOMHighResTimeStamp) {
         if (!startTime) startTime = timestamp;
+
+        if (keepColorAfterHighlight && timestamp - startTime >= duration.color.highlight) {
+            const updates: { id: String, color: { border: string, background: string, highlight: { border: string, background: string } }, borderWidth: null }[] = [];
+            if (ids.length > 0) {
+                ids.forEach((nodeId) => {
+                    updates.push({ id: nodeId, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: null});
+                });
+            } else {
+                nodes.get().forEach((node) => {
+                    updates.push({ id: node.id, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: null});
+                });
+            }
+
+            nodes.update(updates);
+            return;
+        }
 
         const progress = timestamp - startTime;
         const colorInterpolationMultiplier = calcInterpolationMultiplier(progress, duration.color);
