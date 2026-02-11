@@ -198,7 +198,7 @@ export function runKernighanLin(
         });
 
         // TODO: RECHECK DECREASING LOGIC
-        while (idxA < partitionA.length && idxB < partitionB.length && (!maxGain || nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue > maxGain)) {
+        while (idxA < partitionA.length && idxB < partitionB.length && (maxGain === undefined || nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue > maxGain)) {
             const nodeA = nodes[partitionA[idxA]];
             const nodeB = nodes[partitionB[idxB]];
 
@@ -268,7 +268,7 @@ export function runKernighanLin(
             // TODO add cancel fn returning
             if (idxA + 1 < partitionA.length && (idxB + 1 >= partitionB.length || nodeA.dValue - nodes[partitionA[idxA + 1]]?.dValue < nodeB.dValue - nodes[partitionB[idxB + 1]]?.dValue)) {
                 idxA++;
-                if(idxA >= partitionA.length) continue;
+                if (idxA >= partitionA.length || nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue <= maxGain) continue;
                 const nextIdx = idxA;
                 const highlightNodeId = nodes[partitionA[nextIdx]].id;
                 animation.push({
@@ -286,7 +286,7 @@ export function runKernighanLin(
                 });
             } else {
                 idxB++;
-                if(idxB >= partitionB.length) continue;
+                if (idxB >= partitionB.length || nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue <= maxGain) continue;
                 const nextIdx = idxB;
                 const highlightNodeId = nodes[partitionB[nextIdx]].id;
                 animation.push({
