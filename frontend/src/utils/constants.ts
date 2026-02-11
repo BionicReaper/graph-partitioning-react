@@ -60,14 +60,14 @@ export const defaultVisOptions: any = {
   manipulation: {
     enabled: false,
     addNode: (data: any, callback: any) => {
-      document.dispatchEvent(AddNodeEvent);
       data.label = nodeIdCounter.toString();
       nodeIdCounter += 1;
       callback(data);
+      document.dispatchEvent(AddNodeEvent);
     },
     addEdge: (data: any, callback: any) => {
-      document.dispatchEvent(AddEdgeEvent);
       callback(data);
+      document.dispatchEvent(AddEdgeEvent);
     },
   }
 };
