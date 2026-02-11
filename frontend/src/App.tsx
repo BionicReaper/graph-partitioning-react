@@ -27,10 +27,10 @@ function App() {
 
       // Add event listeners to document for adding nodes and edges
       document.addEventListener('addNode', () => {
-        setActiveMode(null);
+        networkRef.current?.addNodeMode();
       });
       document.addEventListener('addEdge', () => {
-        setActiveMode(null);
+        networkRef.current?.addEdgeMode();
       });
 
       return () => {
