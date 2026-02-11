@@ -23,7 +23,34 @@ function App() {
   useEffect(() => {
     if (containerRef.current) {
       // Create network after the container is available
-      networkRef.current = new Network(containerRef.current, { nodes: nodesRef.current, edges: edgesRef.current }, defaultVisOptions);
+      // Override manipulation.addEdge so we can check for duplicate edges using edgesRef
+      const visOptions = {
+        ...defaultVisOptions,
+        manipulation: {
+          ...defaultVisOptions.manipulation,
+          addEdge: (data: any, callback: any) => {
+            // Prevent self-loop
+            if (data.to === data.from) return;
+            // Prevent duplicate edge in either direction
+            const exists = edgesRef.current.get().some((e: any) =>
+              (e.from === data.from && e.to === data.to) || (e.from === data.to && e.to === data.from)
+            );
+            if (exists) {
+              console.log('Edge already exists, skipping addEdge');
+              return;
+            }
+            // No duplicate found — proceed with add
+            if (defaultVisOptions.manipulation?.addEdge) {
+              // preserve any behavior in default options (like dispatching events)
+              defaultVisOptions.manipulation.addEdge(data, callback);
+            } else {
+              callback(data);
+            }
+          }
+        }
+      };
+
+      networkRef.current = new Network(containerRef.current, { nodes: nodesRef.current, edges: edgesRef.current }, visOptions);
 
       // Add event listeners to document for adding nodes and edges
       document.addEventListener('addNode', () => {
