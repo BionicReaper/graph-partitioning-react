@@ -158,16 +158,16 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
                 </Heading>
                 <VStack gap={2} align="stretch">
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
-                    • Press the Plus button or N on your keyboard and click on the grid to add a node
+                    • Press the Plus button or N on your keyboard to get in Add Node Mode and click on the grid to add a node. Press again or switch mode to stop adding nodes.
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
-                    • Press the Cable button or E on your keyboard and drag from one node to another to create an edge
+                    • Press the Cable button or E on your keyboard to get in Add Edge Mode and drag from one node to another to create an edge. Press again or switch mode to stop adding edges.
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
                     • Left click on a node or an edge to select it and DELETE to remove it
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
-                    • Drag nodes to reposition
+                    • Drag nodes to reposition them
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
                     • Drag canvas to pan
