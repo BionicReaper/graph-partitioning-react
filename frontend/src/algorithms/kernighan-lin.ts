@@ -184,7 +184,7 @@ export function runKernighanLin(
         let idxA = 0;
         let idxB = 0;
 
-        let bestSwap: { a: number, b: number };
+        let bestSwap: { a: number, b: number } | undefined = undefined;
 
         const initialNodeA = nodes[partitionA[idxA]];
         const initialNodeB = nodes[partitionB[idxB]];
@@ -203,8 +203,10 @@ export function runKernighanLin(
             const nodeB = nodes[partitionB[idxB]];
 
             const gain = nodeA.dValue + nodeB.dValue - 2 * nodeA.cValue[nodeB.index];
+            let previousBestSwap = undefined;
             if (maxGain === undefined || gain > maxGain) {
                 maxGain = gain;
+                previousBestSwap = bestSwap !== undefined ? bestSwap : null;
                 bestSwap = { a: nodeA.index, b: nodeB.index };
             }
 
@@ -250,20 +252,38 @@ export function runKernighanLin(
                     timeBeforeNext: 0
                 });
             }
-            console.log(
-                "Green edges legth: ", greenEdges.length,
-                "Red edges legth: ", redEdges.length,
-                "Gain: ", gain,
-                "Max Gain: ", maxGain,
-                "Precondition: ", nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue > maxGain);
             // Guaranteed delay
             animation.push({
                 animationCallback: () => {
                     return () => true;
                 },
                 description: `Guaranteed delay`,
-                timeBeforeNext: 2200
+                timeBeforeNext: 2000
             });
+
+            // Make current best swap purple and unhighlight previous best swap if exists
+            if (previousBestSwap !== undefined) {
+                const highlightNodeIdA = nodes[partitionA[idxA]].id;
+                const highlightNodeIdB = nodes[partitionB[idxB]].id;
+                if (previousBestSwap !== null) {
+                    const unhighlightNodeIdA = nodes[previousBestSwap.a].id;
+                    const unhighlightNodeIdB = nodes[previousBestSwap.b].id;
+                    animation.push({
+                        animationCallback: () => {
+                            return highlightNodes(nodeDataSet, [unhighlightNodeIdA, unhighlightNodeIdB], '#FF0000', '#FF8080', 5, { color: { highlight: 0, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } });
+                        },
+                        description: `Unhighlight previous best swap nodes`,
+                        timeBeforeNext: 0
+                    });
+                }
+                animation.push({
+                    animationCallback: () => {
+                        return highlightNodes(nodeDataSet, [highlightNodeIdA, highlightNodeIdB], '#800080', '#D8BFD8', 5, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 350, hold: 400, fade: 250 } }, true);
+                    },
+                    description: `Highlight current best swap nodes ${highlightNodeIdA} and ${highlightNodeIdB}`,
+                    timeBeforeNext: 1000
+                });
+            }
 
             // TODO add cancel fn returning
             if (idxA + 1 < partitionA.length && (idxB + 1 >= partitionB.length || nodeA.dValue - nodes[partitionA[idxA + 1]]?.dValue < nodeB.dValue - nodes[partitionB[idxB + 1]]?.dValue)) {
@@ -271,9 +291,12 @@ export function runKernighanLin(
                 if (idxA >= partitionA.length || nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue <= maxGain) continue;
                 const nextIdx = idxA;
                 const highlightNodeId = nodes[partitionA[nextIdx]].id;
+                const shouldUnhighlight: boolean = bestSwap?.a !== nodeA.index;
                 animation.push({
                     animationCallback: () => {
-                        const stepFn1 = highlightNodes(nodeDataSet, [nodeA.id], '#2B7CE9', '#97C2FC', 1, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 1000, hold: 0, fade: 0 } });
+                        const stepFn1 = (shouldUnhighlight)
+                            ? highlightNodes(nodeDataSet, [nodeA.id], '#2B7CE9', '#97C2FC', 1, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 1000, hold: 0, fade: 0 } })
+                            : highlightNodes(nodeDataSet, [nodeA.id], '#300030', '#886F88', 1, { color: { highlight: 0, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } }, true);;
                         const stepFn2 = highlightNodes(nodeDataSet, [highlightNodeId], '#FFA500', '#FFFF40', 5, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 350, hold: 400, fade: 250 } }, true);
                         return (timestamp: DOMHighResTimeStamp) => {
                             const step1Done = stepFn1(timestamp);
@@ -289,9 +312,12 @@ export function runKernighanLin(
                 if (idxB >= partitionB.length || nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue <= maxGain) continue;
                 const nextIdx = idxB;
                 const highlightNodeId = nodes[partitionB[nextIdx]].id;
+                const shouldUnhighlight: boolean = bestSwap?.b !== nodeB.index;
                 animation.push({
                     animationCallback: () => {
-                        const stepFn1 = highlightNodes(nodeDataSet, [nodeB.id], '#2B7CE9', '#97C2FC', 1, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 1000, hold: 0, fade: 0 } });
+                        const stepFn1 = (shouldUnhighlight)
+                            ? highlightNodes(nodeDataSet, [nodeB.id], '#2B7CE9', '#97C2FC', 1, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 1000, hold: 0, fade: 0 } })
+                            : highlightNodes(nodeDataSet, [nodeB.id], '#300030', '#886F88', 1, { color: { highlight: 0, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } }, true);;
                         const stepFn2 = highlightNodes(nodeDataSet, [highlightNodeId], '#FFA500', '#FFFF40', 5, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 350, hold: 400, fade: 250 } }, true);
                         return (timestamp: DOMHighResTimeStamp) => {
                             const step1Done = stepFn1(timestamp);
