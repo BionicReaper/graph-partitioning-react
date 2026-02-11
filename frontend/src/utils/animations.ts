@@ -2,6 +2,72 @@ import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { defaultVisOptions } from "./constants";
 import { calcInterpolationMultiplier, easeInOutCubic } from "./interpolation";
 
+type NodeUpdate = {
+    id: string,
+    x?: number,
+    y?: number,
+    color?: {
+        border: string,
+        background: string,
+        highlight: {
+            border: string,
+            background: string
+        }
+    } | null,
+    borderWidth?: number | null
+};
+
+type EdgeUpdate = {
+    id: string,
+    color?: {
+        color?: string
+    } | null,
+    width?: number | null
+};
+
+let nodeUpdates: Record<string, NodeUpdate> = {};
+let edgeUpdates: Record<string, EdgeUpdate> = {};
+
+export const extractNodeUpdates = () => {
+    const extracted = Object.values(nodeUpdates);
+    nodeUpdates = {};
+    return extracted;
+}
+
+export const extractEdgeUpdates = () => {
+    const extracted = Object.values(edgeUpdates);
+    edgeUpdates = {};
+    return extracted;
+}
+
+const queueNodeUpdate = (update: NodeUpdate) => {
+    const existing = nodeUpdates[update.id] ?? { id: update.id };
+    if (update.x !== undefined) {
+        existing.x = update.x;
+    }
+    if (update.y !== undefined) {
+        existing.y = update.y;
+    }
+    if (update.color !== undefined) {
+        existing.color = update.color;
+    }
+    if (update.borderWidth !== undefined) {
+        existing.borderWidth = update.borderWidth;
+    }
+    nodeUpdates[update.id] = existing;
+};
+
+const queueEdgeUpdate = (update: EdgeUpdate) => {
+    const existing = edgeUpdates[update.id] ?? { id: update.id };
+    if (update.color !== undefined) {
+        existing.color = update.color;
+    }
+    if (update.width !== undefined) {
+        existing.width = update.width;
+    }
+    edgeUpdates[update.id] = existing;
+};
+
 export const highlightNodes = (
     nodes: DataSet<any, "id">,
     ids: string[] = [],
@@ -12,7 +78,6 @@ export const highlightNodes = (
     keepColorAfterHighlight: boolean = false
 ) => {
     let startTime: DOMHighResTimeStamp | null = null;
-    let frameId: number | null = null;
     const totalDuration = Math.max(
         duration.color.highlight + duration.color.hold + duration.color.fade,
         duration.width.highlight + duration.width.hold + duration.width.fade
@@ -46,20 +111,18 @@ export const highlightNodes = (
     function step(timestamp: DOMHighResTimeStamp) {
         if (!startTime) startTime = timestamp;
 
-        if (keepColorAfterHighlight && timestamp - startTime >= duration.color.highlight) {
-            const updates: { id: String, color: { border: string, background: string, highlight: { border: string, background: string } }, borderWidth: null }[] = [];
+        if (keepColorAfterHighlight && (timestamp - startTime >= duration.color.highlight)) {
             if (ids.length > 0) {
                 ids.forEach((nodeId) => {
-                    updates.push({ id: nodeId, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: null});
+                    queueNodeUpdate({ id: nodeId, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: null});
                 });
             } else {
                 nodes.get().forEach((node) => {
-                    updates.push({ id: node.id, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: null});
+                    queueNodeUpdate({ id: node.id, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: null});
                 });
             }
 
-            nodes.update(updates);
-            return;
+            return true; // End animation immediately after reaching highlight color
         }
 
         const progress = timestamp - startTime;
@@ -96,45 +159,34 @@ export const highlightNodes = (
             widthInterpolationMultiplier * (highlightWidthMultiplier * defaultWidth - defaultWidth) + defaultWidth
         );
 
-        const updates: { id: String, color: { border: string, background: string, highlight: { border: string, background: string } } | null, borderWidth: number | null }[] = [];
-
         const animationEnd: boolean = progress >= totalDuration;
         if (ids.length > 0) {
             if (!animationEnd) {
                 ids.forEach((nodeId) => {
-                    updates.push({ id: nodeId, color: { border: borderColorValue, background: bgColorValue, highlight: { border: borderColorValue, background: bgColorValue } }, borderWidth: width });
+                    queueNodeUpdate({ id: nodeId, color: { border: borderColorValue, background: bgColorValue, highlight: { border: borderColorValue, background: bgColorValue } }, borderWidth: width });
                 });
             } else {
                 ids.forEach((nodeId) => {
-                    updates.push({ id: nodeId, color: null, borderWidth: null });
+                    queueNodeUpdate({ id: nodeId, color: null, borderWidth: null });
                 });
             }
         } else {
             if (!animationEnd) {
                 nodes.get().forEach((node) => {
-                    updates.push({ id: node.id, color: { border: borderColorValue, background: bgColorValue, highlight: { border: borderColorValue, background: bgColorValue } }, borderWidth: width });
+                    queueNodeUpdate({ id: node.id, color: { border: borderColorValue, background: bgColorValue, highlight: { border: borderColorValue, background: bgColorValue } }, borderWidth: width });
                 });
             } else {
                 nodes.get().forEach((node) => {
-                    updates.push({ id: node.id, color: null, borderWidth: null });
+                    queueNodeUpdate({ id: node.id, color: null, borderWidth: null });
                 });
             }
         }
 
-        nodes.update(updates);
-
-        if (!animationEnd) {
-            frameId = requestAnimationFrame(step);
-        }
+        return animationEnd;
     }
 
-    // Start the animation
-    frameId = requestAnimationFrame(step);
-
     // Return a cancel function
-    return () => {
-        if (frameId) cancelAnimationFrame(frameId);
-    };
+    return step;
 }
 
 export const highlightEdges = (
@@ -145,7 +197,6 @@ export const highlightEdges = (
     duration: Record<string, { highlight: number, hold: number, fade: number }> = { color: { highlight: 500, hold: 0, fade: 500 }, width: { highlight: 500, hold: 0, fade: 500 } }
 ) => {
     let startTime: DOMHighResTimeStamp | null = null;
-    let frameId: number | null = null;
     const totalDuration = Math.max(
         duration.color.highlight + duration.color.hold + duration.color.fade,
         duration.width.highlight + duration.width.hold + duration.width.fade
@@ -189,45 +240,33 @@ export const highlightEdges = (
             widthInterpolationMultiplier * (highlightWidthMultiplier * defaultWidth - defaultWidth) + defaultWidth
         );
 
-        const updates: { id: String, color: { color: String } | null, width: number | null }[] = [];
-
         const animationEnd: boolean = progress >= totalDuration;
         if (ids.length > 0) {
             if (!animationEnd) {
                 ids.forEach((edgeId) => {
-                    updates.push({ id: edgeId, color: { color: colorValue }, width: width });
+                    queueEdgeUpdate({ id: edgeId, color: { color: colorValue }, width: width });
                 });
             } else {
                 ids.forEach((edgeId) => {
-                    updates.push({ id: edgeId, color: null, width: null });
+                    queueEdgeUpdate({ id: edgeId, color: null, width: null });
                 });
             }
         } else {
             if (!animationEnd) {
                 edges.get().forEach((edge) => {
-                    updates.push({ id: edge.id, color: { color: colorValue }, width: width });
+                    queueEdgeUpdate({ id: edge.id, color: { color: colorValue }, width: width });
                 });
             } else {
                 edges.get().forEach((edge) => {
-                    updates.push({ id: edge.id, color: null, width: null });
+                    queueEdgeUpdate({ id: edge.id, color: null, width: null });
                 });
             }
         }
 
-        edges.update(updates);
-
-        if (!animationEnd) {
-            frameId = requestAnimationFrame(step);
-        }
+        return animationEnd;
     }
 
-    // Start the animation
-    frameId = requestAnimationFrame(step);
-
-    // Return a cancel function
-    return () => {
-        if (frameId) cancelAnimationFrame(frameId);
-    };
+    return step;
 }
 
 export const moveNode = (
@@ -237,14 +276,13 @@ export const moveNode = (
     targetY: number,
     duration: number = 1000
 ) => {
-    if (!network) return () => { };
+    if (!network) return () => { return true; };
     let startTime: DOMHighResTimeStamp | null = null;
-    let frameId: number | null = null;
 
     const { x: startingX, y: startingY } = network.getPosition(id);
 
     function step(timestamp: DOMHighResTimeStamp) {
-        if (!network) return;
+        if (!network) return true;
         if (!startTime) startTime = timestamp;
         const progress = timestamp - startTime;
         const t = Math.min(progress / duration, 1);
@@ -253,20 +291,12 @@ export const moveNode = (
         const xValue = startingX + easedT * (targetX - startingX);
         const yValue = startingY + easedT * (targetY - startingY);
 
-        network.moveNode(id, xValue, yValue);
+        queueNodeUpdate({ id, x: xValue, y: yValue });
 
-        if (progress < duration) {
-            frameId = requestAnimationFrame(step);
-        }
+        return progress >= duration;
     }
 
-    // Start the animation
-    frameId = requestAnimationFrame(step);
-
-    // Return a cancel function
-    return () => {
-        if (frameId) cancelAnimationFrame(frameId);
-    };
+    return step;
 }
 
 export const swapNodePositions = (
@@ -275,19 +305,21 @@ export const swapNodePositions = (
     idB: string,
     duration: number = 1000
 ) => {
-    if (!network) return () => { };
+    if (!network) return () => { return true; };
 
     const internalDuration = duration;
 
     const { x: startAx, y: startAy } = network.getPosition(idA);
     const { x: startBx, y: startBy } = network.getPosition(idB);
 
-    const cancelFn1 = moveNode(network, idA, startBx, startBy, internalDuration);
-    const cancelFn2 = moveNode(network, idB, startAx, startAy, internalDuration);
+    const stepFn1 = moveNode(network, idA, startBx, startBy, internalDuration);
+    const stepFn2 = moveNode(network, idB, startAx, startAy, internalDuration);
 
-    // Return a cancel function
-    return () => {
-        cancelFn1();
-        cancelFn2();
+    // Return combined step function
+    return (timestamp: DOMHighResTimeStamp) => {
+        const step1Done = stepFn1(timestamp);
+        const step2Done = stepFn2(timestamp);
+
+        return step1Done && step2Done; // Animation is done when both stepFn1 and stepFn2 are done
     };
 }
