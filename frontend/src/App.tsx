@@ -65,6 +65,7 @@ function App() {
     } else if (event.key === 'Escape') {
       event.preventDefault();
       setActiveMode(null);
+      networkRef.current?.unselectAll();
       networkRef.current?.disableEditMode();
     } else if (event.key === 'Delete') {
       event.preventDefault();
@@ -115,6 +116,7 @@ function App() {
         return 'node';
       }
     });
+    networkRef.current.unselectAll();
   }, []);
 
   // Add edge handler
@@ -129,6 +131,7 @@ function App() {
         return 'edge';
       }
     });
+    networkRef.current.unselectAll();
   }, []);
 
   // Run algorithm handler (placeholder for now)
