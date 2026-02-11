@@ -9,6 +9,7 @@ import { algorithms, defaultVisOptions } from './utils/constants';
 import { Plus, Cable } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
 import { runAnimationSequence } from './utils/animationRunner';
+import { updateDataSetPositions } from './utils/positioning';
 
 type ActiveMode = 'node' | 'edge' | null;
 
@@ -136,6 +137,8 @@ function App() {
     if (!networkRef.current || isRunning) return;
 
     setIsRunning(true);
+    updateDataSetPositions(networkRef.current, nodesRef.current);
+    console.log('Current graph state before algorithm:');
     console.log(nodesRef.current.get(), edgesRef.current.get());
 
     const result = runKernighanLin(networkRef.current, nodesRef.current, edgesRef.current);

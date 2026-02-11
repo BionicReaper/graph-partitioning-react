@@ -1,3 +1,5 @@
+import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
+
 const centerX = 0;
 const centerY = 0;
 const baseDistanceBetweenPartitions = 800;
@@ -36,4 +38,18 @@ export const calculateY = (index: number, partition: number, totalNodes: number)
     const circleRadius = baseCircleRadius * scaleFactor;
     
     return centerY + circleRadius * Math.sin(angle);
+}
+
+export const updateDataSetPositions = (
+    network: Network | undefined,
+    nodes: DataSet<any, "id">
+) => {
+    if (!network) return;
+    const allPositions = network.getPositions();
+    const updates = Object.keys(allPositions || {}).map((nodeId) => ({
+      id: nodeId,
+      x: allPositions?.[nodeId].x || 0,
+      y: allPositions?.[nodeId].y || 0
+    }));
+    nodes.update(updates);
 }
