@@ -20,7 +20,7 @@ export interface KLEdge {
 }
 
 export interface Animation {
-    animationCallback: () => () => void;
+    animationCallback: () => (timestamp: DOMHighResTimeStamp) => boolean;
     description: string;
     timeBeforeNext: number;
 }
@@ -58,7 +58,7 @@ export function runKernighanLin(
                     }
                 }
             );
-            return () => { };
+            return () => { return true; };
         },
         description: `Disable interaction and physics`,
         timeBeforeNext: 0
@@ -168,7 +168,7 @@ export function runKernighanLin(
                 }
             );
             network.fit();
-            return () => { };
+            return () => { return true; };
         },
         description: `Initial partitioning complete`,
         timeBeforeNext: 1000
@@ -235,7 +235,7 @@ export function runKernighanLin(
             if (greenEdges.length > 0) {
                 animation.push({
                     animationCallback: () => {
-                        return highlightEdges(edgeDataSet, greenEdges, '#00FF00', 5, { color: { highlight: 600, hold: 2000, fade: 400 }, width: { highlight: 500, hold: 200, fade: 1600 } });
+                        return highlightEdges(edgeDataSet, greenEdges, '#00FF00', 5, { color: { highlight: 600, hold: 1000, fade: 400 }, width: { highlight: 500, hold: 1000, fade: 400 } });
                     },
                     description: `Highlight green edges`,
                     timeBeforeNext: 0
@@ -244,12 +244,26 @@ export function runKernighanLin(
             if (redEdges.length > 0) {
                 animation.push({
                     animationCallback: () => {
-                        return highlightEdges(edgeDataSet, redEdges, '#FF0000', 5, { color: { highlight: 600, hold: 2000, fade: 400 }, width: { highlight: 500, hold: 200, fade: 1600 } });
+                        return highlightEdges(edgeDataSet, redEdges, '#FF0000', 5, { color: { highlight: 600, hold: 1000, fade: 400 }, width: { highlight: 500, hold: 1000, fade: 400 } });
                     },
                     description: `Highlight red edges`,
-                    timeBeforeNext: 3000
+                    timeBeforeNext: 0
                 });
             }
+            console.log(
+                "Green edges legth: ", greenEdges.length,
+                "Red edges legth: ", redEdges.length,
+                "Gain: ", gain,
+                "Max Gain: ", maxGain,
+                "Precondition: ", nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue > maxGain);
+            // Guaranteed delay
+            animation.push({
+                animationCallback: () => {
+                    return () => true;
+                },
+                description: `Guaranteed delay`,
+                timeBeforeNext: 2200
+            });
 
             // TODO add cancel fn returning
             if (idxA + 1 < partitionA.length && (idxB + 1 >= partitionB.length || nodeA.dValue - nodes[partitionA[idxA + 1]]?.dValue < nodeB.dValue - nodes[partitionB[idxB + 1]]?.dValue)) {
@@ -259,9 +273,13 @@ export function runKernighanLin(
                 const highlightNodeId = nodes[partitionA[nextIdx]].id;
                 animation.push({
                     animationCallback: () => {
-                        highlightNodes(nodeDataSet, [nodeA.id], '#2B7CE9', '#97C2FC', 1, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 1000, hold: 0, fade: 0 } });
-                        highlightNodes(nodeDataSet, [highlightNodeId], '#FFA500', '#FFFF40', 5, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 350, hold: 400, fade: 250 } }, true);
-                        return () => { };
+                        const stepFn1 = highlightNodes(nodeDataSet, [nodeA.id], '#2B7CE9', '#97C2FC', 1, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 1000, hold: 0, fade: 0 } });
+                        const stepFn2 = highlightNodes(nodeDataSet, [highlightNodeId], '#FFA500', '#FFFF40', 5, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 350, hold: 400, fade: 250 } }, true);
+                        return (timestamp: DOMHighResTimeStamp) => {
+                            const step1Done = stepFn1(timestamp);
+                            const step2Done = stepFn2(timestamp);
+                            return step1Done && step2Done;
+                        };
                     },
                     description: `Unhighlight node ${nodeA.id} and highlight node ${highlightNodeId}`,
                     timeBeforeNext: 1000
@@ -273,9 +291,13 @@ export function runKernighanLin(
                 const highlightNodeId = nodes[partitionB[nextIdx]].id;
                 animation.push({
                     animationCallback: () => {
-                        highlightNodes(nodeDataSet, [nodeB.id], '#2B7CE9', '#97C2FC', 1, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 1000, hold: 0, fade: 0 } });
-                        highlightNodes(nodeDataSet, [highlightNodeId], '#FFA500', '#FFFF40', 5, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 350, hold: 400, fade: 250 } }, true);
-                        return () => { };
+                        const stepFn1 = highlightNodes(nodeDataSet, [nodeB.id], '#2B7CE9', '#97C2FC', 1, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 1000, hold: 0, fade: 0 } });
+                        const stepFn2 = highlightNodes(nodeDataSet, [highlightNodeId], '#FFA500', '#FFFF40', 5, { color: { highlight: 1000, hold: 0, fade: 0 }, width: { highlight: 350, hold: 400, fade: 250 } }, true);
+                        return (timestamp: DOMHighResTimeStamp) => {
+                            const step1Done = stepFn1(timestamp);
+                            const step2Done = stepFn2(timestamp);
+                            return step1Done && step2Done;
+                        };
                     },
                     description: `Unhighlight node ${nodeB.id} and highlight node ${highlightNodeId}`,
                     timeBeforeNext: 1000
@@ -283,14 +305,15 @@ export function runKernighanLin(
             }
         }
 
-        const nodesToCleanUp = [...partitionA, ...partitionB]
-        animation.push({
-            animationCallback: () => {
-                return highlightNodes(nodeDataSet, nodesToCleanUp, '#FF0000', '#FF8080', 5, { color: { highlight: 0, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } }, false);
-            },
-            description: `Unhighlight all nodes except swapped ones`,
-            timeBeforeNext: 1000
-        })
+        const nodesToCleanUp = [...partitionA, ...partitionB].map(idx => nodes[idx].id).filter(id => id !== nodes[bestSwap!.a].id && id !== nodes[bestSwap!.b].id);
+        if (nodesToCleanUp.length > 0)
+            animation.push({
+                animationCallback: () => {
+                    return highlightNodes(nodeDataSet, nodesToCleanUp, '#FF0000', '#FF8080', 5, { color: { highlight: 0, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } }, false);
+                },
+                description: `Unhighlight all nodes except swapped ones`,
+                timeBeforeNext: 1000
+            })
 
         exchangePairs.push({ a: bestSwap!.a, b: bestSwap!.b, gain: maxGain! });
 
