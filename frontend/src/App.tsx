@@ -144,7 +144,7 @@ function App() {
     const result = runKernighanLin(networkRef.current, nodesRef.current, edgesRef.current);
     console.log('Algorithm result:', result);
 
-    await runAnimationSequence(result.animation);
+    await runAnimationSequence(result.animation, nodesRef.current, edgesRef.current);
     console.log('Animation sequence completed');
 
     networkRef.current?.setOptions({ ...defaultVisOptions, physics: { ...defaultVisOptions.physics, enabled: physicsEnabled } });
