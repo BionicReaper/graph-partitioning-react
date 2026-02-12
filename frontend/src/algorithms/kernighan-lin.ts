@@ -365,11 +365,13 @@ export function runKernighanLin(
 
         animation.push({
             animationCallback: () => {
-                nodeDataSet.update([
-                    { id: nodes[bestSwap!.a].id, color: { background: '#CCCCCC', border: '#999999' } },
-                    { id: nodes[bestSwap!.b].id, color: { background: '#CCCCCC', border: '#999999' } }
-                ]);
-                return swapNodePositions(network, nodes[bestSwap!.a].id, nodes[bestSwap!.b].id, swapTime * (0.6666666667));
+                const stepFn1 = highlightNodes(nodeDataSet, [nodes[bestSwap!.a].id, nodes[bestSwap!.b].id], '#999999', '#CCCCCC', 1, { color: { highlight: 0, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } }, true);
+                const stepFn2 = swapNodePositions(network, nodes[bestSwap!.a].id, nodes[bestSwap!.b].id, swapTime * (0.6666666667));
+                return (timestamp: DOMHighResTimeStamp) => {
+                    const step1Done = stepFn1(timestamp);
+                    const step2Done = stepFn2(timestamp);
+                    return step1Done && step2Done;
+                }
             },
             description: `Swap nodes ${nodes[bestSwap!.a].id} and ${nodes[bestSwap!.b].id}`,
             timeBeforeNext: swapTime
