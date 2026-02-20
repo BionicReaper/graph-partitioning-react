@@ -131,6 +131,9 @@ export const resumeAnimation = () => {
     isPaused = false;
     lastTimestamp = performance.now();
     frameId = requestAnimationFrame(render);
+    return new Promise<void>((resolve) => {
+        resolve();
+    });
 }
 
 export const setSimulationSpeedFactor = (factor: number) => {
