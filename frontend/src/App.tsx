@@ -103,7 +103,7 @@ function App() {
   const simulationKeyDownFunction = useCallback((event: KeyboardEvent) => {
     if (keysPressed.current.has(event.key)) return; // already pressed, ignore
     keysPressed.current.add(event.key);
-    if (event.key === 'p') {
+    if (event.key === 'p' || event.key === 'F9') {
       event.preventDefault();
       const isPaused = getPauseStatus();
       console.log('Toggling pause. Currently paused:', isPaused);
