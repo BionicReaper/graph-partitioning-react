@@ -8,7 +8,7 @@ import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import { algorithms, defaultVisOptions } from './utils/constants';
 import { Plus, Cable } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
-import { runAnimationSequence } from './utils/animationRunner';
+import { getPauseStatus, getSimulationSpeedFactor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
 
 type ActiveMode = 'node' | 'edge' | null;
@@ -80,7 +80,7 @@ function App() {
   // Keys Pressed
   const keysPressed = useRef<Set<string>>(new Set());
 
-  const keyDownFunction = useCallback((event: KeyboardEvent) => {
+  const idleKeyDownFunction = useCallback((event: KeyboardEvent) => {
     if (keysPressed.current.has(event.key)) return; // already pressed, ignore
     keysPressed.current.add(event.key);
     if (event.key === 'n') {
@@ -100,21 +100,58 @@ function App() {
     }
   }, []);
 
+  const simulationKeyDownFunction = useCallback((event: KeyboardEvent) => {
+    if (keysPressed.current.has(event.key)) return; // already pressed, ignore
+    keysPressed.current.add(event.key);
+    if (event.key === 'p') {
+      event.preventDefault();
+      const isPaused = getPauseStatus();
+      console.log('Toggling pause. Currently paused:', isPaused);
+      if (isPaused) {
+        console.log('Resuming animation');
+        resumeAnimation();
+      } else {
+        console.log('Pausing animation');
+        pauseAnimation().catch((err) => {
+          console.error('Error pausing animation:', err);
+        });
+      }
+    } else if (event.key === '-') {
+      event.preventDefault();
+      console.log('Decreasing simulation speed');
+      const currentFactor = getSimulationSpeedFactor();
+      const newFactor = Math.max(0.5, currentFactor / 2);
+      setSimulationSpeedFactor(newFactor);
+      console.log('New simulation speed factor:', newFactor);
+    } else if (event.key === '=') {
+      event.preventDefault();
+      console.log('Increasing simulation speed');
+      const currentFactor = getSimulationSpeedFactor();
+      const newFactor = Math.min(128.0, currentFactor * 2);
+      setSimulationSpeedFactor(newFactor);
+      console.log('New simulation speed factor:', newFactor);
+    }
+  }, []);
+
   const keyUpFunction = useCallback((event: KeyboardEvent) => {
     keysPressed.current.delete(event.key);
   }, []);
 
   useEffect(() => {
     if (isRunning) {
-      document.removeEventListener('keydown', keyDownFunction);
+      document.removeEventListener('keydown', idleKeyDownFunction);
       document.removeEventListener('keyup', keyUpFunction);
+
+      document.addEventListener('keydown', simulationKeyDownFunction);
+      document.addEventListener('keyup', keyUpFunction);
+
       setActiveMode(null);
       networkRef.current?.disableEditMode();
     } else {
-      // Re-add event listener for hotkeys
-      document.addEventListener('keydown', keyDownFunction);
+      document.removeEventListener('keydown', simulationKeyDownFunction);
+      document.removeEventListener('keyup', keyUpFunction);
 
-      // Prevent holding keys from firing multiple times
+      document.addEventListener('keydown', idleKeyDownFunction);
       document.addEventListener('keyup', keyUpFunction);
 
     }
