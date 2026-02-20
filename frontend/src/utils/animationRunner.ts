@@ -19,7 +19,23 @@ let lastTimestamp: DOMHighResTimeStamp | null = null; // Previous supplied times
 let realTimestamp: DOMHighResTimeStamp | null = null; // Simulation timestamp
 let simulationSpeedFactor = 1; // 1 means real-time, <1 means slower, >1 means faster
 
+let isPaused = false;
+
+let resolvePause: (() => void) | null = null;
+let rejectPause: ((reason?: any) => void) | null = null;
+let existingPausePromise: Promise<void> | null = null;
+
+let resolveCurrentAnimation: (() => void) | null = null;
+let rejectCurrentAnimation: ((reason?: any) => void) | null = null;
+
 const render = (nextTimestamp: DOMHighResTimeStamp) => {
+    if (resolvePause) {
+        resolvePause();
+        resolvePause = null;
+        rejectPause = null;
+        isPaused = true;
+        return;
+    }
     if (!animationSteps || !nodes || !edges) {
         console.error("Animation steps, nodes, or edges not set.");
         return;
@@ -64,6 +80,9 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
             isRendering = false;
             waitUntil = null;
             frameId = null;
+            resolveCurrentAnimation?.();
+            resolveCurrentAnimation = null;
+            rejectCurrentAnimation = null;
         } else {
             frameId = requestAnimationFrame(render);
         }
@@ -71,10 +90,32 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
         isRendering = false;
         waitUntil = null;
         frameId = null;
+        resolveCurrentAnimation?.();
+        resolveCurrentAnimation = null;
+        rejectCurrentAnimation = null;
     } else {
         frameId = requestAnimationFrame(render);
     }
 };
+
+export const pauseAnimation = () => {
+    if(!existingPausePromise) {
+        existingPausePromise = new Promise<void>((resolve, reject) => {
+            resolvePause = () => {
+                existingPausePromise = null;
+                resolve();
+            };
+            rejectPause = (reason?: any) => {
+                existingPausePromise = null;
+                reject(reason);
+            };
+        });
+    }
+    return existingPausePromise;
+}
+
+export const resumeAnimation = () => {
+}
 
 export const setSimulationSpeedFactor = (factor: number) => {
     simulationSpeedFactor = factor;
@@ -83,7 +124,6 @@ export const setSimulationSpeedFactor = (factor: number) => {
 export const getSimulationSpeedFactor = () => {
     return simulationSpeedFactor;
 }
-
 
 export const runAnimationSequence = async (
     _animationSteps: Array<{
@@ -94,6 +134,7 @@ export const runAnimationSequence = async (
     _nodes: DataSet<any, "id">,
     _edges: DataSet<any, "id">
 ): Promise<void> => {
+    if (isRendering) return Promise.reject(new Error("An animation sequence is already running. Please wait until it finishes or pause it before starting a new one."));
     animationSteps = _animationSteps;
     nodes = _nodes;
     edges = _edges;
@@ -103,21 +144,10 @@ export const runAnimationSequence = async (
     nextStepIndex = 0;
     steps = [];
 
-    frameId = requestAnimationFrame(render);
-
     // Return a promise that resolves when all animations complete
-    return new Promise(resolve => {
-        if (!isRendering) {
-            resolve();
-        } else {
-            const checkRendering = () => {
-                if (!isRendering) {
-                    resolve();
-                } else {
-                    requestAnimationFrame(checkRendering);
-                }
-            };
-            requestAnimationFrame(checkRendering);
-        }
+    return new Promise((resolve, reject) => {
+        resolveCurrentAnimation = resolve;
+        rejectCurrentAnimation = reject;
+        frameId = requestAnimationFrame(render);
     });
 }
