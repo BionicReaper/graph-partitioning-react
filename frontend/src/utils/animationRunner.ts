@@ -99,6 +99,10 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
     }
 };
 
+export const getIsRendering = () => {
+    return isRendering;
+}
+
 export const getPauseStatus = () => {
     return isPaused;
 }
