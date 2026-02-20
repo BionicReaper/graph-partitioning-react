@@ -11,6 +11,7 @@ export interface KLNode {
     edges: Array<string | null>; // Original edge IDs for mapping back
     partition: number;
     locked: boolean;
+    label: string;
 }
 
 export interface KLEdge {
@@ -85,6 +86,7 @@ export function runKernighanLin(
         edges: Array<string | null>(originalNodes.length).fill(null),
         partition: idx % 2, // Initial partitioning: even index -> partition 0, odd index -> partition 1
         locked: false,
+        label: node.label
     }));
 
 
@@ -150,6 +152,12 @@ export function runKernighanLin(
 
     animation[animation.length - 1].timeBeforeNext = 500;
 
+    const dValueUpdates = nodes.map(node => (
+        {
+            id: node.id,
+            label: `${node.label} ${node.locked ? '' : `(dValue = ${node.dValue})`}`
+        }
+    ));
     animation.push({
         animationCallback: () => {
             network.setOptions(
@@ -168,6 +176,7 @@ export function runKernighanLin(
                 }
             );
             network.fit();
+            nodeDataSet.update(dValueUpdates);
             return () => { return true; };
         },
         description: `Initial partitioning complete`,
@@ -363,6 +372,21 @@ export function runKernighanLin(
         partitionB.splice(partitionB.indexOf(bestSwap!.b), 1);
         const swapTime = (time > 2 ? time : 2);
 
+        const dValueUpdates = nodes.map(node => (
+            {
+                id: node.id,
+                label: `${node.label} ${node.locked ? '' : `(dValue = ${node.dValue})`}`
+            }
+        ));
+        animation.push({
+            animationCallback: () => {
+                nodeDataSet.update(dValueUpdates);
+                return () => { return true; };
+            },
+            description: `dValues updated`,
+            timeBeforeNext: 0
+        });
+
         animation.push({
             animationCallback: () => {
                 const stepFn1 = highlightNodes(nodeDataSet, [nodes[bestSwap!.a].id, nodes[bestSwap!.b].id], '#999999', '#CCCCCC', 1, { color: { highlight: 0, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } }, true);
@@ -417,6 +441,24 @@ export function runKernighanLin(
             timeBeforeNext: swapTime
         });
         time = time * decay;
+    }
+
+    // Remove dValue annotations
+    {
+        const dValueUpdates = nodes.map(node => (
+            {
+                id: node.id,
+                label: node.label
+            }
+        ));
+        animation.push({
+            animationCallback: () => {
+                nodeDataSet.update(dValueUpdates);
+                return () => { return true; };
+            },
+            description: `Remove dValue annotations`,
+            timeBeforeNext: 0
+        });
     }
 
     // Unlock all nodes and changes colors back to normal after highlighting to light green (border is a little darker)
