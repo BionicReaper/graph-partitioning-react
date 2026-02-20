@@ -33,6 +33,7 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
         resolvePause();
         resolvePause = null;
         rejectPause = null;
+        existingPausePromise = null;
         isPaused = true;
         return;
     }
@@ -98,15 +99,22 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
     }
 };
 
-export const pauseAnimation = () => {
-    if(!existingPausePromise) {
+export const getPauseStatus = () => {
+    return isPaused;
+}
+
+export const pauseAnimation: () => Promise<void> = () => {
+    if (isPaused) {
+        return new Promise<void>((_, reject) => {
+            reject(new Error("Animation is already paused."));
+        });
+    }
+    if (!existingPausePromise) {
         existingPausePromise = new Promise<void>((resolve, reject) => {
             resolvePause = () => {
-                existingPausePromise = null;
                 resolve();
             };
             rejectPause = (reason?: any) => {
-                existingPausePromise = null;
                 reject(reason);
             };
         });
@@ -115,6 +123,14 @@ export const pauseAnimation = () => {
 }
 
 export const resumeAnimation = () => {
+    if (!isPaused) {
+        return new Promise<void>((_, reject) => {
+            reject(new Error("Animation is not paused."));
+        });
+    }
+    isPaused = false;
+    lastTimestamp = performance.now();
+    frameId = requestAnimationFrame(render);
 }
 
 export const setSimulationSpeedFactor = (factor: number) => {
