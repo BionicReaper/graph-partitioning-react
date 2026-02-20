@@ -28,6 +28,14 @@ let existingPausePromise: Promise<void> | null = null;
 let resolveCurrentAnimation: (() => void) | null = null;
 let rejectCurrentAnimation: ((reason?: any) => void) | null = null;
 
+let lostFocus = true;
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        lostFocus = true;
+    }
+});
+
 const render = (nextTimestamp: DOMHighResTimeStamp) => {
     if (resolvePause) {
         resolvePause();
@@ -41,9 +49,15 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
         console.error("Animation steps, nodes, or edges not set.");
         return;
     }
-    const timestamp = (lastTimestamp === null)
+    if (lostFocus) { // Compensate for idle time by setting lastTimestamp to the current timestamp when focus is regained
+        lastTimestamp = nextTimestamp;
+        lostFocus = false;
+        frameId = requestAnimationFrame(render);
+        return;
+    }
+    const timestamp = (realTimestamp === null)
         ? nextTimestamp
-        : realTimestamp! + (nextTimestamp - lastTimestamp) * simulationSpeedFactor;
+        : realTimestamp + (nextTimestamp - lastTimestamp!) * simulationSpeedFactor;
     realTimestamp = timestamp;
     lastTimestamp = nextTimestamp;
 
@@ -53,7 +67,7 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
 
     while (timestamp >= waitUntil && nextStepIndex < animationSteps.length) {
         const step = animationSteps[nextStepIndex];
-        console.log(`Scheduling animation step ${nextStepIndex + 1}/${animationSteps.length}: ${step.description}`);
+        //console.log(`Scheduling animation step ${nextStepIndex + 1}/${animationSteps.length}: ${step.description}`);
         steps.push(step.animationCallback());
         waitUntil = timestamp + step.timeBeforeNext;
         nextStepIndex++;
@@ -133,6 +147,7 @@ export const resumeAnimation = () => {
         });
     }
     isPaused = false;
+    lostFocus = false;
     lastTimestamp = performance.now();
     frameId = requestAnimationFrame(render);
     return new Promise<void>((resolve) => {
@@ -171,6 +186,8 @@ export const runAnimationSequence = async (
     return new Promise((resolve, reject) => {
         resolveCurrentAnimation = resolve;
         rejectCurrentAnimation = reject;
+        lostFocus = false;
+        lastTimestamp = performance.now();
         frameId = requestAnimationFrame(render);
     });
 }
