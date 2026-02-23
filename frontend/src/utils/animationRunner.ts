@@ -37,77 +37,77 @@ document.addEventListener('visibilitychange', () => {
 });
 
 const render = (nextTimestamp: DOMHighResTimeStamp) => {
-    if (resolvePause) {
-        resolvePause();
-        resolvePause = null;
-        rejectPause = null;
-        existingPausePromise = null;
-        isPaused = true;
-        return;
-    }
-    if (!animationSteps || !nodes || !edges) {
+    let usedTimestamp: number | null = null;
+    if (!animationSteps || !nodes || !edges) { // Unitialized state branch
         console.error("Animation steps, nodes, or edges not set.");
         return;
     }
-    if (lostFocus) { // Compensate for idle time by setting lastTimestamp to the current timestamp when focus is regained
+    else if (lostFocus && realTimestamp !== null) { // Lost focus branch
+        // Draw nothing new and set the previous render as the previous interpolation point
         lastTimestamp = nextTimestamp;
         lostFocus = false;
-        frameId = requestAnimationFrame(render);
-        return;
     }
-    const timestamp = (realTimestamp === null)
-        ? nextTimestamp
-        : realTimestamp + (nextTimestamp - lastTimestamp!) * simulationSpeedFactor;
-    realTimestamp = timestamp;
-    lastTimestamp = nextTimestamp;
+    else { // Drawing branch
+        const timestamp = (realTimestamp === null)
+            ? nextTimestamp
+            : realTimestamp + (nextTimestamp - lastTimestamp!) * simulationSpeedFactor;
+        realTimestamp = timestamp;
+        lastTimestamp = nextTimestamp;
 
-    if (!waitUntil) {
-        waitUntil = timestamp;
-    }
+        usedTimestamp = timestamp;
 
-    while (timestamp >= waitUntil && nextStepIndex < animationSteps.length) {
-        const step = animationSteps[nextStepIndex];
-        //console.log(`Scheduling animation step ${nextStepIndex + 1}/${animationSteps.length}: ${step.description}`);
-        steps.push(step.animationCallback());
-        waitUntil = timestamp + step.timeBeforeNext;
-        nextStepIndex++;
-    }
+        if (waitUntil === null) {
+            waitUntil = timestamp;
+        }
 
-    if (steps.length > 0) {
-        const stepsToExecute = steps;
-        for (let i = 0; i < stepsToExecute.length; i++) {
-            const stepDone = stepsToExecute[i](timestamp);
-            if (stepDone) {
-                steps.splice(steps.indexOf(stepsToExecute[i]), 1);
+        // Schedule new steps if their time has come
+        while (timestamp >= waitUntil && nextStepIndex < animationSteps.length) {
+            const step = animationSteps[nextStepIndex];
+            //console.log(`Scheduling animation step ${nextStepIndex + 1}/${animationSteps.length}: ${step.description}`);
+            steps.push(step.animationCallback());
+            waitUntil = timestamp + step.timeBeforeNext;
+            nextStepIndex++;
+        }
+
+        // Draw scheduled steps and remove those that are done
+        if (steps.length > 0) {
+            const stepsToExecute = steps;
+            for (let i = 0; i < stepsToExecute.length; i++) {
+                const stepDone = stepsToExecute[i](timestamp);
+                if (stepDone) {
+                    steps.splice(steps.indexOf(stepsToExecute[i]), 1);
+                }
             }
+
+            const nodeUpdates = extractNodeUpdates();
+            const edgeUpdates = extractEdgeUpdates();
+
+            nodes.update(nodeUpdates);
+            edges.update(edgeUpdates);
         }
+    }
 
-        const nodeUpdates = extractNodeUpdates();
-        const edgeUpdates = extractEdgeUpdates();
-
-        nodes.update(nodeUpdates);
-        edges.update(edgeUpdates);
-
-
-        if (steps.length > 0 || nextStepIndex < animationSteps.length) {
-            frameId = requestAnimationFrame(render);
-        } else if (nextStepIndex >= animationSteps.length && steps.length === 0 && timestamp >= waitUntil) {
-            isRendering = false;
-            waitUntil = null;
-            frameId = null;
-            resolveCurrentAnimation?.();
-            resolveCurrentAnimation = null;
-            rejectCurrentAnimation = null;
-        } else {
-            frameId = requestAnimationFrame(render);
-        }
-    } else if (nextStepIndex >= animationSteps.length && steps.length === 0 && timestamp >= waitUntil) {
+    // Rendering termination/continuation logic
+    if (nextStepIndex >= animationSteps.length && steps.length === 0 && (waitUntil === null || usedTimestamp === null || usedTimestamp >= waitUntil)) {
         isRendering = false;
         waitUntil = null;
         frameId = null;
         resolveCurrentAnimation?.();
         resolveCurrentAnimation = null;
         rejectCurrentAnimation = null;
+
+        if (rejectPause) {
+            rejectPause(new Error("Animation was stopped."));
+            resolvePause = null;
+            rejectPause = null;
+            existingPausePromise = null;
+        }
+    } else if (resolvePause) {
+        resolvePause();
+        resolvePause = null;
+        rejectPause = null;
+        existingPausePromise = null;
+        isPaused = true;
     } else {
         frameId = requestAnimationFrame(render);
     }
