@@ -73,7 +73,7 @@ function App() {
   const [activeMode, setActiveMode] = useState<ActiveMode>(null);
   const [currentAlgorithmId, setCurrentAlgorithmId] = useState<string>('kernighan-lin');
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [physicsEnabled, setPhysicsEnabled] = useState<boolean>(true);
+  const [physicsEnabled, setPhysicsEnabled] = useState<boolean>(false);
 
   // Control keys whether an algorithm is running
 
