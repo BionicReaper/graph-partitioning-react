@@ -122,6 +122,9 @@ export function runKernighanLin(
     const partitionA: number[] = [];
     const partitionB: number[] = [];
 
+    const lockedNodesA: number[] = [];
+    const lockedNodesB: number[] = [];
+
     decay = timeFactorDecay(10000, 100); // Max time 10s
     time = 100;
     nodes.forEach(node => {
@@ -189,6 +192,35 @@ export function runKernighanLin(
         let maxGain = undefined;
         partitionA.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
         partitionB.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
+
+        [...lockedNodesA, ...partitionA].forEach((nodeIdx, idx) => {
+            const moveTime = 100;
+            const currentNodeIdx = nodeIdx;
+            const currentIdx = idx;
+            animation.push({
+                animationCallback: () => {
+                    return moveNode(network, nodes[currentNodeIdx].id, calculateX(currentIdx, 0, nodes.length), calculateY(currentIdx, 0, nodes.length), 5 * moveTime);
+                },
+                description: `Sort node ${nodes[currentNodeIdx].id} in partition A`,
+                timeBeforeNext: 0
+            });
+        });
+
+        [...lockedNodesB, ...partitionB].forEach((nodeIdx, idx) => {
+            const moveTime = 100;
+            const currentNodeIdx = nodeIdx;
+            const currentIdx = idx;
+            animation.push({
+                animationCallback: () => {
+                    return moveNode(network, nodes[currentNodeIdx].id, calculateX(currentIdx, 1, nodes.length), calculateY(currentIdx, 1, nodes.length), 5 * moveTime);
+                },
+                description: `Sort node ${nodes[currentNodeIdx].id} in partition B`,
+                timeBeforeNext: 0
+            });
+        });
+
+        animation[animation.length - 1].timeBeforeNext = 1000;
+
 
         let idxA = 0;
         let idxB = 0;
@@ -370,6 +402,10 @@ export function runKernighanLin(
         // Remove locked nodes from partitions
         partitionA.splice(partitionA.indexOf(bestSwap!.a), 1);
         partitionB.splice(partitionB.indexOf(bestSwap!.b), 1);
+
+        lockedNodesA.push(bestSwap!.b);
+        lockedNodesB.push(bestSwap!.a);
+
         const swapTime = (time > 2 ? time : 2);
 
         const dValueUpdates = nodes.map(node => (
