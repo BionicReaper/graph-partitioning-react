@@ -119,16 +119,16 @@ function App() {
     } else if (event.key === '-') {
       event.preventDefault();
       console.log('Decreasing simulation speed');
-      const currentFactor = getSimulationSpeedFactor();
+      const currentFactor = getSimulationSpeedFactor(true);
       const newFactor = Math.max(0.5, currentFactor / 2);
-      setSimulationSpeedFactor(newFactor);
+      setSimulationSpeedFactor(newFactor, true);
       console.log('New simulation speed factor:', newFactor);
     } else if (event.key === '=') {
       event.preventDefault();
       console.log('Increasing simulation speed');
-      const currentFactor = getSimulationSpeedFactor();
+      const currentFactor = getSimulationSpeedFactor(true);
       const newFactor = Math.min(128.0, currentFactor * 2);
-      setSimulationSpeedFactor(newFactor);
+      setSimulationSpeedFactor(newFactor, true);
       console.log('New simulation speed factor:', newFactor);
     }
   }, []);

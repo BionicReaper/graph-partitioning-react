@@ -18,6 +18,7 @@ let steps: Array<(timestamp: DOMHighResTimeStamp) => boolean> = [];
 let lastTimestamp: DOMHighResTimeStamp | null = null; // Previous supplied timestamp from requestAnimationFrame
 let realTimestamp: DOMHighResTimeStamp | null = null; // Simulation timestamp
 let simulationSpeedFactor = 1; // 1 means real-time, <1 means slower, >1 means faster
+let userSpeedFactor = 1;
 
 let isPaused = false;
 
@@ -50,7 +51,7 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
     else { // Drawing branch
         const timestamp = (realTimestamp === null)
             ? nextTimestamp
-            : realTimestamp + (nextTimestamp - lastTimestamp!) * simulationSpeedFactor;
+            : realTimestamp + (nextTimestamp - lastTimestamp!) * simulationSpeedFactor * userSpeedFactor;
         realTimestamp = timestamp;
         lastTimestamp = nextTimestamp;
 
@@ -155,12 +156,20 @@ export const resumeAnimation = () => {
     });
 }
 
-export const setSimulationSpeedFactor = (factor: number) => {
-    simulationSpeedFactor = factor;
+export const setSimulationSpeedFactor = (factor: number, user: boolean = false) => {
+    if (!user) {
+        simulationSpeedFactor = factor;
+    } else {
+        userSpeedFactor = factor;
+    }
 }
 
-export const getSimulationSpeedFactor = () => {
-    return simulationSpeedFactor;
+export const getSimulationSpeedFactor = (user: boolean = false) => {
+    if (!user) {
+        return simulationSpeedFactor;
+    } else {
+        return userSpeedFactor;
+    }
 }
 
 export const runAnimationSequence = async (
