@@ -1,7 +1,6 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { highlightEdges, highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
-import { timeFactorDecay } from "../utils/interpolation";
 
 export interface KLNode {
     index: number;
@@ -35,9 +34,6 @@ export function runKernighanLin(
     cutSize: number;
     animation: Animation[];
 } {
-    let decay: number; // Time decay to limit looped animations
-    let time: number; // Decayed time tracker
-
     const animation: Animation[] = [];
 
     animation.push({
@@ -125,10 +121,8 @@ export function runKernighanLin(
     const lockedNodesA: number[] = [];
     const lockedNodesB: number[] = [];
 
-    decay = timeFactorDecay(10000, 100); // Max time 10s
-    time = 100;
     nodes.forEach(node => {
-        const moveTime = (time > 1 ? time : 1);
+        const moveTime = 100;
         if (node.partition === 0) {
             partitionA.push(node.index);
             const currentIndex = partitionA.length - 1;
@@ -150,7 +144,6 @@ export function runKernighanLin(
                 timeBeforeNext: moveTime
             });
         }
-        time = time * decay;
     });
 
     animation[animation.length - 1].timeBeforeNext = 500;
@@ -186,8 +179,6 @@ export function runKernighanLin(
         timeBeforeNext: 1000
     });
 
-    decay = timeFactorDecay(30000, 2000); // Max time 30s
-    time = 2000;
     for (let i = 0; i < Math.floor(nodes.length / 2); i++) {
         let maxGain = undefined;
         partitionA.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
@@ -406,7 +397,7 @@ export function runKernighanLin(
         lockedNodesA.push(bestSwap!.b);
         lockedNodesB.push(bestSwap!.a);
 
-        const swapTime = (time > 2 ? time : 2);
+        const swapTime = 2000;
 
         const dValueUpdates = nodes.map(node => (
             {
@@ -436,8 +427,6 @@ export function runKernighanLin(
             description: `Swap nodes ${nodes[bestSwap!.a].id} and ${nodes[bestSwap!.b].id}`,
             timeBeforeNext: swapTime
         });
-
-        time = time * decay;
     }
 
     // Calculate cumulative gains
@@ -460,15 +449,12 @@ export function runKernighanLin(
 
     // Undo swaps beyond k
 
-    decay = timeFactorDecay(10000, 150); // Max time 10s
-    time = 150;
     for (let i = exchangePairs.length - 1; i > k; i--) {
-        console.log(time);
         const pair = exchangePairs[i];
         nodes[pair.a].partition = 0;
         nodes[pair.b].partition = 1;
 
-        const swapTime = (time > 1 ? time : 1);
+        const swapTime = 150;
         animation.push({
             animationCallback: () => {
                 return swapNodePositions(network, nodes[pair.a].id, nodes[pair.b].id, 2 * swapTime);
@@ -476,7 +462,6 @@ export function runKernighanLin(
             description: `Swap nodes ${nodes[pair.a].id} and ${nodes[pair.b].id}`,
             timeBeforeNext: swapTime
         });
-        time = time * decay;
     }
 
     // Remove dValue annotations
