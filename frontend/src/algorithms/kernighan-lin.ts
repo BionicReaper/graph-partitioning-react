@@ -497,8 +497,6 @@ export function runKernighanLin(
         timeBeforeNext: 0
     });
 
-    animation[animation.length - 1].timeBeforeNext = 5000 //10000 + 1250 + 8750;
-
     // Map partitions back to original IDs
     const partitionResult: { [key: string]: number } = {};
     nodes.forEach(node => {

@@ -237,6 +237,7 @@ function App() {
     if (!networkRef.current || isRunning) return;
 
     setIsRunning(true);
+    setPhysicsEnabled(false); // Disable physics during and after animation
     updateDataSetPositions(networkRef.current, nodesRef.current);
     console.log('Current graph state before algorithm:');
     console.log(nodesRef.current.get(), edgesRef.current.get());
@@ -247,7 +248,7 @@ function App() {
     await runAnimationSequence(result.animation, nodesRef.current, edgesRef.current);
     console.log('Animation sequence completed');
 
-    networkRef.current?.setOptions({ ...defaultVisOptions, physics: { ...defaultVisOptions.physics, enabled: physicsEnabled } });
+    networkRef.current?.setOptions({ ...defaultVisOptions, physics: { ...defaultVisOptions.physics, enabled: false } });
     setIsRunning(false);
   };
 
