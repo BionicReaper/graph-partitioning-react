@@ -83,29 +83,31 @@ function App() {
   const keysPressed = useRef<Set<string>>(new Set());
 
   const idleKeyDownFunction = useCallback((event: KeyboardEvent) => {
-    if (keysPressed.current.has(event.key)) return; // already pressed, ignore
-    keysPressed.current.add(event.key);
-    if (event.key === 'n') {
+    const pressedKey = event.key.toLowerCase();
+    if (keysPressed.current.has(pressedKey)) return; // already pressed, ignore
+    keysPressed.current.add(pressedKey);
+    if (pressedKey === 'n') {
       event.preventDefault();
       toggleAddNode();
-    } else if (event.key === 'e') {
+    } else if (pressedKey === 'e') {
       event.preventDefault();
       toggleAddEdge();
-    } else if (event.key === 'Escape') {
+    } else if (pressedKey === 'escape') {
       event.preventDefault();
       setActiveMode(null);
       networkRef.current?.unselectAll();
       networkRef.current?.disableEditMode();
-    } else if (event.key === 'Delete') {
+    } else if (pressedKey === 'delete') {
       event.preventDefault();
       networkRef.current?.deleteSelected();
     }
   }, []);
 
   const simulationKeyDownFunction = useCallback((event: KeyboardEvent) => {
-    if (keysPressed.current.has(event.key)) return; // already pressed, ignore
-    keysPressed.current.add(event.key);
-    if (event.key === 'p' || event.key === 'F9') {
+    const pressedKey = event.key.toLowerCase();
+    if (keysPressed.current.has(pressedKey)) return; // already pressed, ignore
+    keysPressed.current.add(pressedKey);
+    if (pressedKey === 'p' || pressedKey === 'f9') {
       event.preventDefault();
       const isPaused = getPauseStatus();
       console.log('Toggling pause. Currently paused:', isPaused);
@@ -118,14 +120,14 @@ function App() {
           console.error('Error pausing animation:', err);
         });
       }
-    } else if (event.key === '-') {
+    } else if (pressedKey === '-') {
       event.preventDefault();
       console.log('Decreasing simulation speed');
       const currentFactor = getSimulationSpeedFactor(true);
       const newFactor = Math.max(0.5, currentFactor / 2);
       setSimulationSpeedFactor(newFactor, true);
       console.log('New simulation speed factor:', newFactor);
-    } else if (event.key === '=') {
+    } else if (pressedKey === '=') {
       event.preventDefault();
       console.log('Increasing simulation speed');
       const currentFactor = getSimulationSpeedFactor(true);
@@ -136,26 +138,31 @@ function App() {
   }, []);
 
   const keyUpFunction = useCallback((event: KeyboardEvent) => {
-    keysPressed.current.delete(event.key);
+    const releasedKey = event.key.toLowerCase();
+    keysPressed.current.delete(releasedKey);
   }, []);
 
   useEffect(() => {
     if (isRunning) {
-      document.removeEventListener('keydown', idleKeyDownFunction);
-      document.removeEventListener('keyup', keyUpFunction);
-
       document.addEventListener('keydown', simulationKeyDownFunction);
       document.addEventListener('keyup', keyUpFunction);
 
       setActiveMode(null);
       networkRef.current?.disableEditMode();
-    } else {
-      document.removeEventListener('keydown', simulationKeyDownFunction);
-      document.removeEventListener('keyup', keyUpFunction);
 
+      return () => {
+        document.removeEventListener('keydown', simulationKeyDownFunction);
+        document.removeEventListener('keyup', keyUpFunction);
+      }
+
+    } else {
       document.addEventListener('keydown', idleKeyDownFunction);
       document.addEventListener('keyup', keyUpFunction);
 
+      return () => {
+        document.removeEventListener('keydown', idleKeyDownFunction);
+        document.removeEventListener('keyup', keyUpFunction);
+      }
     }
   }, [isRunning]);
 
