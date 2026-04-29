@@ -38,8 +38,6 @@ export function runKernighanLin(
 
     animation.push({
         animationCallback: () => {
-            network.unselectAll();
-            network.disableEditMode();
             network.setOptions(
                 {
                     physics: {
@@ -55,6 +53,8 @@ export function runKernighanLin(
                     }
                 }
             );
+            network.unselectAll();
+            network.disableEditMode();
             return () => { return true; };
         },
         description: `Disable interaction and physics`,
