@@ -6,10 +6,11 @@ import PlayButton from './components/PlayButton';
 import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import { algorithms, defaultVisOptions } from './utils/constants';
-import { Plus, Cable } from 'lucide-react';
+import { Plus, Cable, Minimize, Maximize } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
 import { getPauseStatus, getSimulationSpeedFactor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
+import FullscreenButton from './components/FullscreenButton';
 
 type ActiveMode = 'node' | 'edge' | null;
 
@@ -74,6 +75,7 @@ function App() {
   const [currentAlgorithmId, setCurrentAlgorithmId] = useState<string>('kernighan-lin');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [physicsEnabled, setPhysicsEnabled] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   // Control keys whether an algorithm is running
 
@@ -156,6 +158,37 @@ function App() {
 
     }
   }, [isRunning]);
+
+  // Fullscreen toggle handler
+  const toggleFullscreen = useCallback((): void => {
+    const el = document.documentElement;
+    if (isFullscreen) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) { /* Safari */
+        (document as any).webkitExitFullscreen();
+      }
+    } else {
+      if (el.requestFullscreen) {
+        el.requestFullscreen();
+      } else if ((el as any).webkitRequestFullscreen) {
+        (el as any).webkitRequestFullscreen();
+      }
+    }
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const fsElement = document.fullscreenElement || (document as any).webkitFullscreenElement;
+      setIsFullscreen(!!fsElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    }
+  }, []);
 
   // Sidebar toggle handler
 
@@ -279,6 +312,14 @@ function App() {
         algorithms={algorithms}
         currentAlgorithmId={currentAlgorithmId}
         disabled={isRunning}
+      />
+      <FullscreenButton
+        onClick={toggleFullscreen}
+        icon={isFullscreen ? Minimize : Maximize}
+        label="Toggle Fullscreen"
+        position="top"
+        colorPalette='cyan'
+        fullscreenColorPalette='cyan'
       />
       <AddButton
         onClick={toggleAddEdge}
