@@ -264,8 +264,8 @@ function App() {
   }, [physicsEnabled]);
 
   return (
-    <Box className="app" w="100vw" h="100vh" bg="gray.50">
-      <div ref={containerRef} className="graph-canvas" style={{ height: '100vh' }} />
+    <Box className="app" w="100dvw" h="100dvh" bg="gray.50">
+      <div ref={containerRef} className="graph-canvas" style={{ height: '100dvh' }} />
       <Sidebar
         isOpen={isSidebarOpen}
         onToggle={toggleSidebar}
