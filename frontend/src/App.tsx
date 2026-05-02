@@ -229,7 +229,33 @@ function App() {
     await runAnimationSequence(result.animation, nodesRef.current, edgesRef.current);
     console.log('Animation sequence completed');
 
-    networkRef.current?.setOptions({ ...defaultVisOptions, physics: { ...defaultVisOptions.physics, enabled: false } });
+    networkRef.current?.setOptions(
+      {
+        ...defaultVisOptions,
+        physics: { ...defaultVisOptions.physics, enabled: false },
+        manipulation: {
+          ...defaultVisOptions.manipulation,
+          addEdge: (data: any, callback: any) => {
+            // Prevent self-loop
+            if (data.to === data.from) return;
+            // Prevent duplicate edge in either direction
+            const exists = edgesRef.current.get().some((e: any) =>
+              (e.from === data.from && e.to === data.to) || (e.from === data.to && e.to === data.from)
+            );
+            if (exists) {
+              console.log('Edge already exists, skipping addEdge');
+              return;
+            }
+            // No duplicate found — proceed with add
+            if (defaultVisOptions.manipulation?.addEdge) {
+              // preserve any behavior in default options (like dispatching events)
+              defaultVisOptions.manipulation.addEdge(data, callback);
+            } else {
+              callback(data);
+            }
+          }
+        }
+      });
     setIsRunning(false);
   }, [networkRef, isRunning, setIsRunning, setPhysicsEnabled, nodesRef, edgesRef, currentAlgorithmId]);
 
