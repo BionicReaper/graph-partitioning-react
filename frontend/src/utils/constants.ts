@@ -1,6 +1,8 @@
 const AddNodeEvent = new Event('addNode');
 const AddEdgeEvent = new Event('addEdge');
 
+const canHover = window.matchMedia('(hover: hover)').matches;
+
 let nodeIdCounter = 0;
 
 export const defaultVisOptions: any = {
@@ -53,7 +55,7 @@ export const defaultVisOptions: any = {
     dragNodes: true,
     dragView: true,
     zoomView: true,
-    hover: true,
+    hover: canHover,
     multiselect: true,
     selectable: true,
   },
