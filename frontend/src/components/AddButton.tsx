@@ -31,7 +31,7 @@ const AddButton = ({
       onClick={onClick}
       position="fixed"
       bottom={positionMap[position]}
-      right="20px"
+      right={disabled ? "-80px" : "20px"}
       size={active ? 'xl' : 'lg'}
       w={active ? '70px' : '60px'}
       h={active ? '70px' : '60px'}
@@ -52,8 +52,9 @@ const AddButton = ({
       _active={{
         transform: 'scale(0.95)',
       }}
-      transition="all 0.3s ease"
+      transition="all 0.3s ease, right 1s ease"
       animation={active ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none'}
+      opacity={0.7}
     >
       <Icon
         size={active ? 28 : 20}

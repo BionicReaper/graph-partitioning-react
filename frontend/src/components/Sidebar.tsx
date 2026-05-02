@@ -67,6 +67,7 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
           transform: 'scale(0.95)',
         }}
         transition="all 0.3s ease"
+        opacity={0.7}
       >
         <Menu size={24} />
       </IconButton>

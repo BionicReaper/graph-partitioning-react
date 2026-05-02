@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, IconButton, Text } from '@chakra-ui/react';
 import { Play, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -34,6 +34,7 @@ const PlayButton = ({
   const handleAlgorithmClick = (algorithmId: string) => {
     onSelectAlgorithm(algorithmId);
     setShowDropdown(false);
+    setIsExpanded(false);
   };
 
   const handlePlayClick = () => {
@@ -48,11 +49,18 @@ const PlayButton = ({
     }
   };
 
+  useEffect(() => {
+    if (disabled) {
+      setShowDropdown(false);
+      setIsExpanded(false);
+    }
+  }, [disabled]);
+
   return (
     <Box
       position="fixed"
       bottom="260px"
-      right="20px"
+      right={disabled ? "-80px" : "20px"}
       zIndex={1001}
       onMouseEnter={() => !disabled && setIsExpanded(true)}
       onMouseLeave={() => {
@@ -60,12 +68,13 @@ const PlayButton = ({
           setIsExpanded(false);
         }
       }}
+      transition={"right 1s ease"}
     >
       {/* Dropdown Menu */}
       {showDropdown && (
         <Box
           position="absolute"
-          bottom="70px"
+          top="70px"
           right="0"
           w="220px"
           bg="white"
@@ -110,13 +119,13 @@ const PlayButton = ({
         display="flex"
         alignItems="center"
         h="60px"
-        bg={disabled ? 'gray.400' : 'purple.600'}
+        bg={'purple.600'}
         borderRadius="full"
         boxShadow={disabled ? 'md' : 'lg'}
         overflow="hidden"
         transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
         w={isExpanded ? '230px' : '60px'}
-        opacity={disabled ? 0.6 : 1}
+        opacity={0.7}
         pointerEvents={disabled ? 'none' : 'auto'}
       >
         {/* Algorithm Name Section (extends to left) */}
@@ -175,6 +184,7 @@ const PlayButton = ({
           _active={{
             transform: disabled ? 'none' : 'scale(0.95)',
           }}
+          opacity={0.7}
         >
           <Play
             size={24}
