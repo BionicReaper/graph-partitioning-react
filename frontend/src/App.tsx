@@ -59,9 +59,11 @@ function App() {
 
       // Add event listeners to document for adding nodes and edges
       document.addEventListener('addNode', () => {
+        unselectAll();
         networkRef.current?.addNodeMode();
       });
       document.addEventListener('addEdge', () => {
+        unselectAll();
         networkRef.current?.addEdgeMode();
       });
 
@@ -93,9 +95,16 @@ function App() {
   }, [])
 
   const deleteSelected = useCallback((): void => {
+    // Delete selected nodes and edges
     networkRef.current?.deleteSelected();
+    networkRef.current?.unselectAll();
     setHasSelection(false);
-  }, []);
+
+    // Disable edit mode to fix an issue where a selection remains after delete
+    setActiveMode(null);
+    networkRef.current?.disableEditMode();
+
+  }, [networkRef, activeMode]);
 
   useEffect(() => {
     const handleSelectionChange = () => {
