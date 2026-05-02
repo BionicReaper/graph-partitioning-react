@@ -59,7 +59,7 @@ const PlayButton = ({
   return (
     <Box
       position="fixed"
-      bottom="260px"
+      bottom="180px"
       right={disabled ? "-80px" : "20px"}
       zIndex={1001}
       onMouseEnter={() => !disabled && setIsExpanded(true)}
