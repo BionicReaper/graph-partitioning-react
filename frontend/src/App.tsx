@@ -328,7 +328,7 @@ function App() {
         onClick={toggleFullscreen}
         icon={isFullscreen ? Minimize : Maximize}
         label={t('ToggleFullscreen')}
-        position="top"
+        position="middle"
         colorPalette='cyan'
         fullscreenColorPalette='cyan'
       />

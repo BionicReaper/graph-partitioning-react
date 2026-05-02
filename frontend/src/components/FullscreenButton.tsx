@@ -33,7 +33,7 @@ const FullscreenButton = ({
       onClick={onClick}
       position="fixed"
       bottom={positionMap[position]}
-      right={disabled ? "-80px" : "20px"}
+      left={disabled ? "-80px" : "20px"}
       size={'lg'}
       w={'60px'}
       h={'60px'}
@@ -54,7 +54,7 @@ const FullscreenButton = ({
       _active={{
         transform: 'scale(0.95)',
       }}
-      transition="all 0.3s ease, right 1s ease"
+      transition="all 0.3s ease, left 1s ease"
       animation={'none'}
       opacity={0.7}
     >
