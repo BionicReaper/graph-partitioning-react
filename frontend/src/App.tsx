@@ -6,12 +6,13 @@ import PlayButton from './components/PlayButton';
 import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import { algorithms, defaultVisOptions } from './utils/constants';
-import { Plus, Cable, Minimize, Maximize } from 'lucide-react';
+import { Plus, Cable, Minimize, Maximize, Trash2 } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
 import { getPauseStatus, getSimulationSpeedFactor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
 import FullscreenButton from './components/FullscreenButton';
 import { useTranslation } from 'react-i18next';
+import DeleteButton from './components/DeleteButton';
 
 type ActiveMode = 'node' | 'edge' | null;
 
@@ -80,6 +81,38 @@ function App() {
   const [physicsEnabled, setPhysicsEnabled] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
+  // Delete handler
+
+  const [hasSelection, setHasSelection] = useState<boolean>(false);
+
+  const hasSelected = useCallback((): boolean => {
+    const selection = networkRef.current?.getSelection();
+    if (!selection) return false;
+    const { nodes: selectedNodes, edges: selectedEdges } = selection;
+    return selectedNodes.length > 0 || selectedEdges.length > 0;
+  }, [])
+
+  const deleteSelected = useCallback((): void => {
+    networkRef.current?.deleteSelected();
+    setHasSelection(false);
+  }, []);
+
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      // Change state for delete button
+      setHasSelection(hasSelected());
+    }
+    networkRef.current?.on('select', handleSelectionChange);
+    networkRef.current?.on('dragStart', handleSelectionChange);
+  }, [hasSelected]);
+
+  // Select handler
+
+  const unselectAll = useCallback((): void => {
+    networkRef.current?.unselectAll();
+    (networkRef.current as any).body.emitter.emit('select', { nodes: [], edges: [] });
+  }, []);
+
   // Control keys whether an algorithm is running
 
   // Keys Pressed
@@ -98,11 +131,11 @@ function App() {
     } else if (pressedKey === 'escape') {
       event.preventDefault();
       setActiveMode(null);
-      networkRef.current?.unselectAll();
+      unselectAll();
       networkRef.current?.disableEditMode();
     } else if (pressedKey === 'delete') {
       event.preventDefault();
-      networkRef.current?.deleteSelected();
+      deleteSelected();
     }
   }, []);
 
@@ -223,7 +256,7 @@ function App() {
         return 'node';
       }
     });
-    networkRef.current.unselectAll();
+    unselectAll();
   }, []);
 
   // Add edge handler
@@ -238,7 +271,7 @@ function App() {
         return 'edge';
       }
     });
-    networkRef.current.unselectAll();
+    unselectAll();
   }, []);
 
   // Run algorithm handler (placeholder for now)
@@ -349,6 +382,14 @@ function App() {
         colorPalette="green"
         active={activeMode === 'node'}
         disabled={isRunning}
+      />
+      <DeleteButton
+        onClick={deleteSelected}
+        icon={Trash2}
+        label={t('Delete')}
+        position="bottom"
+        colorPalette="red"
+        disabled={!hasSelection}
       />
     </Box>
   );

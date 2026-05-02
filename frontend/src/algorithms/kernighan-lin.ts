@@ -54,6 +54,7 @@ export function runKernighanLin(
                 }
             );
             network.unselectAll();
+            (network as any).body.emitter.emit('select', { nodes: [], edges: [] });
             network.disableEditMode();
             return () => { return true; };
         },
