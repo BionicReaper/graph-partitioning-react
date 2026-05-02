@@ -75,7 +75,7 @@ export const defaultVisOptions: any = {
 
 // Algorithm options
 export const algorithms = [
-  { id: 'kernighan-lin', name: 'Kernighan-Lin', description: 'Classic graph bisection' },
-  { id: 'fiduccia-mattheyses', name: 'Fiduccia-Mattheyses', description: 'Fast heuristic method' },
-  { id: 'metis', name: 'METIS', description: 'Multilevel graph partitioning' },
+  { id: 'kernighan-lin', name: 'Kernighan-Lin', description: 'KernighanLinDescription' },
+  { id: 'fiduccia-mattheyses', name: 'Fiduccia-Mattheyses', description: 'FiducciaMattheysesDescription' },
+  { id: 'metis', name: 'METIS', description: 'MetisDescription' },
 ];

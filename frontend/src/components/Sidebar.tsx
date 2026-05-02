@@ -7,9 +7,13 @@ import {
   Separator,
   Stack,
   Drawer,
-  Switch
+  Switch,
+  RadioGroup,
+  HStack
 } from '@chakra-ui/react';
 import { Menu, GitBranch } from 'lucide-react';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,7 +29,18 @@ const algorithms = [
   'METIS',
 ];
 
+const nativeLanguageLabels: Record<string, string> = {
+  en: 'English',
+  el: 'Ελληνικά'
+};
+
 const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnabled, onTogglePhysics }: SidebarProps) => {
+  const { t, i18n } = useTranslation();
+
+  const languageOptions = useMemo(() => {
+    return i18n.store.data ? Object.keys(i18n.store.data) : [];
+  }, [i18n.store.data]);
+
   return (
     <>
       {/* Hamburger Button - Bottom Left */}
@@ -42,7 +57,7 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
         bg="blue.600"
         boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
         zIndex={1000}
-        aria-label="Open menu"
+        aria-label={t('ToggleMenu')}
         _hover={{
           bg: 'blue.700',
           transform: 'scale(1.05)',
@@ -80,7 +95,7 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
             px={5}
           >
             <Heading size="lg" color="blue.600" fontWeight="600">
-              Graph Partitioning
+              {t('GraphPartitioning')}
             </Heading>
           </Drawer.Header>
 
@@ -89,7 +104,7 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
               {/* Algorithms Section */}
               <Box>
                 <Heading size="md" mb={4} color="gray.800" fontWeight="500">
-                  Algorithms
+                  {t('Algorithms')}
                 </Heading>
                 <Stack gap={2}>
                   {algorithms.map((algorithm) => (
@@ -122,8 +137,10 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
               {/* Settings Section */}
               <Box>
                 <Heading size="md" mb={4} color="gray.800" fontWeight="500">
-                  Settings
+                  {t('Settings')}
                 </Heading>
+
+                {/* Physics Toggle */}
                 <Box
                   p={3}
                   bg="gray.50"
@@ -133,7 +150,7 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
                   justifyContent="space-between"
                 >
                   <Text fontSize="sm" color="gray.700" fontWeight="500">
-                    Physics
+                    {t('Physics')}
                   </Text>
                   <Switch.Root
                     checked={physicsEnabled}
@@ -147,6 +164,37 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
                     <Switch.Label />
                   </Switch.Root>
                 </Box>
+
+                <Heading size="md" mb={4} mt={6} color="gray.800" fontWeight="500">
+                  {t('Language')}
+                </Heading>
+
+                {/* Language Select */}
+                <Box
+                  p={3}
+                  px={6}
+                  bg="gray.50"
+                  borderRadius="md"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <RadioGroup.Root
+                    value={i18n.language}
+                    onValueChange={(e) => i18n.changeLanguage(e.value || undefined)}
+                    w={"100%"}
+                  >
+                    <HStack gap="6" justifyContent={"space-between"}>
+                      {languageOptions.map((language) => (
+                        <RadioGroup.Item key={language} value={language}>
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>{nativeLanguageLabels[language]}</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                      ))}
+                    </HStack>
+                  </RadioGroup.Root>
+                </Box>
               </Box>
 
               <Separator borderColor="gray.200" />
@@ -154,26 +202,29 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
               {/* Controls Section */}
               <Box>
                 <Heading size="md" mb={4} color="gray.800" fontWeight="500">
-                  Controls
+                  {t('Controls')}
                 </Heading>
                 <VStack gap={2} align="stretch">
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
-                    • Press the Plus button or N on your keyboard to get in Add Node Mode and click on the grid to add a node. Press again or switch mode to stop adding nodes.
+                    {t('AddNodeInstruction')}
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
-                    • Press the Cable button or E on your keyboard to get in Add Edge Mode and drag from one node to another to create an edge. Press again or switch mode to stop adding edges.
+                    {t('AddEdgeInstruction')}
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
-                    • Left click on a node or an edge to select it and DELETE to remove it
+                    {t('RunAlgorithmInstruction')}
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
-                    • Drag nodes to reposition them
+                    {t('SelectRemoveInstruction')}
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
-                    • Drag canvas to pan
+                    {t('RepositionNodesInstruction')}
                   </Text>
                   <Text fontSize="sm" color="gray.600" lineHeight="1.5">
-                    • Scroll to zoom in/out
+                    {t('PanCanvasInstruction')}
+                  </Text>
+                  <Text fontSize="sm" color="gray.600" lineHeight="1.5">
+                    {t('ZoomInstruction')}
                   </Text>
                 </VStack>
               </Box>
@@ -183,11 +234,10 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
               {/* Info Section */}
               <Box>
                 <Heading size="md" mb={4} color="gray.800" fontWeight="500">
-                  About
+                  {t('About')}
                 </Heading>
                 <Text fontSize="sm" color="gray.600" lineHeight="1.5">
-                  This tool helps visualize and understand graph partitioning algorithms
-                  used in computer science and network optimization.
+                  {t('AboutText')}
                 </Text>
               </Box>
             </VStack>

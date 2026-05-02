@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, IconButton, Text } from '@chakra-ui/react';
 import { Play, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AlgorithmOption {
   id: string;
@@ -23,6 +24,8 @@ const PlayButton = ({
   currentAlgorithmId,
   disabled = false
 }: PlayButtonProps) => {
+  const { t } = useTranslation();
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -94,7 +97,7 @@ const PlayButton = ({
               </Text>
               {algorithm.description && (
                 <Text fontSize="xs" color="gray.600" mt={1}>
-                  {algorithm.description}
+                  {t(algorithm.description)}
                 </Text>
               )}
             </Box>
@@ -139,7 +142,7 @@ const PlayButton = ({
             fontSize="sm"
             fontWeight="500"
           >
-            {currentAlgorithm?.name || 'Select Algorithm'}
+            {t(currentAlgorithm?.name || 'SelectAlgorithm')}
           </Text>
           <ChevronDown
             size={16}

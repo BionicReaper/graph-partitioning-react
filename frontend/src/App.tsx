@@ -11,10 +11,13 @@ import { runKernighanLin } from './algorithms/kernighan-lin';
 import { getPauseStatus, getSimulationSpeedFactor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
 import FullscreenButton from './components/FullscreenButton';
+import { useTranslation } from 'react-i18next';
 
 type ActiveMode = 'node' | 'edge' | null;
 
 function App() {
+  const { t } = useTranslation();
+
   const nodesRef = useRef(new DataSet<any, "id">([]));
   const edgesRef = useRef(new DataSet<any, "id">([]));
   // VisJS network
@@ -324,7 +327,7 @@ function App() {
       <FullscreenButton
         onClick={toggleFullscreen}
         icon={isFullscreen ? Minimize : Maximize}
-        label="Toggle Fullscreen"
+        label={t('ToggleFullscreen')}
         position="top"
         colorPalette='cyan'
         fullscreenColorPalette='cyan'
@@ -332,7 +335,7 @@ function App() {
       <AddButton
         onClick={toggleAddEdge}
         icon={Cable}
-        label="Add Edge"
+        label={t('AddEdge')}
         position="middle"
         colorPalette="teal"
         active={activeMode === 'edge'}
@@ -341,7 +344,7 @@ function App() {
       <AddButton
         onClick={toggleAddNode}
         icon={Plus}
-        label="Add Node"
+        label={t('AddNode')}
         position="bottom"
         colorPalette="green"
         active={activeMode === 'node'}
