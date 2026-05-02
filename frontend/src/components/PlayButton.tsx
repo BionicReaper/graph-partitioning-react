@@ -74,8 +74,8 @@ const PlayButton = ({
       {showDropdown && (
         <Box
           position="absolute"
-          top="70px"
-          right="0"
+          top="0px"
+          right="1"
           w="220px"
           bg="white"
           borderRadius="xl"
@@ -83,6 +83,7 @@ const PlayButton = ({
           overflow="hidden"
           border="1px solid"
           borderColor="gray.200"
+          zIndex={1000}
         >
           {algorithms.map((algorithm) => (
             <Box
