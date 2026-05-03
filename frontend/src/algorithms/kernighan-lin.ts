@@ -45,8 +45,6 @@ export function runKernighanLin(
                     },
                     interaction: {
                         dragNodes: false,
-                        dragView: true,
-                        zoomView: true,
                         multiselect: false,
                         hover: false,
                         selectable: false,
@@ -157,21 +155,6 @@ export function runKernighanLin(
     ));
     animation.push({
         animationCallback: () => {
-            network.setOptions(
-                {
-                    physics: {
-                        enabled: false
-                    },
-                    interaction: {
-                        dragNodes: false,
-                        dragView: false,
-                        zoomView: false,
-                        multiselect: false,
-                        hover: false,
-                        selectable: false,
-                    }
-                }
-            );
             network.fit();
             nodeDataSet.update(dValueUpdates);
             return () => { return true; };
