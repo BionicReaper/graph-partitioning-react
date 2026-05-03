@@ -12,8 +12,9 @@ import {
   HStack
 } from '@chakra-ui/react';
 import { Menu, GitBranch } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import AlgorithmDialog from './AlgorithmDialog';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -36,6 +37,11 @@ const nativeLanguageLabels: Record<string, string> = {
 
 const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnabled, onTogglePhysics }: SidebarProps) => {
   const { t, i18n } = useTranslation();
+
+  const [dialogState, setDialogState] = useState<{ isOpen: boolean; algorithm: string | null }>({
+    isOpen: false,
+    algorithm: null,
+  });
 
   const languageOptions = useMemo(() => {
     return i18n.store.data ? Object.keys(i18n.store.data) : [];
@@ -84,6 +90,14 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
           bg="white"
           boxShadow="2px 0 10px rgba(0, 0, 0, 0.1)"
         >
+          {/* Algorithm Description Dialog */}
+          {dialogState.algorithm && (
+            <AlgorithmDialog
+              isOpen={dialogState.isOpen}
+              onOpenChange={() => setDialogState({ isOpen: false, algorithm: null })}
+              algorithm={dialogState.algorithm}
+            />
+          )}
           <Drawer.CloseTrigger
             top="4"
             right="4"
@@ -125,6 +139,7 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
                         transform: 'translateX(5px)'
                       }}
                       transition="all 0.2s ease"
+                      onClick={() => setDialogState({ isOpen: true, algorithm: algorithm })}
                     >
                       <GitBranch size={16} style={{ flexShrink: 0 }} />
                       {algorithm}
