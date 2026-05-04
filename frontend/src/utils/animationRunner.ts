@@ -172,6 +172,37 @@ export const getSimulationSpeedFactor = (user: boolean = false) => {
     }
 }
 
+const resetNodeEdgeColors = () => {
+    if (nodes) {
+        const allNodes = nodes.get();
+        const updatedNodes = allNodes.map(node => ({ id: node.id, color: null, borderWidth: null }));
+        nodes.update(updatedNodes);
+    }
+    if (edges) {
+        const allEdges = edges.get();
+        const updatedEdges = allEdges.map(edge => ({ id: edge.id, color: null, width: null }));
+        edges.update(updatedEdges);
+    }
+}
+
+export const restartRunningAnimation = async () => {
+    if (!isRendering) throw new Error("No animation is currently running.");
+
+    const wasPaused = isPaused;
+    if (!isPaused) await pauseAnimation();
+
+    resetNodeEdgeColors();
+
+    waitUntil = null;
+    nextStepIndex = 0;
+    steps = [];
+
+    lostFocus = false;
+    realTimestamp = null;
+
+    if (!wasPaused) resumeAnimation();
+}
+
 export const runAnimationSequence = async (
     _animationSteps: Array<{
         animationCallback: () => (timestamp: DOMHighResTimeStamp) => boolean;
