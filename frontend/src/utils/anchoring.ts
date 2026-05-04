@@ -8,6 +8,16 @@ let targetAnchorIndex: number | null = null;
 
 let wasPaused: boolean | null = false;
 
+let anchorReachedCallback: () => Promise<void> = async () => { };
+
+export const setAnchorReachedCallback = (callback: () => Promise<void>) => {
+  anchorReachedCallback = callback;
+}
+
+export const clearAnchorReachedCallback = () => {
+  anchorReachedCallback = async () => { };
+}
+
 const recoverPauseStatus = async () => {
   const currentPauseStatus = getPauseStatus();
   if (wasPaused === null) {
@@ -45,6 +55,8 @@ export const setAnchor = async (anchorIndex: number | null, textKey?: string) =>
 
     if (targetAnchorIndex !== null && anchorIndex === targetAnchorIndex) {
       await anchorReachedCleanup();
+    } else {
+      await anchorReachedCallback();
     }
   }
 }
