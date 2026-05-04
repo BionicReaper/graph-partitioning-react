@@ -6,7 +6,7 @@ let anchor: { index: number, textKey: string } | null = null;
 
 let targetAnchorIndex: number | null = null;
 
-let wasPaused: boolean | null = false;
+let wasPaused: boolean | null = null;
 
 let anchorReachedCallback: () => Promise<void> = async () => { };
 
@@ -39,7 +39,7 @@ const anchorReachedCleanup = async () => {
 }
 
 export const getAnchor = () => {
-  return { ...anchor };
+  return anchor ? { ...anchor } : null;
 }
 
 export const setAnchor = async (anchorIndex: number | null, textKey?: string) => {
@@ -71,7 +71,7 @@ export const goToAnchor = async (anchorIndex: number) => {
 
   targetAnchorIndex = anchorIndex;
 
-  if (!anchor?.index || anchorIndex < anchor?.index) {
+  if (anchor?.index !== null && anchor?.index !== undefined && anchorIndex < anchor?.index) {
     try {
       await restartRunningAnimation();
     } catch (error) {
