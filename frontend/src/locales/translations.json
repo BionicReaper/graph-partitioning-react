@@ -23,7 +23,8 @@
         "MetisDescription": "Multilevel graph partitioning",
         "ToggleFullscreen": "Toggle Fullscreen",
         "AddEdge": "Add Edge",
-        "AddNode": "Add Node"
+        "AddNode": "Add Node",
+        "Delete": "Delete"
     },
     "el": {
         "English": "Αγγλικά",
@@ -49,6 +50,7 @@
         "MetisDescription": "Πολυεπίπεδη διαμέριση γραφήματος",
         "ToggleFullscreen": "Εναλλαγή Πλήρους Οθόνης",
         "AddEdge": "Προσθήκη Ακμής",
-        "AddNode": "Προσθήκη Κόμβου"
+        "AddNode": "Προσθήκη Κόμβου",
+        "Delete": "Διαγραφή"
     }
 }
