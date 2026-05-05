@@ -93,6 +93,7 @@ function App() {
   const [activeMode, setActiveMode] = useState<ActiveMode>(null);
   const [currentAlgorithmId, setCurrentAlgorithmId] = useState<string>('kernighan-lin');
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [animationStarted, setAnimationStarted] = useState<boolean>(false);
   const [physicsEnabled, setPhysicsEnabled] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
@@ -226,7 +227,11 @@ function App() {
     const result = runKernighanLin(networkRef.current, nodesRef.current, edgesRef.current);
     console.log('Algorithm result:', result);
 
-    await runAnimationSequence(result.animation, nodesRef.current, edgesRef.current);
+    const animationPromise = runAnimationSequence(result.animation, nodesRef.current, edgesRef.current);
+    setAnimationStarted(true);
+
+    await animationPromise;
+    setAnimationStarted(false);
     console.log('Animation sequence completed');
 
     networkRef.current?.setOptions(
@@ -312,6 +317,27 @@ function App() {
     }
   }, [networkRef, physicsEnabled]);
 
+  // Pause handler
+  const [isPaused, setIsPaused] = useState<boolean>(getPauseStatus());
+
+  const togglePause = useCallback((): void => {
+    const isPaused = getPauseStatus();
+      console.log('Toggling pause. Currently paused:', isPaused);
+      if (isPaused) {
+        console.log('Resuming animation');
+        resumeAnimation();
+        setIsPaused(false);
+      } else {
+        console.log('Pausing animation');
+        pauseAnimation().then(() => {
+          console.log('Animation paused');
+          setIsPaused(true);
+        }).catch((err) => {
+          console.error('Error pausing animation:', err);
+        });
+      }
+  }, [setIsPaused]);
+
   // Control keys whether an algorithm is running
 
   // Keys Pressed
@@ -344,17 +370,7 @@ function App() {
     keysPressed.current.add(pressedKey);
     if (pressedKey === 'p' || pressedKey === 'f9') {
       event.preventDefault();
-      const isPaused = getPauseStatus();
-      console.log('Toggling pause. Currently paused:', isPaused);
-      if (isPaused) {
-        console.log('Resuming animation');
-        resumeAnimation();
-      } else {
-        console.log('Pausing animation');
-        pauseAnimation().catch((err) => {
-          console.error('Error pausing animation:', err);
-        });
-      }
+      togglePause();
     } else if (pressedKey === '-') {
       event.preventDefault();
       console.log('Decreasing simulation speed');
@@ -379,7 +395,7 @@ function App() {
 
   useEffect(() => {
     if (!networkRef.current) return;
-    if (isRunning) {
+    if (isRunning && animationStarted) {
       document.addEventListener('keydown', simulationKeyDownFunction);
       document.addEventListener('keyup', keyUpFunction);
 
@@ -391,7 +407,7 @@ function App() {
         document.removeEventListener('keyup', keyUpFunction);
       }
 
-    } else {
+    } else if (!isRunning && !animationStarted) {
       document.addEventListener('keydown', idleKeyDownFunction);
       document.addEventListener('keyup', keyUpFunction);
 
@@ -400,7 +416,7 @@ function App() {
         document.removeEventListener('keyup', keyUpFunction);
       }
     }
-  }, [isRunning, networkRef, setActiveMode, simulationKeyDownFunction, idleKeyDownFunction, keyUpFunction, ensureControlsAttached]);
+  }, [isRunning, animationStarted, networkRef, setActiveMode, simulationKeyDownFunction, idleKeyDownFunction, keyUpFunction, ensureControlsAttached]);
 
   return (
     <Box className="app" w="100dvw" h="100dvh" bg="gray.50">
@@ -414,10 +430,13 @@ function App() {
       />
       <PlayButton
         onRun={runAlgorithm}
+        onTogglePause={togglePause}
         onSelectAlgorithm={selectAlgorithm}
         algorithms={algorithms}
         currentAlgorithmId={currentAlgorithmId}
-        disabled={isRunning}
+        isRunning={isRunning}
+        isPaused={isPaused}
+        animationStarted={animationStarted}
       />
       <FullscreenButton
         onClick={toggleFullscreen}
@@ -451,7 +470,7 @@ function App() {
         label={t('Delete')}
         position="bottom"
         colorPalette="red"
-        disabled={!hasSelection}
+        disabled={!hasSelection || isRunning}
       />
     </Box>
   );

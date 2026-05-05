@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, IconButton, Text } from '@chakra-ui/react';
-import { Play, ChevronDown } from 'lucide-react';
+import { Play, ChevronDown, Pause } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface AlgorithmOption {
@@ -11,18 +11,24 @@ interface AlgorithmOption {
 
 interface PlayButtonProps {
   onRun: () => void;
+  onTogglePause: () => void;
   onSelectAlgorithm: (algorithmId: string) => void;
   algorithms: AlgorithmOption[];
   currentAlgorithmId: string;
-  disabled?: boolean;
+  isPaused: boolean;
+  isRunning: boolean;
+  animationStarted: boolean;
 }
 
 const PlayButton = ({
   onRun,
+  onTogglePause,
   onSelectAlgorithm,
   algorithms,
   currentAlgorithmId,
-  disabled = false
+  isPaused = false,
+  isRunning = false,
+  animationStarted = false
 }: PlayButtonProps) => {
   const { t } = useTranslation();
 
@@ -38,31 +44,34 @@ const PlayButton = ({
   };
 
   const handlePlayClick = () => {
-    if (!disabled) {
+    if (!isRunning && !animationStarted && onRun) {
       onRun();
+    } else if (isRunning && animationStarted && onTogglePause) {
+      onTogglePause();
     }
   };
 
   const toggleDropdown = () => {
-    if (!disabled) {
+    if (!isRunning && !animationStarted) {
       setShowDropdown(!showDropdown);
     }
   };
 
   useEffect(() => {
-    if (disabled) {
+    if (isRunning || animationStarted) {
       setShowDropdown(false);
       setIsExpanded(false);
     }
-  }, [disabled]);
+  }, [isRunning, animationStarted]);
 
   return (
     <Box
       position="fixed"
       bottom="180px"
-      right={disabled ? "-80px" : "20px"}
+      //right={isRunning ? "-80px" : "20px"}
+      right={"20px"}
       zIndex={1001}
-      onMouseEnter={() => !disabled && setIsExpanded(true)}
+      onMouseEnter={() => !isRunning && !animationStarted && setIsExpanded(true)}
       onMouseLeave={() => {
         if (!showDropdown) {
           setIsExpanded(false);
@@ -122,12 +131,12 @@ const PlayButton = ({
         h="60px"
         bg={'purple.600'}
         borderRadius="full"
-        boxShadow={disabled ? 'md' : 'lg'}
+        boxShadow={'lg'}
         overflow="hidden"
         transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
         w={isExpanded ? '230px' : '60px'}
         opacity={0.7}
-        pointerEvents={disabled ? 'none' : 'auto'}
+        pointerEvents={'auto'}
       >
         {/* Algorithm Name Section (extends to left) */}
         <Box
@@ -137,13 +146,13 @@ const PlayButton = ({
           px={4}
           h="full"
           w={"230px"}
-          cursor={disabled ? 'not-allowed' : 'pointer'}
+          cursor={isRunning ? 'not-allowed' : 'pointer'}
           onClick={toggleDropdown}
           opacity={isExpanded ? 1 : 0}
           visibility={isExpanded ? 'visible' : 'hidden'}
           transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
           _hover={{
-            bg: disabled ? 'transparent' : 'purple.700',
+            bg: isRunning ? 'transparent' : 'purple.700',
           }}
           whiteSpace="nowrap"
         >
@@ -174,25 +183,35 @@ const PlayButton = ({
           display="flex"
           alignItems="center"
           justifyContent="center"
-          cursor={disabled ? 'not-allowed' : 'pointer'}
+          cursor={isRunning && !animationStarted ? 'not-allowed' : 'pointer'}
           flexShrink={0}
           onClick={handlePlayClick}
           _hover={{
-            bg: disabled ? 'transparent' : 'purple.700',
+            bg: 'purple.700',
           }}
           colorPalette={"purple"}
           transition="background 0.2s"
           _active={{
-            transform: disabled ? 'none' : 'scale(0.95)',
+            transform: 'scale(0.95)',
           }}
           opacity={0.7}
         >
-          <Play
-            size={24}
-            fill="white"
-            color="white"
-            style={{ marginLeft: '3px' }}
-          />
+          {
+          isPaused || !isRunning ? (
+            <Play
+              size={24}
+              fill="white"
+              color="white"
+              style={{ marginLeft: '3px' }}
+            />
+          ) : (
+            <Pause
+              size={24}
+              fill="white"
+              color="white"
+              style={{ marginLeft: '3px' }}
+            />
+          )}
         </IconButton>
       </Box>
     </Box >
