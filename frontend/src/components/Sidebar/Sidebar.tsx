@@ -14,7 +14,7 @@ import {
 import { Menu, GitBranch } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import AlgorithmDialog from './AlgorithmDialog';
+import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
 
 interface SidebarProps {
   isOpen: boolean;

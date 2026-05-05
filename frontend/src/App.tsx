@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Box } from '@chakra-ui/react';
-import Sidebar from './components/Sidebar';
-import AddButton from './components/AddButton';
-import PlayButton from './components/PlayButton';
+import Sidebar from './components/Sidebar/Sidebar';
+import AddButton from './components/Buttons/AddButton';
+import PlayButton from './components/Buttons/PlayButton';
 import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import { algorithms, defaultVisOptions } from './utils/constants';
@@ -10,9 +10,9 @@ import { Plus, Cable, Minimize, Maximize, Trash2 } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
 import { getPauseStatus, getSimulationSpeedFactor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
-import FullscreenButton from './components/FullscreenButton';
+import FullscreenButton from './components/Buttons/FullscreenButton';
 import { useTranslation } from 'react-i18next';
-import DeleteButton from './components/DeleteButton';
+import DeleteButton from './components/Buttons/DeleteButton';
 
 type ActiveMode = 'node' | 'edge' | null;
 
