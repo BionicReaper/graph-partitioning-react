@@ -76,6 +76,7 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
                 const stepDone = stepsToExecute[i](timestamp);
                 if (stepDone) {
                     steps.splice(steps.indexOf(stepsToExecute[i]), 1);
+                    i = i - 1;
                 }
             }
 
@@ -218,15 +219,14 @@ export const goToAnchor = async (anchorIndex: number, shouldPauseOnFirstReach: b
     const guaranteeSynchronous = true;
     restartRunningAnimation(guaranteeSynchronous);
 
-    lastTimestamp = performance.now();
-    let renderTime = 1;
+    let nextTimestamp = 0;
 
     while (getAnchor()?.index !== anchorIndex && isRendering && (nextStepIndex < animationSteps.length || steps.length > 0)) {
-        console.log(renderTime, waitUntil);
-        render(renderTime);
-        console.log(renderTime, waitUntil);
-        if (waitUntil !== null && renderTime < waitUntil) renderTime = waitUntil;
-        renderTime += 100;
+        lastTimestamp = 0;
+        render(nextTimestamp);
+        if (waitUntil !== null && realTimestamp < waitUntil - 1) nextTimestamp = waitUntil - realTimestamp;
+        else nextTimestamp = 100;
+
         if (frameId !== null) {
             cancelAnimationFrame(frameId!);
             frameId = null;
