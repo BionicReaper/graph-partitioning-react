@@ -17,7 +17,7 @@ let nextStepIndex = 0;
 let steps: Array<(timestamp: DOMHighResTimeStamp) => boolean> = [];
 
 let lastTimestamp: DOMHighResTimeStamp | null = null; // Previous supplied timestamp from requestAnimationFrame
-let realTimestamp: DOMHighResTimeStamp | null = null; // Simulation timestamp
+let realTimestamp: DOMHighResTimeStamp = 0; // Simulation timestamp
 let simulationSpeedFactor = 1; // 1 means real-time, <1 means slower, >1 means faster
 let userSpeedFactor = 1;
 
@@ -44,15 +44,13 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
         console.error("Animation steps, nodes, or edges not set.");
         return;
     }
-    else if (lostFocus && realTimestamp !== null) { // Lost focus branch
+    else if (lostFocus) { // Lost focus branch
         // Draw nothing new and set the previous render as the previous interpolation point
         lastTimestamp = nextTimestamp;
         lostFocus = false;
     }
     else { // Drawing branch
-        const timestamp = (realTimestamp === null)
-            ? nextTimestamp
-            : realTimestamp + (nextTimestamp - lastTimestamp!) * simulationSpeedFactor * userSpeedFactor;
+        const timestamp = realTimestamp + (nextTimestamp - lastTimestamp!) * simulationSpeedFactor * userSpeedFactor;
         realTimestamp = timestamp;
         lastTimestamp = nextTimestamp;
 
@@ -202,14 +200,15 @@ export const restartRunningAnimation = async (guaranteeSynchronous: boolean = fa
     steps = [];
 
     lostFocus = false;
+    realTimestamp = 0;
     lastTimestamp = performance.now();
 
     if (!wasPaused && !guaranteeSynchronous) resumeAnimation();
 }
 
 export const goToAnchor = async (anchorIndex: number, shouldPauseOnFirstReach: boolean = false) => {
-    if(!isRendering) throw new Error("No animation is currently running.");
-    if(!animationSteps) throw new Error("Animation steps not set.");
+    if (!isRendering) throw new Error("No animation is currently running.");
+    if (!animationSteps) throw new Error("Animation steps not set.");
 
     const wasPaused = isPaused;
     if (!isPaused) await pauseAnimation();
@@ -265,6 +264,7 @@ export const runAnimationSequence = async (
         resolveCurrentAnimation = resolve;
         rejectCurrentAnimation = reject;
         lostFocus = false;
+        realTimestamp = 0;
         lastTimestamp = performance.now();
         frameId = requestAnimationFrame(render);
     });
