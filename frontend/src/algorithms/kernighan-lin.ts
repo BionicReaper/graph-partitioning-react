@@ -361,8 +361,6 @@ export function runKernighanLin(
             }
         }
 
-        animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLPerformBestSwap' }, i === 0));
-
         const nodesToCleanUp = [...partitionA, ...partitionB].map(idx => nodes[idx].id).filter(id => id !== nodes[bestSwap!.a].id && id !== nodes[bestSwap!.b].id);
         if (nodesToCleanUp.length > 0)
             animation.push({
@@ -372,6 +370,8 @@ export function runKernighanLin(
                 description: `Unhighlight all nodes except swapped ones`,
                 timeBeforeNext: 1000
             })
+
+        animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLPerformBestSwap' }, i === 0));
 
         exchangePairs.push({ a: bestSwap!.a, b: bestSwap!.b, gain: maxGain! });
 
