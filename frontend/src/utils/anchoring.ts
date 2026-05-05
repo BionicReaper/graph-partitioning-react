@@ -2,13 +2,17 @@ import { getIsRendering, getPauseStatus, pauseAnimation, restartRunningAnimation
 
 const SIMULATION_SKIP_SPEED_FACTOR = 1000000;
 
-let anchor: { index: number, textKey: string } | null = null;
+let anchor: { index: number, textKey: string, values: any } | null = null;
 
 let targetAnchorIndex: number | null = null;
 
 let wasPaused: boolean | null = null;
 
 let anchorReachedCallback: () => Promise<void> = async () => { };
+
+export const goingToAnchor = () => {
+  return targetAnchorIndex !== null;
+}
 
 export const setAnchorReachedCallback = (callback: () => Promise<void>) => {
   anchorReachedCallback = callback;
@@ -42,7 +46,7 @@ export const getAnchor = () => {
   return anchor ? { ...anchor } : null;
 }
 
-export const setAnchor = async (anchorIndex: number | null, textKey?: string) => {
+export const setAnchor = async (anchorIndex: number | null, textKey?: string, values?: any) => {
   if (anchorIndex === null) {
     anchor = null;
 
@@ -51,7 +55,7 @@ export const setAnchor = async (anchorIndex: number | null, textKey?: string) =>
     }
 
   } else {
-    anchor = { index: anchorIndex, textKey: textKey || "" };
+    anchor = { index: anchorIndex, textKey: textKey || "", values: values || {} };
 
     if (targetAnchorIndex !== null && anchorIndex === targetAnchorIndex) {
       await anchorReachedCleanup();
