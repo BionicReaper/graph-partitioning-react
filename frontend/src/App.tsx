@@ -221,7 +221,7 @@ function App() {
   const [shouldOpenStepDialogOnFirstReach, setShouldOpenStepDialogOnFirstReach] = useState<boolean>(true);
   const [shouldPauseOnFirstReach, setShouldPauseOnFirstReach] = useState<boolean>(true);
   const [isStepDialogOpen, setIsStepDialogOpen] = useState<boolean>(false);
-  const [currentAnchor, setCurrentAnchor] = useState<{ index: number, textKey: string, values: {[key: string]: string}, firstReach: boolean } | null>(null);
+  const [currentAnchor, setCurrentAnchor] = useState<{ index: number, textKey: string, values: { [key: string]: string }, firstReach: boolean } | null>(null);
 
   const navigateToAnchor = useCallback(async (direction: 'left' | 'right'): Promise<void> => {
     const activeNavigation = goingToAnchor();
@@ -244,7 +244,7 @@ function App() {
     console.log(`Anchor reached callback triggered for anchor index ${anchor ? anchor.index : 'null'}, firstReach: ${firstReach}`);
     if (!anchor) return;
     setCurrentAnchor(anchor);
-    if(firstReach) {
+    if (firstReach) {
       if (shouldOpenStepDialogOnFirstReach) {
         setIsStepDialogOpen(true);
       }
@@ -380,20 +380,20 @@ function App() {
 
   const togglePause = useCallback((): void => {
     const isPaused = getPauseStatus();
-      console.log('Toggling pause. Currently paused:', isPaused);
-      if (isPaused) {
-        console.log('Resuming animation');
-        resumeAnimation();
-        setIsPaused(false);
-      } else {
-        console.log('Pausing animation');
-        pauseAnimation().then(() => {
-          console.log('Animation paused');
-          setIsPaused(true);
-        }).catch((err) => {
-          console.error('Error pausing animation:', err);
-        });
-      }
+    console.log('Toggling pause. Currently paused:', isPaused);
+    if (isPaused) {
+      console.log('Resuming animation');
+      resumeAnimation();
+      setIsPaused(false);
+    } else {
+      console.log('Pausing animation');
+      pauseAnimation().then(() => {
+        console.log('Animation paused');
+        setIsPaused(true);
+      }).catch((err) => {
+        console.error('Error pausing animation:', err);
+      });
+    }
   }, [setIsPaused]);
 
   // Control keys whether an algorithm is running
@@ -531,20 +531,20 @@ function App() {
         disabled={!hasSelection || isRunning}
       />
       <InfoButton
-        onClick={() => {if (isStepDialogOpen) setIsStepDialogOpen(false); else setIsStepDialogOpen(true)}}
+        onClick={() => { if (isStepDialogOpen) setIsStepDialogOpen(false); else setIsStepDialogOpen(true) }}
         icon={Info}
         label={t('AlgorithmStepInfo')}
         disabled={!isRunning || !animationStarted}
       />
       <AnchorNavigationButton
-        onClick={() => {navigateToAnchor('left')}}
+        onClick={() => { navigateToAnchor('left') }}
         icon={ChevronLeft}
         label={t('AnchorNavigationLeft')}
         horizontalPosition='left'
         disabled={!isRunning || !animationStarted}
       />
       <AnchorNavigationButton
-        onClick={() => {navigateToAnchor('right')}}
+        onClick={() => { navigateToAnchor('right') }}
         icon={ChevronRight}
         label={t('AnchorNavigationRight')}
         horizontalPosition='right'
