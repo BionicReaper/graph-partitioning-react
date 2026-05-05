@@ -6,13 +6,17 @@ import PlayButton from './components/Buttons/PlayButton';
 import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import { algorithms, defaultVisOptions } from './utils/constants';
-import { Plus, Cable, Minimize, Maximize, Trash2 } from 'lucide-react';
+import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
-import { getPauseStatus, getSimulationSpeedFactor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
+import { getPauseStatus, getSimulationSpeedFactor, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
 import FullscreenButton from './components/Buttons/FullscreenButton';
 import { useTranslation } from 'react-i18next';
 import DeleteButton from './components/Buttons/DeleteButton';
+import InfoButton from './components/Buttons/InfoButton';
+import AnchorNavigationButton from './components/Buttons/AnchorNavigationButton';
+import StepDialog from './components/Dialogs/StepDialog';
+import { clearAnchorReachedCallback, getAnchor, goingToAnchor, setAnchor, setAnchorReachedCallback } from './utils/anchoring';
 
 type ActiveMode = 'node' | 'edge' | null;
 
@@ -213,6 +217,59 @@ function App() {
     unselectAll();
   }, [networkRef, setActiveMode, unselectAll]);
 
+  // Anchor handler
+  const [shouldOpenStepDialogOnFirstReach, setShouldOpenStepDialogOnFirstReach] = useState<boolean>(true);
+  const [shouldPauseOnFirstReach, setShouldPauseOnFirstReach] = useState<boolean>(true);
+  const [isStepDialogOpen, setIsStepDialogOpen] = useState<boolean>(false);
+  const [currentAnchor, setCurrentAnchor] = useState<{ index: number, textKey: string, values: {[key: string]: string}, firstReach: boolean } | null>(null);
+
+  const navigateToAnchor = useCallback(async (direction: 'left' | 'right'): Promise<void> => {
+    const activeNavigation = goingToAnchor();
+    if (activeNavigation) {
+      console.error('Already navigating to an anchor, ignoring new navigation request');
+      return;
+    }
+
+    const anchor = getAnchor();
+    if (!anchor || (direction === 'left' && anchor.index === 0)) return;
+
+    const newAnchorIndex = anchor.index + (direction === 'right' ? 1 : -1);
+
+    await goToAnchor(newAnchorIndex, shouldPauseOnFirstReach);
+  }, [shouldPauseOnFirstReach]);
+
+  const onAnchorReached = useCallback((firstReach: boolean) => {
+    const anchor = getAnchor();
+
+    console.log(`Anchor reached callback triggered for anchor index ${anchor ? anchor.index : 'null'}, firstReach: ${firstReach}`);
+    if (!anchor) return;
+    setCurrentAnchor(anchor);
+    if(firstReach) {
+      if (shouldOpenStepDialogOnFirstReach) {
+        setIsStepDialogOpen(true);
+      }
+      if (shouldPauseOnFirstReach) {
+        const asyncPause = async () => {
+          try {
+            const currentIsPaused = getPauseStatus(); // Check if animation is already paused to avoid unnecessary pause calls
+            if (!currentIsPaused) await pauseAnimation();
+            setIsPaused(true);
+          } catch (err) {
+            console.error('Error pausing animation on anchor reach:', err);
+          }
+        }
+        asyncPause();
+      }
+    }
+  }, [isStepDialogOpen, shouldOpenStepDialogOnFirstReach, setCurrentAnchor, setIsStepDialogOpen]);
+
+  useEffect(() => {
+    setAnchorReachedCallback(onAnchorReached);
+    return () => {
+      clearAnchorReachedCallback();
+    }
+  }, [onAnchorReached]);
+
   // Run algorithm handler
   const runAlgorithm = useCallback(async (): Promise<void> => {
     console.log('Running algorithm:', currentAlgorithmId);
@@ -232,6 +289,7 @@ function App() {
 
     await animationPromise;
     setAnimationStarted(false);
+    setAnchor({ anchorIndex: null, textKey: '', values: {} }, false); // Clear any remaining anchor state
     console.log('Animation sequence completed');
 
     networkRef.current?.setOptions(
@@ -471,6 +529,32 @@ function App() {
         position="bottom"
         colorPalette="red"
         disabled={!hasSelection || isRunning}
+      />
+      <InfoButton
+        onClick={() => {if (isStepDialogOpen) setIsStepDialogOpen(false); else setIsStepDialogOpen(true)}}
+        icon={Info}
+        label={t('AlgorithmStepInfo')}
+        disabled={!isRunning || !animationStarted}
+      />
+      <AnchorNavigationButton
+        onClick={() => {navigateToAnchor('left')}}
+        icon={ChevronLeft}
+        label={t('AnchorNavigationLeft')}
+        horizontalPosition='left'
+        disabled={!isRunning || !animationStarted}
+      />
+      <AnchorNavigationButton
+        onClick={() => {navigateToAnchor('right')}}
+        icon={ChevronRight}
+        label={t('AnchorNavigationRight')}
+        horizontalPosition='right'
+        disabled={!isRunning || !animationStarted}
+      />
+      <StepDialog
+        isOpen={isStepDialogOpen}
+        onOpenChange={() => setIsStepDialogOpen(false)}
+        anchor={currentAnchor}
+        algorithmId={currentAlgorithmId}
       />
     </Box>
   );

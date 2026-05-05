@@ -24,7 +24,10 @@
         "ToggleFullscreen": "Toggle Fullscreen",
         "AddEdge": "Add Edge",
         "AddNode": "Add Node",
-        "Delete": "Delete"
+        "Delete": "Delete",
+        "AlgorithmStepInfo": "Algorithm Step Info",
+        "AnchorNavigationLeft": "Navigate to Previous Anchor",
+        "AnchorNavigationRight": "Navigate to Next Anchor"
     },
     "el": {
         "English": "Αγγλικά",
@@ -51,6 +54,9 @@
         "ToggleFullscreen": "Εναλλαγή Πλήρους Οθόνης",
         "AddEdge": "Προσθήκη Ακμής",
         "AddNode": "Προσθήκη Κόμβου",
-        "Delete": "Διαγραφή"
+        "Delete": "Διαγραφή",
+        "AlgorithmStepInfo": "Πληροφορίες Βήματος Αλγορίθμου",
+        "AnchorNavigationLeft": "Πλοήγηση στην προηγούμενη άγκυρα",
+        "AnchorNavigationRight": "Πλοήγηση στην επόμενη άγκυρα"
     }
 }

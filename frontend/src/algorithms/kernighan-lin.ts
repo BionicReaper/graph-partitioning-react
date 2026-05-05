@@ -1,6 +1,7 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { highlightEdges, highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
+import { generateSetAnchorAnimation } from "../utils/anchoring";
 
 export interface KLNode {
     index: number;
@@ -35,6 +36,8 @@ export function runKernighanLin(
     animation: Animation[];
 } {
     const animation: Animation[] = [];
+
+    let anchorIndex = 0;
 
     animation.push({
         animationCallback: () => {
@@ -147,6 +150,8 @@ export function runKernighanLin(
 
     animation[animation.length - 1].timeBeforeNext = 500;
 
+    animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLInitialPartitioning' }, true));
+
     const dValueUpdates = nodes.map(node => (
         {
             id: node.id,
@@ -164,6 +169,8 @@ export function runKernighanLin(
     });
 
     for (let i = 0; i < Math.floor(nodes.length / 2); i++) {
+
+        animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLSortingStep' }, i === 0));
         let maxGain = undefined;
         partitionA.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
         partitionB.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
@@ -196,6 +203,7 @@ export function runKernighanLin(
 
         animation[animation.length - 1].timeBeforeNext = 1000;
 
+        animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLInitialPair' }, i === 0));
 
         let idxA = 0;
         let idxB = 0;
@@ -217,6 +225,10 @@ export function runKernighanLin(
         while (idxA < partitionA.length && idxB < partitionB.length && (maxGain === undefined || nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue > maxGain)) {
             const nodeA = nodes[partitionA[idxA]];
             const nodeB = nodes[partitionB[idxB]];
+
+            if (idxA + idxB === 1 && i === 0) {
+                animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLComparison' }, true));
+            }
 
             const gain = nodeA.dValue + nodeB.dValue - 2 * nodeA.cValue[nodeB.index];
             let previousBestSwap = undefined;
@@ -301,6 +313,8 @@ export function runKernighanLin(
                 });
             }
 
+            animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLNextPair' }, (idxA === 0 && idxB === 0 && i === 0)));
+
             // TODO add cancel fn returning
             if (idxA + 1 < partitionA.length && (idxB + 1 >= partitionB.length || nodeA.dValue - nodes[partitionA[idxA + 1]]?.dValue < nodeB.dValue - nodes[partitionB[idxB + 1]]?.dValue)) {
                 idxA++;
@@ -346,6 +360,8 @@ export function runKernighanLin(
                 });
             }
         }
+
+        animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLPerformBestSwap' }, i === 0));
 
         const nodesToCleanUp = [...partitionA, ...partitionB].map(idx => nodes[idx].id).filter(id => id !== nodes[bestSwap!.a].id && id !== nodes[bestSwap!.b].id);
         if (nodesToCleanUp.length > 0)
@@ -412,6 +428,8 @@ export function runKernighanLin(
             timeBeforeNext: swapTime
         });
     }
+
+    animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLRollbackBestIteration' }, true));
 
     // Calculate cumulative gains
     const cumulativeGains: number[] = [];

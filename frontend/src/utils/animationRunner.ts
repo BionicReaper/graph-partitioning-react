@@ -1,3 +1,4 @@
+import { getAnchor, setTargetAnchor } from "./anchoring";
 import { extractNodeUpdates, extractEdgeUpdates } from "./animations";
 import { DataSet } from 'vis-network/standalone/esm/vis-network';
 
@@ -90,7 +91,9 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
 
     // Rendering termination/continuation logic
     if (nextStepIndex >= animationSteps.length && steps.length === 0 && (waitUntil === null || usedTimestamp === null || usedTimestamp >= waitUntil)) {
+        console.log("Rendering complete.");
         isRendering = false;
+        isPaused = false;
         waitUntil = null;
         frameId = null;
         resolveCurrentAnimation?.();
@@ -107,6 +110,7 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
         resolvePause();
         resolvePause = null;
         rejectPause = null;
+        frameId = null;
         existingPausePromise = null;
         isPaused = true;
     } else {
@@ -185,11 +189,11 @@ const resetNodeEdgeColors = () => {
     }
 }
 
-export const restartRunningAnimation = async () => {
+export const restartRunningAnimation = async (guaranteeSynchronous: boolean = false) => {
     if (!isRendering) throw new Error("No animation is currently running.");
 
     const wasPaused = isPaused;
-    if (!isPaused) await pauseAnimation();
+    if (!isPaused && !guaranteeSynchronous) await pauseAnimation();
 
     resetNodeEdgeColors();
 
@@ -198,9 +202,43 @@ export const restartRunningAnimation = async () => {
     steps = [];
 
     lostFocus = false;
-    realTimestamp = null;
+    lastTimestamp = performance.now();
 
-    if (!wasPaused) resumeAnimation();
+    if (!wasPaused && !guaranteeSynchronous) resumeAnimation();
+}
+
+export const goToAnchor = async (anchorIndex: number, shouldPauseOnFirstReach: boolean = false) => {
+    if(!isRendering) throw new Error("No animation is currently running.");
+    if(!animationSteps) throw new Error("Animation steps not set.");
+
+    const wasPaused = isPaused;
+    if (!isPaused) await pauseAnimation();
+
+    setTargetAnchor(anchorIndex);
+
+    const guaranteeSynchronous = true;
+    restartRunningAnimation(guaranteeSynchronous);
+
+    lastTimestamp = performance.now();
+    let renderTime = 1;
+
+    while (getAnchor()?.index !== anchorIndex && isRendering && (nextStepIndex < animationSteps.length || steps.length > 0)) {
+        console.log(renderTime, waitUntil);
+        render(renderTime);
+        console.log(renderTime, waitUntil);
+        if (waitUntil !== null && renderTime < waitUntil) renderTime = waitUntil;
+        renderTime += 100;
+        if (frameId !== null) {
+            cancelAnimationFrame(frameId!);
+            frameId = null;
+        }
+    }
+
+    setTargetAnchor(null);
+
+    if (!shouldPauseOnFirstReach && !wasPaused && isRendering && isPaused) {
+        resumeAnimation();
+    }
 }
 
 export const runAnimationSequence = async (
