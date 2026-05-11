@@ -91,11 +91,11 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
           boxShadow="2px 0 10px rgba(0, 0, 0, 0.1)"
         >
           {/* Algorithm Description Dialog */}
-            <AlgorithmDialog
-              isOpen={dialogState.isOpen}
-              onOpenChange={() => setDialogState((prev) => ({ isOpen: false, algorithm: prev.algorithm }))}
-              algorithm={dialogState.algorithm || ''}
-            />
+          <AlgorithmDialog
+            isOpen={dialogState.isOpen}
+            onOpenChange={() => setDialogState((prev) => ({ isOpen: false, algorithm: prev.algorithm }))}
+            algorithm={dialogState.algorithm || ''}
+          />
           <Drawer.CloseTrigger
             top="4"
             right="4"
