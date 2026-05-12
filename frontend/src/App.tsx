@@ -236,6 +236,7 @@ function App() {
     const newAnchorIndex = anchor.index + (direction === 'right' ? 1 : -1);
 
     await goToAnchor(newAnchorIndex, shouldPauseOnFirstReach);
+    setIsPaused(getPauseStatus());
   }, [shouldPauseOnFirstReach]);
 
   const onAnchorReached = useCallback((firstReach: boolean) => {
