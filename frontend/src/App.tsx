@@ -485,6 +485,10 @@ function App() {
         disablePhysicsToggle={isRunning}
         physicsEnabled={physicsEnabled}
         onTogglePhysics={togglePhysics}
+        shouldOpenStepDialogOnFirstReach={shouldOpenStepDialogOnFirstReach}
+        onShouldOpenStepDialogOnFirstReachToggle={() => setShouldOpenStepDialogOnFirstReach((prev) => !prev)}
+        shouldPauseOnFirstReach={shouldPauseOnFirstReach}
+        onShouldPauseOnFirstReachToggle={() => setShouldPauseOnFirstReach((prev) => !prev)}
       />
       <PlayButton
         onRun={runAlgorithm}

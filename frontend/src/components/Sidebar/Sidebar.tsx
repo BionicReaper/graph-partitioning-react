@@ -11,7 +11,7 @@ import {
   RadioGroup,
   HStack
 } from '@chakra-ui/react';
-import { Menu, GitBranch } from 'lucide-react';
+import { Menu, GitBranch, Globe } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
@@ -22,6 +22,10 @@ interface SidebarProps {
   disablePhysicsToggle?: boolean;
   physicsEnabled: boolean;
   onTogglePhysics: () => void;
+  shouldOpenStepDialogOnFirstReach: boolean;
+  onShouldOpenStepDialogOnFirstReachToggle: () => void;
+  shouldPauseOnFirstReach: boolean;
+  onShouldPauseOnFirstReachToggle: () => void;
 }
 
 const algorithms = [
@@ -35,7 +39,17 @@ const nativeLanguageLabels: Record<string, string> = {
   el: 'Ελληνικά'
 };
 
-const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnabled, onTogglePhysics }: SidebarProps) => {
+const Sidebar = ({
+  isOpen,
+  onToggle,
+  disablePhysicsToggle = false,
+  physicsEnabled,
+  onTogglePhysics,
+  shouldOpenStepDialogOnFirstReach,
+  onShouldOpenStepDialogOnFirstReachToggle,
+  shouldPauseOnFirstReach,
+  onShouldPauseOnFirstReachToggle
+}: SidebarProps) => {
   const { t, i18n } = useTranslation();
 
   const [dialogState, setDialogState] = useState<{ isOpen: boolean; algorithm: string | null }>({
@@ -180,7 +194,7 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
                 </Box>
 
                 <Heading size="md" mb={4} mt={6} color="gray.800" fontWeight="500">
-                  {t('Language')}
+                  {t('Language')} <Globe size={20} style={{ display: 'inline', marginLeft: '4px' }} />
                 </Heading>
 
                 {/* Language Select */}
@@ -208,6 +222,60 @@ const Sidebar = ({ isOpen, onToggle, disablePhysicsToggle = false, physicsEnable
                       ))}
                     </HStack>
                   </RadioGroup.Root>
+                </Box>
+
+                {/* Info settings */}
+
+                <Heading size="md" mb={4} mt={6} color="gray.800" fontWeight="500">
+                  {t('InfoSettings')}
+                </Heading>
+
+                {/* Open Step Dialog on First Step Occurence */}
+                <Box
+                  p={3}
+                  bg="gray.50"
+                  borderRadius="md"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Text fontSize="sm" color="gray.700" fontWeight="500">
+                    {t('OpenStepDialogOnFirstReach')}
+                  </Text>
+                  <Switch.Root
+                    checked={shouldOpenStepDialogOnFirstReach}
+                    onCheckedChange={onShouldOpenStepDialogOnFirstReachToggle}
+                  >
+                    <Switch.HiddenInput />
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                    <Switch.Label />
+                  </Switch.Root>
+                </Box>
+
+                {/* Pause on First Step Occurence */}
+                <Box
+                  p={3}
+                  bg="gray.50"
+                  borderRadius="md"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Text fontSize="sm" color="gray.700" fontWeight="500">
+                    {t('PauseOnFirstReach')}
+                  </Text>
+                  <Switch.Root
+                    checked={shouldPauseOnFirstReach}
+                    onCheckedChange={onShouldPauseOnFirstReachToggle}
+                  >
+                    <Switch.HiddenInput />
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                    <Switch.Label />
+                  </Switch.Root>
                 </Box>
               </Box>
 
