@@ -150,8 +150,6 @@ export function runKernighanLin(
 
     animation[animation.length - 1].timeBeforeNext = 500;
 
-    animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLInitialPartitioning' }, true));
-
     const dValueUpdates = nodes.map(node => (
         {
             id: node.id,
@@ -168,9 +166,13 @@ export function runKernighanLin(
         timeBeforeNext: 1000
     });
 
+    animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLInitialPartitioning' }, true));
+
     for (let i = 0; i < Math.floor(nodes.length / 2); i++) {
 
-        animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLSortingStep' }, i === 0));
+        if (i > 0) {
+            animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLSortingStep' }, false));
+        }
         let maxGain = undefined;
         partitionA.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
         partitionB.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
