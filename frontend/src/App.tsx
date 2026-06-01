@@ -20,6 +20,7 @@ import { clearAnchorReachedCallback, getAnchor, goingToAnchor, setAnchor, setAnc
 import { getStats } from './utils/stats';
 import { useSnackbar } from 'notistack';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import LocalizedStatsText from './components/LocalizedSnackbarText/LocallizedStatsText';
 type ActiveMode = 'node' | 'edge' | null;
 
 function App() {
@@ -298,13 +299,15 @@ function App() {
     setAnimationStarted(false);
     setAnchor({ anchorIndex: null, textKey: '', values: {} }, false); // Clear any remaining anchor state
     enqueueSnackbar(
-      t('AlgorithmCompleted', { 
-        cutSize: stats.cutSize,
-        reads: stats.reads,
-        writes: stats.writes,
-        additions: stats.additions,
-        comparisons: stats.comparisons 
-      }), { 
+      <LocalizedStatsText stats={{
+          cutSize: stats.cutSize,
+          reads: stats.reads,
+          writes: stats.writes,
+          additions: stats.additions,
+          comparisons: stats.comparisons 
+        }}
+      />
+      , { 
         variant: 'success',
         persist: true,
         action: (snackbarId) => (
@@ -347,7 +350,7 @@ function App() {
         }
       });
     setIsRunning(false);
-  }, [networkRef, isRunning, setIsRunning, setPhysicsEnabled, nodesRef, edgesRef, currentAlgorithmId]);
+  }, [networkRef, isRunning, setIsRunning, setPhysicsEnabled, nodesRef, edgesRef, currentAlgorithmId, t, enqueueSnackbar, closeSnackbar, LocalizedStatsText]);
 
   // Select algorithm handler
   const selectAlgorithm = useCallback((algorithmId: string): void => {
