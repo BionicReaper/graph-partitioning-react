@@ -28,7 +28,7 @@ const InfoButton = ({
   label,
   verticalPosition = 'middle',
   horizontalPosition = 'right',
-  colorPalette = 'orange',
+  colorPalette = 'yellow',
   disabled = false,
 }: InfoButtonProps) => {
   return (
