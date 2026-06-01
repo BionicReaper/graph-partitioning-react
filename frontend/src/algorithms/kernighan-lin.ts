@@ -2,6 +2,7 @@ import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { highlightEdges, highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
 import { generateSetAnchorAnimation } from "../utils/anchoring";
+import { resetStats, setCutSize, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
 
 export interface KLNode {
     index: number;
@@ -36,6 +37,8 @@ export function runKernighanLin(
     animation: Animation[];
 } {
     const animation: Animation[] = [];
+
+    resetStats();
 
     let anchorIndex = 0;
 
@@ -91,13 +94,20 @@ export function runKernighanLin(
     // Convert edges to array format using index mapping - O(m)
     const edges: KLEdge[] = originalEdges
         .map(edge => {
+            incrementReads(1); // Reading from edgeDataSet
+
             const fromIdx = idToIndex.get(edge.from);
             const toIdx = idToIndex.get(edge.to);
+
+            if (fromIdx === undefined || toIdx === undefined) {
+                console.error(`Edge with id ${edge.id} has invalid node references: from ${edge.from} to ${edge.to}`);
+                return null;
+            }
 
             nodes[fromIdx!].cValue[toIdx!] = 1; // Assuming unweighted graph, cost = 1
             nodes[toIdx!].cValue[fromIdx!] = 1; // Undirected graph
 
-            nodes[fromIdx!].edges[toIdx!] = edge.id;
+            nodes[fromIdx!].edges[toIdx!] = edge.id; // Animation only use
             nodes[toIdx!].edges[fromIdx!] = edge.id;
 
             if (nodes[fromIdx!].partition !== nodes[toIdx!].partition) {
@@ -108,10 +118,11 @@ export function runKernighanLin(
                 nodes[toIdx!].dValue -= 1;
             }
 
-            if (fromIdx !== undefined && toIdx !== undefined) {
-                return { from: fromIdx, to: toIdx, id: edge.id };
-            }
-            return null;
+            incrementReads(2); // Reading dValues for increment
+            incrementWrites(4); // Writing cValues and dValues for both nodes
+            incrementComparisons(1); // Comparison for partition check
+
+            return { from: fromIdx, to: toIdx, id: edge.id };
         })
         .filter((edge): edge is KLEdge => edge !== null);
 
@@ -176,8 +187,16 @@ export function runKernighanLin(
             animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLSortingStep' }, false));
         }
         let maxGain = undefined;
-        partitionA.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
-        partitionB.sort((a, b) => nodes[b].dValue - nodes[a].dValue);
+        partitionA.sort((a, b) => {
+            incrementReads(2); // Reading dValues for comparison
+            incrementComparisons(1); // Comparison for sorting
+            return nodes[b].dValue - nodes[a].dValue
+        });
+        partitionB.sort((a, b) => {
+            incrementReads(2); // Reading dValues for comparison
+            incrementComparisons(1); // Comparison for sorting
+            return nodes[b].dValue - nodes[a].dValue
+        });
 
         [...lockedNodesA, ...partitionA].forEach((nodeIdx, idx) => {
             const moveTime = 100;
@@ -226,7 +245,12 @@ export function runKernighanLin(
         });
 
         // TODO: RECHECK DECREASING LOGIC
+        incrementReads(3);
+        incrementComparisons(1); // Error correcting for when the while loop finishes without entering due to maxGain condition
         while (idxA < partitionA.length && idxB < partitionB.length && (maxGain === undefined || nodes[partitionA[idxA]].dValue + nodes[partitionB[idxB]].dValue > maxGain)) {
+            incrementReads(3); // Reading dValues and maxGain
+            incrementComparisons(1); // Comparison for while loop condition
+
             const nodeA = nodes[partitionA[idxA]];
             const nodeB = nodes[partitionB[idxB]];
 
@@ -235,12 +259,19 @@ export function runKernighanLin(
             }
 
             const gain = nodeA.dValue + nodeB.dValue - 2 * nodeA.cValue[nodeB.index];
+
+            incrementReads(3); // Reading dValues and cValue for gain calculation
+            incrementAdditions(2); // Adding dValues and shifted cValue
+
             let previousBestSwap = undefined;
             if (maxGain === undefined || gain > maxGain) {
                 maxGain = gain;
                 previousBestSwap = bestSwap !== undefined ? bestSwap : null;
                 bestSwap = { a: nodeA.index, b: nodeB.index };
+                incrementWrites(1);
             }
+
+            incrementComparisons(1); // Comparison for maxGain update
 
             const greenEdges: Array<string> = [];
             const redEdges: Array<string> = [];
@@ -363,6 +394,9 @@ export function runKernighanLin(
                     timeBeforeNext: 1000
                 });
             }
+            incrementReads(4); // Reading dValues for comparison
+            incrementAdditions(2); // Adding dValues for comparison
+            incrementComparisons(1); // Comparisons for if conditions
         }
 
         const nodesToCleanUp = [...partitionA, ...partitionB].map(idx => nodes[idx].id).filter(id => id !== nodes[bestSwap!.a].id && id !== nodes[bestSwap!.b].id);
@@ -383,14 +417,22 @@ export function runKernighanLin(
         nodes[bestSwap!.a].locked = true;
         nodes[bestSwap!.b].locked = true;
 
+        incrementWrites(2); // Locking nodes
+
         // Swap partitions
         nodes[bestSwap!.a].partition = 1;
         nodes[bestSwap!.b].partition = 0;
+
+        incrementWrites(2); // Swapping partitions
 
         // Update dValues
         nodes.forEach(node => {
             if (!node.locked) {
                 node.dValue += (node.partition === 0 ? 2 : -2) * (nodes[bestSwap!.a].cValue[node.index] - nodes[bestSwap!.b].cValue[node.index]);
+                incrementReads(4); // Reading cValues for dValue update
+                incrementWrites(1); // Writing updated dValue
+                incrementAdditions(2); // Adding cValues and then the dValue
+                incrementComparisons(1); // Comparing partition
             }
         });
 
@@ -450,15 +492,24 @@ export function runKernighanLin(
         if (gain > maxCumulativeGain) {
             maxCumulativeGain = gain;
             k = index;
+            incrementWrites(2); // Updating maxCumulativeGain
         }
+        incrementReads(2); // Reading cumulative gain for comparison
+        incrementComparisons(1); // Comparing cumulative gain
     });
 
     // Undo swaps beyond k
 
     for (let i = exchangePairs.length - 1; i > k; i--) {
+
         const pair = exchangePairs[i];
+
+        incrementReads(1)
+
         nodes[pair.a].partition = 0;
         nodes[pair.b].partition = 1;
+
+        incrementWrites(2); // Undoing partitions
 
         const swapTime = 150;
         animation.push({
@@ -516,6 +567,8 @@ export function runKernighanLin(
             cutSize += 1;
         }
     });
+
+    setCutSize(cutSize);
 
     return {
         partition: partitionResult,
