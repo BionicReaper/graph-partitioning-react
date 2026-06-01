@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Box } from '@chakra-ui/react';
+import { Box, IconButton } from '@chakra-ui/react';
 import Sidebar from './components/Sidebar/Sidebar';
 import AddButton from './components/Buttons/AddButton';
 import PlayButton from './components/Buttons/PlayButton';
 import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import { algorithms, defaultVisOptions } from './utils/constants';
-import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
 import { getPauseStatus, getSimulationSpeedFactor, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
@@ -17,11 +17,15 @@ import InfoButton from './components/Buttons/InfoButton';
 import AnchorNavigationButton from './components/Buttons/AnchorNavigationButton';
 import StepDialog from './components/Dialogs/StepDialog';
 import { clearAnchorReachedCallback, getAnchor, goingToAnchor, setAnchor, setAnchorReachedCallback } from './utils/anchoring';
-
+import { getStats } from './utils/stats';
+import { useSnackbar } from 'notistack';
+import { useLocalStorage } from './hooks/useLocalStorage';
 type ActiveMode = 'node' | 'edge' | null;
 
 function App() {
   const { t } = useTranslation();
+
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const nodesRef = useRef(new DataSet<any, "id">([]));
   const edgesRef = useRef(new DataSet<any, "id">([]));
@@ -95,10 +99,10 @@ function App() {
   // App state
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [activeMode, setActiveMode] = useState<ActiveMode>(null);
-  const [currentAlgorithmId, setCurrentAlgorithmId] = useState<string>('kernighan-lin');
+  const [currentAlgorithmId, setCurrentAlgorithmId] = useLocalStorage<string>('currentAlgorithmId', 'kernighan-lin');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [animationStarted, setAnimationStarted] = useState<boolean>(false);
-  const [physicsEnabled, setPhysicsEnabled] = useState<boolean>(false);
+  const [physicsEnabled, setPhysicsEnabled] = useLocalStorage<boolean>('physicsEnabled', false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   // Delete handler
@@ -218,8 +222,8 @@ function App() {
   }, [networkRef, setActiveMode, unselectAll]);
 
   // Anchor handler
-  const [shouldOpenStepDialogOnFirstReach, setShouldOpenStepDialogOnFirstReach] = useState<boolean>(true);
-  const [shouldPauseOnFirstReach, setShouldPauseOnFirstReach] = useState<boolean>(true);
+  const [shouldOpenStepDialogOnFirstReach, setShouldOpenStepDialogOnFirstReach] = useLocalStorage<boolean>('shouldOpenStepDialogOnFirstReach', true);
+  const [shouldPauseOnFirstReach, setShouldPauseOnFirstReach] = useLocalStorage<boolean>('shouldPauseOnFirstReach', true);
   const [isStepDialogOpen, setIsStepDialogOpen] = useState<boolean>(false);
   const [currentAnchor, setCurrentAnchor] = useState<{ index: number, textKey: string, values: { [key: string]: string }, firstReach: boolean } | null>(null);
 
@@ -288,9 +292,31 @@ function App() {
     const animationPromise = runAnimationSequence(result.animation, nodesRef.current, edgesRef.current);
     setAnimationStarted(true);
 
+    const stats = getStats();
+
     await animationPromise;
     setAnimationStarted(false);
     setAnchor({ anchorIndex: null, textKey: '', values: {} }, false); // Clear any remaining anchor state
+    enqueueSnackbar(
+      t('AlgorithmCompleted', { 
+        cutSize: stats.cutSize,
+        reads: stats.reads,
+        writes: stats.writes,
+        additions: stats.additions,
+        comparisons: stats.comparisons 
+      }), { 
+        variant: 'success',
+        persist: true,
+        action: (snackbarId) => (
+          <IconButton
+            aria-label="Close notification"
+            bg="green.700"
+            children={<X />}
+            onClick={() => closeSnackbar(snackbarId)}
+          />
+        )
+      }
+    );
     console.log('Animation sequence completed');
 
     networkRef.current?.setOptions(

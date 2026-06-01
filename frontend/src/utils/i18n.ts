@@ -24,13 +24,19 @@ const resources = {
   }
 };
 
+const savedLanguage = localStorage.getItem('language') || 'en';
+
 i18n
   .use(initReactI18next).init({
     resources,
-    lng: "en",
+    lng: savedLanguage,
     interpolation: {
       escapeValue: false // react already safes from xss
     }
   });
+
+i18n.on('languageChanged', (lng) => {
+  localStorage.setItem('language', lng);
+});
 
 export default i18n;

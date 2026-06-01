@@ -31,7 +31,8 @@
         "Language": "Language",
         "InfoSettings": "Step Info Settings",
         "OpenStepDialogOnFirstReach": "Open explanation on first step οccurence",
-        "PauseOnFirstReach": "Pause on first step occurence"
+        "PauseOnFirstReach": "Pause on first step occurence",
+        "AlgorithmCompleted": "Algorithm completed! Cut size: {{cutSize}}, Reads: {{reads}}, Writes: {{writes}}, Additions: {{additions}}, Comparisons: {{comparisons}}"
     },
     "el": {
         "English": "Αγγλικά",
@@ -65,6 +66,7 @@
         "Language": "Γλώσσα",
         "InfoSettings": "Ρυθμίσεις Πληροφοριών Βημάτων",
         "OpenStepDialogOnFirstReach": "Άνοιγμα επεξήγησης στην πρώτη εμφάνιση βήματος",
-        "PauseOnFirstReach": "Παύση στην πρώτη εμφάνιση βήματος"
+        "PauseOnFirstReach": "Παύση στην πρώτη εμφάνιση βήματος",
+        "AlgorithmCompleted": "Ο αλγόριθμος ολοκληρώθηκε! Μέγεθος τομής: {{cutSize}}, Αναγνώσεις: {{reads}}, Εγγραφές: {{writes}}, Προσθέσεις: {{additions}}, Συγκρίσεις: {{comparisons}}"
     }
 }
