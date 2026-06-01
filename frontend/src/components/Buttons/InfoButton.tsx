@@ -42,6 +42,7 @@ const InfoButton = ({
       h={'60px'}
       colorPalette={colorPalette}
       bg={`${colorPalette}.500`}
+      color={'white'}
       rounded="full"
       boxShadow={'lg'}
       zIndex={1000}
