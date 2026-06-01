@@ -10,9 +10,11 @@ export const calculateX = (index: number, partition: number, totalNodes: number)
     const nodesInPartition = (partition === 0) ? Math.ceil(totalNodes / 2) : Math.floor(totalNodes / 2);
     
     // Partition 0: left semicircle (π/2 to 3π/2), Partition 1: right semicircle (-π/2 to π/2)
-    const angle = (partition === 0)
-        ? startAngle + (Math.PI * index) / (nodesInPartition - 1)
-        : startAngle - (Math.PI * index) / (nodesInPartition - 1);
+    const angle =
+        (nodesInPartition <= 1) ? Math.PI / 2 : // If only one node, place it at the top
+        (partition === 0)
+            ? startAngle + (Math.PI * index) / (nodesInPartition - 1)
+            : startAngle - (Math.PI * index) / (nodesInPartition - 1);
     
     // Scale radius and distance with number of nodes
     const scaleFactor = totalNodes / 10;
@@ -29,9 +31,11 @@ export const calculateY = (index: number, partition: number, totalNodes: number)
     const nodesInPartition = (partition === 0) ? Math.ceil(totalNodes / 2) : Math.floor(totalNodes / 2);
     
     // Partition 0: left semicircle (π/2 to 3π/2), Partition 1: right semicircle (π/2 to -π/2)
-    const angle = (partition === 0)
-        ? startAngle + (Math.PI * index) / (nodesInPartition - 1)
-        : startAngle - (Math.PI * index) / (nodesInPartition - 1);
+    const angle =
+        (nodesInPartition <= 1) ? Math.PI / 2 : // If only one node, place it at the top
+        (partition === 0)
+            ? startAngle + (Math.PI * index) / (nodesInPartition - 1)
+            : startAngle - (Math.PI * index) / (nodesInPartition - 1);
     
     // Scale radius with number of nodes
     const scaleFactor = totalNodes / 10;
