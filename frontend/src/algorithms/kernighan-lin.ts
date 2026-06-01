@@ -150,6 +150,8 @@ export function runKernighanLin(
 
     animation[animation.length - 1].timeBeforeNext = 500;
 
+    animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLInitialPartitioning' }, true));
+
     const dValueUpdates = nodes.map(node => (
         {
             id: node.id,
@@ -166,7 +168,7 @@ export function runKernighanLin(
         timeBeforeNext: 1000
     });
 
-    animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLInitialPartitioning' }, true));
+    animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLFirstSortingStep' }, true));
 
     for (let i = 0; i < Math.floor(nodes.length / 2); i++) {
 
