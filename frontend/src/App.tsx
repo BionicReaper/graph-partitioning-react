@@ -262,7 +262,7 @@ function App() {
         asyncPause();
       }
     }
-  }, [isStepDialogOpen, shouldOpenStepDialogOnFirstReach, setCurrentAnchor, setIsStepDialogOpen]);
+  }, [isStepDialogOpen, shouldOpenStepDialogOnFirstReach, shouldPauseOnFirstReach, setCurrentAnchor, setIsStepDialogOpen]);
 
   useEffect(() => {
     setAnchorReachedCallback(onAnchorReached);
