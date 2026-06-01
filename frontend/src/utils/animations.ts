@@ -285,7 +285,9 @@ export const moveNode = (
         if (!network) return true;
         if (!startTime) startTime = timestamp;
         const progress = timestamp - startTime;
-        const t = Math.min(progress / duration, 1);
+        const t = (duration <= 0) 
+            ? 1 
+            : Math.min(progress / duration, 1);
         const easedT = easeInOutCubic(t);
 
         const xValue = startingX + easedT * (targetX - startingX);
