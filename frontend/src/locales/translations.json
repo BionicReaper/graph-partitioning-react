@@ -30,8 +30,11 @@
         "AnchorNavigationRight": "Navigate to Next Anchor",
         "Language": "Language",
         "InfoSettings": "Step Info",
-        "OpenStepDialogOnFirstReach": "Open explanation on first step οccurence",
-        "PauseOnFirstReach": "Pause on first step occurence",
+        "OpenStepDialog": "Open step explanation",
+        "PauseOnStep": "Pause on step",
+        "StepSettingAlways": "Always",
+        "StepSettingOnFirstReach": "On first step reach",
+        "StepSettingNever": "Never",
         "AlgorithmCompleted": "Algorithm completed! Cut size: {{cutSize}}, Reads: {{reads}}, Writes: {{writes}}, Additions: {{additions}}, Comparisons: {{comparisons}}",
         "Graph": "Graph"
     },
@@ -66,8 +69,11 @@
         "AnchorNavigationRight": "Πλοήγηση στην επόμενη άγκυρα",
         "Language": "Γλώσσα",
         "InfoSettings": "Πληροφοριές Βημάτων",
-        "OpenStepDialogOnFirstReach": "Άνοιγμα επεξήγησης στην πρώτη εμφάνιση βήματος",
-        "PauseOnFirstReach": "Παύση στην πρώτη εμφάνιση βήματος",
+        "OpenStepDialog": "Άνοιγμα επεξήγησης βήματος",
+        "PauseOnStep": "Παύση στο βήμα",
+        "StepSettingAlways": "Πάντα",
+        "StepSettingOnFirstReach": "Στην πρώτη εμφάνιση βήματος",
+        "StepSettingNever": "Ποτέ",
         "AlgorithmCompleted": "Ο αλγόριθμος ολοκληρώθηκε! Μέγεθος τομής: {{cutSize}}, Αναγνώσεις: {{reads}}, Εγγραφές: {{writes}}, Προσθέσεις: {{additions}}, Συγκρίσεις: {{comparisons}}",
         "Graph": "Γράφος"
     }

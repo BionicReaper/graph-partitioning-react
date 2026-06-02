@@ -5,7 +5,7 @@ import AddButton from './components/Buttons/AddButton';
 import PlayButton from './components/Buttons/PlayButton';
 import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
-import { algorithms, defaultVisOptions } from './utils/constants';
+import { algorithms, defaultVisOptions, shouldTriggerOnStep, type StepSettingMode } from './utils/constants';
 import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
 import { getPauseStatus, getSimulationSpeedFactor, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
@@ -223,8 +223,8 @@ function App() {
   }, [networkRef, setActiveMode, unselectAll]);
 
   // Anchor handler
-  const [shouldOpenStepDialogOnFirstReach, setShouldOpenStepDialogOnFirstReach] = useLocalStorage<boolean>('shouldOpenStepDialogOnFirstReach', true);
-  const [shouldPauseOnFirstReach, setShouldPauseOnFirstReach] = useLocalStorage<boolean>('shouldPauseOnFirstReach', true);
+  const [shouldOpenStepDialog, setShouldOpenStepDialog] = useLocalStorage<StepSettingMode>('shouldOpenStepDialog', 'onFirstReach');
+  const [shouldPause, setShouldPause] = useLocalStorage<StepSettingMode>('shouldPause', 'onFirstReach');
   const [isStepDialogOpen, setIsStepDialogOpen] = useState<boolean>(false);
   const [currentAnchor, setCurrentAnchor] = useState<{ index: number, textKey: string, values: { [key: string]: string }, firstReach: boolean } | null>(null);
 
@@ -240,34 +240,35 @@ function App() {
 
     const newAnchorIndex = anchor.index + (direction === 'right' ? 1 : -1);
 
-    await goToAnchor(newAnchorIndex, shouldPauseOnFirstReach);
+    await goToAnchor(newAnchorIndex, shouldPause);
     setIsPaused(getPauseStatus());
-  }, [shouldPauseOnFirstReach]);
+  }, [shouldPause]);
 
-  const onAnchorReached = useCallback((firstReach: boolean) => {
+  const onAnchorReached = useCallback((firstReach: boolean, controlled: boolean) => {
     const anchor = getAnchor();
 
     console.log(`Anchor reached callback triggered for anchor index ${anchor ? anchor.index : 'null'}, firstReach: ${firstReach}`);
     if (!anchor) return;
     setCurrentAnchor(anchor);
-    if (firstReach) {
-      if (shouldOpenStepDialogOnFirstReach) {
-        setIsStepDialogOpen(true);
-      }
-      if (shouldPauseOnFirstReach) {
-        const asyncPause = async () => {
-          try {
-            const currentIsPaused = getPauseStatus(); // Check if animation is already paused to avoid unnecessary pause calls
-            if (!currentIsPaused) await pauseAnimation();
-            setIsPaused(true);
-          } catch (err) {
-            console.error('Error pausing animation on anchor reach:', err);
-          }
-        }
-        asyncPause();
-      }
+
+    if (controlled) return;
+
+    if (shouldTriggerOnStep(shouldOpenStepDialog, firstReach)) {
+      setIsStepDialogOpen(true);
     }
-  }, [isStepDialogOpen, shouldOpenStepDialogOnFirstReach, shouldPauseOnFirstReach, setCurrentAnchor, setIsStepDialogOpen]);
+    if (shouldTriggerOnStep(shouldPause, firstReach)) {
+      const asyncPause = async () => {
+        try {
+          const currentIsPaused = getPauseStatus(); // Check if animation is already paused to avoid unnecessary pause calls
+          if (!currentIsPaused) await pauseAnimation();
+          setIsPaused(true);
+        } catch (err) {
+          console.error('Error pausing animation on anchor reach:', err);
+        }
+      }
+      asyncPause();
+    }
+  }, [shouldOpenStepDialog, shouldPause, setCurrentAnchor, setIsStepDialogOpen]);
 
   useEffect(() => {
     setAnchorReachedCallback(onAnchorReached);
@@ -515,10 +516,10 @@ function App() {
         disablePhysicsToggle={isRunning}
         physicsEnabled={physicsEnabled}
         onTogglePhysics={togglePhysics}
-        shouldOpenStepDialogOnFirstReach={shouldOpenStepDialogOnFirstReach}
-        onShouldOpenStepDialogOnFirstReachToggle={() => setShouldOpenStepDialogOnFirstReach((prev) => !prev)}
-        shouldPauseOnFirstReach={shouldPauseOnFirstReach}
-        onShouldPauseOnFirstReachToggle={() => setShouldPauseOnFirstReach((prev) => !prev)}
+        shouldOpenStepDialog={shouldOpenStepDialog}
+        onShouldOpenStepDialogChange={setShouldOpenStepDialog}
+        shouldPause={shouldPause}
+        onShouldPauseChange={setShouldPause}
       />
       <PlayButton
         onRun={runAlgorithm}

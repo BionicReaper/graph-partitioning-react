@@ -2,13 +2,13 @@ let anchor: { index: number, textKey: string, values: {[key: string]: string}, f
 
 let targetAnchorIndex: number | null = null;
 
-let anchorReachedCallback: (firstReach: boolean) => void = () => { };
+let anchorReachedCallback: (firstReach: boolean, controlled: boolean) => void = () => { };
 
 export const goingToAnchor = () => {
   return targetAnchorIndex !== null;
 }
 
-export const setAnchorReachedCallback = (callback: (firstReach: boolean) => void) => {
+export const setAnchorReachedCallback = (callback: (firstReach: boolean, controlled: boolean) => void) => {
   anchorReachedCallback = callback;
 }
 
@@ -53,10 +53,10 @@ export const setAnchor = (_anchor: {anchorIndex: number | null, textKey?: string
     anchor = { index: anchorIndex, textKey: textKey || "", values: values || {}, firstReach };
 
     if (targetAnchorIndex === null) {
-      anchorReachedCallback(firstReach);
+      anchorReachedCallback(firstReach, false);
     } else if (anchorIndex === targetAnchorIndex) {
       anchorReachedCleanup();
-      anchorReachedCallback(false);
+      anchorReachedCallback(firstReach, true);
     }
   }
 }

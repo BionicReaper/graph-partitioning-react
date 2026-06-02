@@ -81,3 +81,16 @@ export const algorithms = [
   { id: 'fiduccia-mattheyses', name: 'Fiduccia-Mattheyses', description: 'FiducciaMattheysesDescription' },
   { id: 'metis', name: 'METIS', description: 'MetisDescription' },
 ];
+
+export type StepSettingMode = 'always' | 'onFirstReach' | 'never';
+
+export const stepSettingModes: StepSettingMode[] = ['always', 'onFirstReach', 'never'];
+
+export const stepSettingLabelKeys: Record<StepSettingMode, string> = {
+  always: 'StepSettingAlways',
+  onFirstReach: 'StepSettingOnFirstReach',
+  never: 'StepSettingNever',
+};
+
+export const shouldTriggerOnStep = (mode: StepSettingMode, firstReach: boolean): boolean =>
+  mode === 'always' || (mode === 'onFirstReach' && firstReach);

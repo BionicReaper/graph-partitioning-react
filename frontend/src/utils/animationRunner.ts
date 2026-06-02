@@ -1,6 +1,7 @@
 import { getAnchor, setTargetAnchor } from "./anchoring";
 import { extractNodeUpdates, extractEdgeUpdates } from "./animations";
 import { DataSet } from 'vis-network/standalone/esm/vis-network';
+import { StepSettingMode } from "./constants";
 
 let animationSteps: Array<{
     animationCallback: () => (timestamp: DOMHighResTimeStamp) => boolean;
@@ -207,7 +208,7 @@ export const restartRunningAnimation = async (guaranteeSynchronous: boolean = fa
     if (!wasPaused && !guaranteeSynchronous) resumeAnimation();
 }
 
-export const goToAnchor = async (anchorIndex: number, shouldPauseOnFirstReach: boolean = false) => {
+export const goToAnchor = async (anchorIndex: number, pauseOnReach: StepSettingMode) => {
     if (!isRendering) throw new Error("No animation is currently running.");
     if (!animationSteps) throw new Error("Animation steps not set.");
 
@@ -233,9 +234,13 @@ export const goToAnchor = async (anchorIndex: number, shouldPauseOnFirstReach: b
         }
     }
 
+    const { firstReach } = getAnchor() || { firstReach: false };
+
     setTargetAnchor(null);
 
-    if (!shouldPauseOnFirstReach && !wasPaused && isRendering && isPaused) {
+    const shouldPause = (pauseOnReach === 'always') || (pauseOnReach === 'onFirstReach' && firstReach);
+
+    if (!shouldPause && !wasPaused && isRendering && isPaused) {
         resumeAnimation();
     }
 }

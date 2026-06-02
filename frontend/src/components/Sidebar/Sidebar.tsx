@@ -15,6 +15,7 @@ import { Menu, GitBranch, Globe } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
+import { stepSettingLabelKeys, stepSettingModes, type StepSettingMode } from '../../utils/constants';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -22,10 +23,10 @@ interface SidebarProps {
   disablePhysicsToggle?: boolean;
   physicsEnabled: boolean;
   onTogglePhysics: () => void;
-  shouldOpenStepDialogOnFirstReach: boolean;
-  onShouldOpenStepDialogOnFirstReachToggle: () => void;
-  shouldPauseOnFirstReach: boolean;
-  onShouldPauseOnFirstReachToggle: () => void;
+  shouldOpenStepDialog: StepSettingMode;
+  onShouldOpenStepDialogChange: (value: StepSettingMode) => void;
+  shouldPause: StepSettingMode;
+  onShouldPauseChange: (value: StepSettingMode) => void;
 }
 
 const algorithms = [
@@ -45,10 +46,10 @@ const Sidebar = ({
   disablePhysicsToggle = false,
   physicsEnabled,
   onTogglePhysics,
-  shouldOpenStepDialogOnFirstReach,
-  onShouldOpenStepDialogOnFirstReachToggle,
-  shouldPauseOnFirstReach,
-  onShouldPauseOnFirstReachToggle
+  shouldOpenStepDialog,
+  onShouldOpenStepDialogChange,
+  shouldPause,
+  onShouldPauseChange
 }: SidebarProps) => {
   const { t, i18n } = useTranslation();
 
@@ -234,52 +235,59 @@ const Sidebar = ({
                   {t('InfoSettings')}
                 </Heading>
 
-                {/* Open Step Dialog on First Step Occurence */}
+                {/* When to open the step explanation dialog */}
                 <Box
                   p={3}
                   bg="gray.50"
                   borderRadius="md"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
                 >
-                  <Text fontSize="sm" color="gray.700" fontWeight="500">
-                    {t('OpenStepDialogOnFirstReach')}
+                  <Text fontSize="sm" color="gray.700" fontWeight="500" mb={3}>
+                    {t('OpenStepDialog')}
                   </Text>
-                  <Switch.Root
-                    checked={shouldOpenStepDialogOnFirstReach}
-                    onCheckedChange={onShouldOpenStepDialogOnFirstReachToggle}
+                  <RadioGroup.Root
+                    value={shouldOpenStepDialog}
+                    onValueChange={(e) => e.value && onShouldOpenStepDialogChange(e.value as StepSettingMode)}
                   >
-                    <Switch.HiddenInput />
-                    <Switch.Control>
-                      <Switch.Thumb />
-                    </Switch.Control>
-                    <Switch.Label />
-                  </Switch.Root>
+                    <VStack align="start" gap={2}>
+                      {stepSettingModes.map((mode) => (
+                        <RadioGroup.Item key={mode} value={mode}>
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText fontSize="sm" color="gray.700">
+                            {t(stepSettingLabelKeys[mode])}
+                          </RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                      ))}
+                    </VStack>
+                  </RadioGroup.Root>
                 </Box>
 
-                {/* Pause on First Step Occurence */}
+                {/* When to pause playback on a step */}
                 <Box
                   p={3}
+                  mt={4}
                   bg="gray.50"
                   borderRadius="md"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
                 >
-                  <Text fontSize="sm" color="gray.700" fontWeight="500">
-                    {t('PauseOnFirstReach')}
+                  <Text fontSize="sm" color="gray.700" fontWeight="500" mb={3}>
+                    {t('PauseOnStep')}
                   </Text>
-                  <Switch.Root
-                    checked={shouldPauseOnFirstReach}
-                    onCheckedChange={onShouldPauseOnFirstReachToggle}
+                  <RadioGroup.Root
+                    value={shouldPause}
+                    onValueChange={(e) => e.value && onShouldPauseChange(e.value as StepSettingMode)}
                   >
-                    <Switch.HiddenInput />
-                    <Switch.Control>
-                      <Switch.Thumb />
-                    </Switch.Control>
-                    <Switch.Label />
-                  </Switch.Root>
+                    <VStack align="start" gap={2}>
+                      {stepSettingModes.map((mode) => (
+                        <RadioGroup.Item key={mode} value={mode}>
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText fontSize="sm" color="gray.700">
+                            {t(stepSettingLabelKeys[mode])}
+                          </RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                      ))}
+                    </VStack>
+                  </RadioGroup.Root>
                 </Box>
               </Box>
 
