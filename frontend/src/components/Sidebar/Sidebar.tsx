@@ -121,7 +121,7 @@ const Sidebar = ({
             pb={4}
             px={5}
           >
-            <Heading size="lg" color="blue.600" fontWeight="600">
+            <Heading size="xl" color="blue.600" fontWeight="600">
               {t('GraphPartitioning')}
             </Heading>
           </Drawer.Header>
@@ -130,7 +130,7 @@ const Sidebar = ({
             <VStack gap={8} align="stretch">
               {/* Algorithms Section */}
               <Box>
-                <Heading size="md" mb={4} color="gray.800" fontWeight="500">
+                <Heading size="lg" mb={4} color="gray.800" fontWeight="500">
                   {t('Algorithms')}
                 </Heading>
                 <Stack gap={2}>
@@ -164,8 +164,12 @@ const Sidebar = ({
 
               {/* Settings Section */}
               <Box>
-                <Heading size="md" mb={4} color="gray.800" fontWeight="500">
+                <Heading size="lg" mb={4} color="gray.800" fontWeight="500">
                   {t('Settings')}
+                </Heading>
+
+                <Heading size="md" mb={4} mt={6} color="gray.800" fontWeight="500">
+                  {t('Graph')}
                 </Heading>
 
                 {/* Physics Toggle */}
@@ -283,7 +287,7 @@ const Sidebar = ({
 
               {/* Controls Section */}
               <Box>
-                <Heading size="md" mb={4} color="gray.800" fontWeight="500">
+                <Heading size="lg" mb={4} color="gray.800" fontWeight="500">
                   {t('Controls')}
                 </Heading>
                 <VStack gap={2} align="stretch">
@@ -315,7 +319,7 @@ const Sidebar = ({
 
               {/* Info Section */}
               <Box>
-                <Heading size="md" mb={4} color="gray.800" fontWeight="500">
+                <Heading size="lg" mb={4} color="gray.800" fontWeight="500">
                   {t('About')}
                 </Heading>
                 <Text fontSize="sm" color="gray.600" lineHeight="1.5">
