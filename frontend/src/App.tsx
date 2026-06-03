@@ -297,6 +297,17 @@ function App() {
     console.log('Running algorithm:', currentAlgorithmId);
     if (!networkRef.current || isRunning) return;
 
+    const runSelectedAlgorithm =
+      (currentAlgorithmId === 'kernighan-lin')       ? runKernighanLin :
+      (currentAlgorithmId === 'fiduccia-mattheyses') ? undefined       :
+      (currentAlgorithmId === 'metis')               ? undefined       :
+      undefined;
+
+    if (!runSelectedAlgorithm) {
+      console.warn('Selected algorithm doesn\'t have an implementation');
+      return;
+    }
+
     setIsRunning(true);
     setPhysicsEnabled(false); // Disable physics during and after animation
     updateDataSetPositions(networkRef.current, nodesRef.current);
