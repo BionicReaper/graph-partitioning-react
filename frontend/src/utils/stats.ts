@@ -1,5 +1,6 @@
 let stats = {
-    cutSize: 0,
+    initialCutSize: 0,
+    finalCutSize: 0,
     reads: 0,
     writes: 0,
     additions: 0,
@@ -8,7 +9,8 @@ let stats = {
 
 export const resetStats = () => {
     stats = {
-        cutSize: 0,
+        initialCutSize: 0,
+        finalCutSize: 0,
         reads: 0,
         writes: 0,
         additions: 0,
@@ -16,8 +18,12 @@ export const resetStats = () => {
     }
 }
 
-export const setCutSize = (cutSize: number) => {
-    stats.cutSize = cutSize;
+export const setInitialCutSize = (cutSize: number) => {
+    stats.initialCutSize = cutSize;
+}
+
+export const setFinalCutSize = (cutSize: number) => {
+    stats.finalCutSize = cutSize;
 }
 
 export const incrementReads = (count: number = 1) => {

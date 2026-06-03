@@ -2,7 +2,7 @@ import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { highlightEdges, highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
 import { generateSetAnchorAnimation } from "../utils/anchoring";
-import { resetStats, setCutSize, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
+import { resetStats, setInitialCutSize, setFinalCutSize, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
 
 export interface KLNode {
     index: number;
@@ -33,7 +33,8 @@ export function runKernighanLin(
     edgeDataSet: DataSet<any, "id">
 ): {
     partition: { [key: string]: number };
-    cutSize: number;
+    initialCutSize: number;
+    finalCutSize: number;
     animation: Animation[];
 } {
     const animation: Animation[] = [];
@@ -125,6 +126,16 @@ export function runKernighanLin(
             return { from: fromIdx, to: toIdx, id: edge.id };
         })
         .filter((edge): edge is KLEdge => edge !== null);
+
+    // Initial cut size calculation
+    let initialCutSize = 0;
+    edges.forEach(edge => {
+        if (nodes[edge.from].partition !== nodes[edge.to].partition) {
+            initialCutSize += 1;
+        }
+    });
+
+    setInitialCutSize(initialCutSize);
 
     const exchangePairs: Array<{ a: number; b: number; gain: number }> = [];
 
@@ -561,18 +572,19 @@ export function runKernighanLin(
     });
 
     // Final cut size calculation
-    let cutSize = 0;
+    let finalCutSize = 0;
     edges.forEach(edge => {
         if (nodes[edge.from].partition !== nodes[edge.to].partition) {
-            cutSize += 1;
+            finalCutSize += 1;
         }
     });
 
-    setCutSize(cutSize);
+    setFinalCutSize(finalCutSize);
 
     return {
         partition: partitionResult,
-        cutSize: cutSize,
+        initialCutSize: initialCutSize,
+        finalCutSize: finalCutSize,
         animation
     };
 }

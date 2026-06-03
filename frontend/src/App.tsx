@@ -316,7 +316,8 @@ function App() {
     setAnchor({ anchorIndex: null, textKey: '', values: {} }, false); // Clear any remaining anchor state
     enqueueSnackbar(
       <LocalizedStatsText stats={{
-          cutSize: stats.cutSize,
+          initialCutSize: stats.initialCutSize,
+          finalCutSize: stats.finalCutSize,
           reads: stats.reads,
           writes: stats.writes,
           additions: stats.additions,
