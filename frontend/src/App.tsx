@@ -309,7 +309,26 @@ function App() {
     }
 
     setIsRunning(true);
+
     setPhysicsEnabled(false); // Disable physics during and after animation
+
+    networkRef.current?.setOptions(
+        {
+            physics: {
+                enabled: false
+            },
+            interaction: {
+                dragNodes: false,
+                multiselect: false,
+                hover: false,
+                selectable: false,
+            }
+        }
+    );
+    networkRef.current?.unselectAll();
+    (networkRef.current as any).body.emitter.emit('select', { nodes: [], edges: [] });
+    networkRef.current?.disableEditMode();
+
     updateDataSetPositions(networkRef.current, nodesRef.current);
     console.log('Current graph state before algorithm:');
     console.log(nodesRef.current.get(), edgesRef.current.get());

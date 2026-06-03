@@ -43,30 +43,6 @@ export function runKernighanLin(
 
     let anchorIndex = 0;
 
-    animation.push({
-        animationCallback: () => {
-            network.setOptions(
-                {
-                    physics: {
-                        enabled: false
-                    },
-                    interaction: {
-                        dragNodes: false,
-                        multiselect: false,
-                        hover: false,
-                        selectable: false,
-                    }
-                }
-            );
-            network.unselectAll();
-            (network as any).body.emitter.emit('select', { nodes: [], edges: [] });
-            network.disableEditMode();
-            return () => { return true; };
-        },
-        description: `Disable interaction and physics`,
-        timeBeforeNext: 0
-    });
-
     // Convert DataSet to array format with index mapping
     // Time complexity: O(n + m) where n = nodes, m = edges
 
