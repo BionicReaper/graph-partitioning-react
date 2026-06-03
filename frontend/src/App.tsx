@@ -314,7 +314,7 @@ function App() {
     console.log('Current graph state before algorithm:');
     console.log(nodesRef.current.get(), edgesRef.current.get());
 
-    const result = runKernighanLin(networkRef.current, nodesRef.current, edgesRef.current);
+    const result = runSelectedAlgorithm(networkRef.current, nodesRef.current, edgesRef.current);
     console.log('Algorithm result:', result);
 
     const animationPromise = runAnimationSequence(result.animation, nodesRef.current, edgesRef.current);
