@@ -36,7 +36,16 @@
         "StepSettingOnFirstReach": "On first step reach",
         "StepSettingNever": "Never",
         "AlgorithmCompleted": "Algorithm completed! Cut size: {{cutSize}}, Reads: {{reads}}, Writes: {{writes}}, Additions: {{additions}}, Comparisons: {{comparisons}}",
-        "Graph": "Graph"
+        "Graph": "Graph",
+        "GraphGeneration": "Graph Generation",
+        "MinNodes": "Minimum nodes",
+        "MaxNodes": "Maximum nodes",
+        "EdgeChance": "Edge inclusion chance",
+        "GenerateGraph": "Generate graph",
+        "Passes": "Passes",
+        "PassesUntilNoGain": "Until no gain",
+        "DecreasePasses": "Decrease passes",
+        "IncreasePasses": "Increase passes"
     },
     "el": {
         "English": "Αγγλικά",
@@ -75,6 +84,15 @@
         "StepSettingOnFirstReach": "Στην πρώτη εμφάνιση βήματος",
         "StepSettingNever": "Ποτέ",
         "AlgorithmCompleted": "Ο αλγόριθμος ολοκληρώθηκε! Μέγεθος τομής: {{cutSize}}, Αναγνώσεις: {{reads}}, Εγγραφές: {{writes}}, Προσθέσεις: {{additions}}, Συγκρίσεις: {{comparisons}}",
-        "Graph": "Γράφος"
+        "Graph": "Γράφος",
+        "GraphGeneration": "Δημιουργία Γραφήματος",
+        "MinNodes": "Ελάχιστοι κόμβοι",
+        "MaxNodes": "Μέγιστοι κόμβοι",
+        "EdgeChance": "Πιθανότητα ακμής",
+        "GenerateGraph": "Δημιουργία γραφήματος",
+        "Passes": "Περάσματα",
+        "PassesUntilNoGain": "Μέχρι μηδενικό κέρδος",
+        "DecreasePasses": "Μείωση περασμάτων",
+        "IncreasePasses": "Αύξηση περασμάτων"
     }
 }

@@ -5,6 +5,9 @@ const canHover = window.matchMedia('(hover: hover)').matches;
 
 let nodeIdCounter = 0;
 
+export const getNextNodeLabel = (): string => (nodeIdCounter++).toString();
+export const resetNodeIdCounter = (value = 0): void => { nodeIdCounter = value; };
+
 export const defaultVisOptions: any = {
   nodes: {
     shape: 'dot',
@@ -62,8 +65,7 @@ export const defaultVisOptions: any = {
   manipulation: {
     enabled: false,
     addNode: (data: any, callback: any) => {
-      data.label = nodeIdCounter.toString();
-      nodeIdCounter += 1;
+      data.label = getNextNodeLabel();
       callback(data);
       document.dispatchEvent(AddNodeEvent);
     },

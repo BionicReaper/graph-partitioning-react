@@ -9,13 +9,17 @@ import {
   Drawer,
   Switch,
   RadioGroup,
-  HStack
+  HStack,
+  NumberInput,
+  Slider,
+  Button
 } from '@chakra-ui/react';
-import { Menu, GitBranch, Globe } from 'lucide-react';
+import { Menu, GitBranch, Globe, Waypoints, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
 import { stepSettingLabelKeys, stepSettingModes, type StepSettingMode } from '../../utils/constants';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -23,6 +27,10 @@ interface SidebarProps {
   disablePhysicsToggle?: boolean;
   physicsEnabled: boolean;
   onTogglePhysics: () => void;
+  onGenerateGraph: (minNodes: number, maxNodes: number, edgeProbability: number) => void;
+  disableGraphGeneration?: boolean;
+  algorithmPasses: number;
+  onAlgorithmPassesChange: (value: number) => void;
   shouldOpenStepDialog: StepSettingMode;
   onShouldOpenStepDialogChange: (value: StepSettingMode) => void;
   shouldPause: StepSettingMode;
@@ -46,6 +54,10 @@ const Sidebar = ({
   disablePhysicsToggle = false,
   physicsEnabled,
   onTogglePhysics,
+  onGenerateGraph,
+  disableGraphGeneration = false,
+  algorithmPasses,
+  onAlgorithmPassesChange,
   shouldOpenStepDialog,
   onShouldOpenStepDialogChange,
   shouldPause,
@@ -57,6 +69,10 @@ const Sidebar = ({
     isOpen: false,
     algorithm: null,
   });
+
+  const [minNodes, setMinNodes] = useLocalStorage<number>('minNodes', 5);
+  const [maxNodes, setMaxNodes] = useLocalStorage<number>('maxNodes', 10);
+  const [edgeChance, setEdgeChance] = useLocalStorage<number>('edgeChance', 30); // percentage 0-100
 
   const languageOptions = useMemo(() => {
     return i18n.store.data ? Object.keys(i18n.store.data) : [];
@@ -163,11 +179,127 @@ const Sidebar = ({
 
               <Separator borderColor="gray.200" />
 
+              {/* Graph Generation Section */}
+              <Box>
+                <Heading size="lg" mb={4} color="gray.800" fontWeight="500">
+                  {t('GraphGeneration')} <Waypoints size={20} style={{ display: 'inline', marginLeft: '4px' }} />
+                </Heading>
+                <VStack gap={4} align="stretch">
+                  {/* Minimum nodes */}
+                  <Box p={3} bg="gray.50" borderRadius="md">
+                    <Text fontSize="sm" color="gray.700" fontWeight="500" mb={2}>
+                      {t('MinNodes')}
+                    </Text>
+                    <NumberInput.Root
+                      value={String(minNodes)}
+                      min={1}
+                      step={1}
+                      width="100%"
+                      size="sm"
+                      onValueChange={(e) => setMinNodes(Number.isNaN(e.valueAsNumber) ? 1 : Math.min(Math.max(1, Math.floor(e.valueAsNumber)), maxNodes))}
+                    >
+                      <NumberInput.Control />
+                      <NumberInput.Input />
+                    </NumberInput.Root>
+                  </Box>
+
+                  {/* Maximum nodes */}
+                  <Box p={3} bg="gray.50" borderRadius="md">
+                    <Text fontSize="sm" color="gray.700" fontWeight="500" mb={2}>
+                      {t('MaxNodes')}
+                    </Text>
+                    <NumberInput.Root
+                      value={String(maxNodes)}
+                      min={1}
+                      step={1}
+                      width="100%"
+                      size="sm"
+                      onValueChange={(e) => setMaxNodes(Number.isNaN(e.valueAsNumber) ? 1 : Math.max(1, Math.floor(e.valueAsNumber), minNodes))}
+                    >
+                      <NumberInput.Control />
+                      <NumberInput.Input />
+                    </NumberInput.Root>
+                  </Box>
+
+                  {/* Edge inclusion chance */}
+                  <Box p={3} bg="gray.50" borderRadius="md">
+                    <HStack justifyContent="space-between" mb={2}>
+                      <Text fontSize="sm" color="gray.700" fontWeight="500">
+                        {t('EdgeChance')}
+                      </Text>
+                      <Text fontSize="sm" color="gray.600" fontWeight="500">
+                        {edgeChance}%
+                      </Text>
+                    </HStack>
+                    <Slider.Root
+                      value={[edgeChance]}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onValueChange={(e) => setEdgeChance(e.value[0])}
+                    >
+                      <Slider.Control>
+                        <Slider.Track>
+                          <Slider.Range />
+                        </Slider.Track>
+                        <Slider.Thumbs />
+                      </Slider.Control>
+                    </Slider.Root>
+                  </Box>
+
+                  <Button
+                    colorPalette="blue"
+                    onClick={() => onGenerateGraph(minNodes, maxNodes, edgeChance / 100)}
+                    disabled={disableGraphGeneration}
+                  >
+                    {t('GenerateGraph')}
+                  </Button>
+                </VStack>
+              </Box>
+
+              <Separator borderColor="gray.200" />
+
               {/* Settings Section */}
               <Box>
                 <Heading size="lg" mb={4} color="gray.800" fontWeight="500">
                   {t('Settings')}
                 </Heading>
+
+                {/* Passes */}
+                <Heading size="md" mb={4} mt={6} color="gray.800" fontWeight="500">
+                  {t('Passes')}
+                </Heading>
+                <Box
+                  p={3}
+                  bg="gray.50"
+                  borderRadius="md"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <IconButton
+                    aria-label={t('DecreasePasses')}
+                    size="sm"
+                    variant="ghost"
+                    color="gray.700"
+                    onClick={() => onAlgorithmPassesChange(Math.max(0, algorithmPasses - 1))}
+                    disabled={algorithmPasses <= 0}
+                  >
+                    <ChevronLeft size={18} />
+                  </IconButton>
+                  <Text fontSize="sm" color="gray.700" fontWeight="500" textAlign="center">
+                    {algorithmPasses === 0 ? t('PassesUntilNoGain') : algorithmPasses}
+                  </Text>
+                  <IconButton
+                    aria-label={t('IncreasePasses')}
+                    size="sm"
+                    variant="ghost"
+                    color="gray.700"
+                    onClick={() => onAlgorithmPassesChange(algorithmPasses + 1)}
+                  >
+                    <ChevronRight size={18} />
+                  </IconButton>
+                </Box>
 
                 <Heading size="md" mb={4} mt={6} color="gray.800" fontWeight="500">
                   {t('Graph')}

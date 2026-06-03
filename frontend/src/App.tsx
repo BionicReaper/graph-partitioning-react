@@ -10,6 +10,7 @@ import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRigh
 import { runKernighanLin } from './algorithms/kernighan-lin';
 import { getPauseStatus, getSimulationSpeedFactor, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
+import { generateRandomGraph } from './utils/graphGeneration';
 import FullscreenButton from './components/Buttons/FullscreenButton';
 import { useTranslation } from 'react-i18next';
 import DeleteButton from './components/Buttons/DeleteButton';
@@ -192,6 +193,19 @@ function App() {
     setPhysicsEnabled((prev) => !prev);
   }, [setPhysicsEnabled]);
 
+  // Generate random graph handler
+  const generateGraph = useCallback((minNodes: number, maxNodes: number, edgeProbability: number): void => {
+    if (!networkRef.current || isRunning) return;
+
+    setActiveMode(null);
+    networkRef.current.disableEditMode();
+    unselectAll();
+    setHasSelection(false);
+
+    generateRandomGraph(nodesRef.current, edgesRef.current, minNodes, maxNodes, edgeProbability);
+
+  }, [networkRef, nodesRef, edgesRef, isRunning, setPhysicsEnabled, setActiveMode, unselectAll, setHasSelection]);
+
   // Add node handler
   const toggleAddNode = useCallback((): void => {
     if (!networkRef.current) return;
@@ -225,6 +239,7 @@ function App() {
   // Anchor handler
   const [shouldOpenStepDialog, setShouldOpenStepDialog] = useLocalStorage<StepSettingMode>('shouldOpenStepDialog', 'onFirstReach');
   const [shouldPause, setShouldPause] = useLocalStorage<StepSettingMode>('shouldPause', 'onFirstReach');
+  const [algorithmPasses, setAlgorithmPasses] = useLocalStorage<number>('algorithmPasses', 0);
   const [isStepDialogOpen, setIsStepDialogOpen] = useState<boolean>(false);
   const [currentAnchor, setCurrentAnchor] = useState<{ index: number, textKey: string, values: { [key: string]: string }, firstReach: boolean } | null>(null);
 
@@ -516,6 +531,10 @@ function App() {
         disablePhysicsToggle={isRunning}
         physicsEnabled={physicsEnabled}
         onTogglePhysics={togglePhysics}
+        onGenerateGraph={generateGraph}
+        disableGraphGeneration={isRunning}
+        algorithmPasses={algorithmPasses}
+        onAlgorithmPassesChange={setAlgorithmPasses}
         shouldOpenStepDialog={shouldOpenStepDialog}
         onShouldOpenStepDialogChange={setShouldOpenStepDialog}
         shouldPause={shouldPause}
