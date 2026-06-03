@@ -31,6 +31,7 @@ interface SidebarProps {
   disableGraphGeneration?: boolean;
   algorithmPasses: number;
   onAlgorithmPassesChange: (value: number) => void;
+  disableAlgorithmPassesChange?: boolean;
   shouldOpenStepDialog: StepSettingMode;
   onShouldOpenStepDialogChange: (value: StepSettingMode) => void;
   shouldPause: StepSettingMode;
@@ -58,6 +59,7 @@ const Sidebar = ({
   disableGraphGeneration = false,
   algorithmPasses,
   onAlgorithmPassesChange,
+  disableAlgorithmPassesChange = false,
   shouldOpenStepDialog,
   onShouldOpenStepDialogChange,
   shouldPause,
@@ -284,7 +286,7 @@ const Sidebar = ({
                     variant="ghost"
                     color="gray.700"
                     onClick={() => onAlgorithmPassesChange(Math.max(0, algorithmPasses - 1))}
-                    disabled={algorithmPasses <= 0}
+                    disabled={algorithmPasses <= 0 || disableAlgorithmPassesChange}
                   >
                     <ChevronLeft size={18} />
                   </IconButton>
@@ -297,6 +299,7 @@ const Sidebar = ({
                     variant="ghost"
                     color="gray.700"
                     onClick={() => onAlgorithmPassesChange(algorithmPasses + 1)}
+                    disabled={disableAlgorithmPassesChange}
                   >
                     <ChevronRight size={18} />
                   </IconButton>

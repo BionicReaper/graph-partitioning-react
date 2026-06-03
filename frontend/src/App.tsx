@@ -566,6 +566,7 @@ function App() {
         disableGraphGeneration={isRunning}
         algorithmPasses={algorithmPasses}
         onAlgorithmPassesChange={setAlgorithmPasses}
+        disableAlgorithmPassesChange={isRunning}
         shouldOpenStepDialog={shouldOpenStepDialog}
         onShouldOpenStepDialogChange={setShouldOpenStepDialog}
         shouldPause={shouldPause}
