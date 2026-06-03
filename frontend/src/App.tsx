@@ -262,7 +262,7 @@ function App() {
   const onAnchorReached = useCallback((firstReach: boolean, controlled: boolean) => {
     const anchor = getAnchor();
 
-    console.log(`Anchor reached callback triggered for anchor index ${anchor ? anchor.index : 'null'}, firstReach: ${firstReach}`);
+    // console.log(`Anchor reached callback triggered for anchor index ${anchor ? anchor.index : 'null'}, firstReach: ${firstReach}`);
     if (!anchor) return;
     setCurrentAnchor(anchor);
 
@@ -333,7 +333,7 @@ function App() {
     console.log('Current graph state before algorithm:');
     console.log(nodesRef.current.get(), edgesRef.current.get());
 
-    const result = runSelectedAlgorithm(networkRef.current, nodesRef.current, edgesRef.current);
+    const result = runSelectedAlgorithm(networkRef.current, nodesRef.current, edgesRef.current, algorithmPasses);
     console.log('Algorithm result:', result);
 
     const animationPromise = runAnimationSequence(result.animation, nodesRef.current, edgesRef.current);
@@ -397,7 +397,7 @@ function App() {
         }
       });
     setIsRunning(false);
-  }, [networkRef, isRunning, setIsRunning, setPhysicsEnabled, nodesRef, edgesRef, currentAlgorithmId, t, enqueueSnackbar, closeSnackbar, LocalizedStatsText]);
+  }, [networkRef, isRunning, setIsRunning, setPhysicsEnabled, nodesRef, edgesRef, currentAlgorithmId, t, enqueueSnackbar, closeSnackbar, LocalizedStatsText, algorithmPasses]);
 
   // Select algorithm handler
   const selectAlgorithm = useCallback((algorithmId: string): void => {

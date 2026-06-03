@@ -3,6 +3,7 @@ import { highlightEdges, highlightNodes, moveNode, swapNodePositions } from "../
 import { calculateX, calculateY } from "../utils/positioning";
 import { generateSetAnchorAnimation } from "../utils/anchoring";
 import { resetStats, setInitialCutSize, setFinalCutSize, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
+import { startNextPass } from "../utils/startNextPass";
 
 export interface KLNode {
     index: number;
@@ -30,7 +31,8 @@ export interface Animation {
 export function runKernighanLin(
     network: Network,
     nodeDataSet: DataSet<any, "id">,
-    edgeDataSet: DataSet<any, "id">
+    edgeDataSet: DataSet<any, "id">,
+    algorithmPasses: number = 0
 ): {
     partition: { [key: string]: number };
     initialCutSize: number;
@@ -49,6 +51,15 @@ export function runKernighanLin(
     const originalNodes = nodeDataSet.get();
     const originalEdges = edgeDataSet.get();
 
+    console.log('Original nodes and edges fetched from DataSet: ', originalNodes, originalEdges);
+
+    let currentPass = 0;
+    let initialCutSize = 0;
+    let previousCutSize = originalEdges.length;
+    let finalCutSize = originalEdges.length;
+
+    const partitionResult: { [key: string]: number } = {};
+
     // Create ID to index mapping - O(n)
     const idToIndex = new Map<number | string, number>();
     originalNodes.forEach((node, idx) => {
@@ -66,6 +77,12 @@ export function runKernighanLin(
         locked: false,
         label: node.label
     }));
+
+    while (startNextPass(algorithmPasses, previousCutSize, finalCutSize, currentPass)) {
+    
+    currentPass += 1;
+    previousCutSize = finalCutSize;
+    finalCutSize = 0;
 
 
     // Convert edges to array format using index mapping - O(m)
@@ -104,12 +121,14 @@ export function runKernighanLin(
         .filter((edge): edge is KLEdge => edge !== null);
 
     // Initial cut size calculation
-    let initialCutSize = 0;
-    edges.forEach(edge => {
-        if (nodes[edge.from].partition !== nodes[edge.to].partition) {
-            initialCutSize += 1;
-        }
-    });
+    if (currentPass === 1) {
+        edges.forEach(edge => {
+            if (nodes[edge.from].partition !== nodes[edge.to].partition) {
+                initialCutSize += 1;
+            }
+        });
+        previousCutSize = initialCutSize;
+    }
 
     setInitialCutSize(initialCutSize);
 
@@ -528,11 +547,15 @@ export function runKernighanLin(
 
     // Unlock all nodes and changes colors back to normal after highlighting to light green (border is a little darker)
 
-    const nodeIds: string[] = nodes.map(node => node.id);
+    const nodeIds: string[] = [];
     for (let i = 0; i < nodes.length; i++) {
         nodes[i].locked = false;
+        nodes[i].dValue = 0;
         nodeIds.push(nodes[i].id);
     }
+
+    incrementWrites(nodes.length * 2); // Unlocking nodes and resetting dValues
+
     animation.push({
         animationCallback: () => {
             return highlightNodes(nodeDataSet, nodeIds, '#2EFF57', '#90FF90', 2, { color: { highlight: 600, hold: 50, fade: 600 }, width: { highlight: 600, hold: 50, fade: 600 } });
@@ -541,21 +564,21 @@ export function runKernighanLin(
         timeBeforeNext: 0
     });
 
-    // Map partitions back to original IDs
-    const partitionResult: { [key: string]: number } = {};
-    nodes.forEach(node => {
-        partitionResult[node.id] = node.partition;
-    });
-
     // Final cut size calculation
-    let finalCutSize = 0;
     edges.forEach(edge => {
         if (nodes[edge.from].partition !== nodes[edge.to].partition) {
             finalCutSize += 1;
         }
     });
 
+    }
+
     setFinalCutSize(finalCutSize);
+
+    // Map partitions back to original IDs
+    nodes.forEach(node => {
+        partitionResult[node.id] = node.partition;
+    });
 
     return {
         partition: partitionResult,
