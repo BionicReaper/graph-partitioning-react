@@ -144,30 +144,40 @@ export function runKernighanLin(
             const moveTime = 100;
             if (node.partition === 0) {
                 partitionA.push(node.index);
-                const currentIndex = partitionA.length - 1;
-                animation.push({
-                    animationCallback: () => {
-                        return moveNode(network, node.id, calculateX(currentIndex, 0, nodes.length), calculateY(currentIndex, 0, nodes.length), 5 * moveTime);
-                    },
-                    description: `Move node ${node.id} to partition A`,
-                    timeBeforeNext: moveTime
-                });
+
+                if (currentPass === 1) {
+                    const currentIndex = partitionA.length - 1;
+                    animation.push({
+                        animationCallback: () => {
+                            return moveNode(network, node.id, calculateX(currentIndex, 0, nodes.length), calculateY(currentIndex, 0, nodes.length), 5 * moveTime);
+                        },
+                        description: `Move node ${node.id} to partition A`,
+                        timeBeforeNext: moveTime
+                    });
+                }
+
             } else {
                 partitionB.push(node.index);
-                const currentIndex = partitionB.length - 1;
-                animation.push({
-                    animationCallback: () => {
-                        return moveNode(network, node.id, calculateX(currentIndex, 1, nodes.length), calculateY(currentIndex, 1, nodes.length), 5 * moveTime);
-                    },
-                    description: `Move node ${node.id} to partition B`,
-                    timeBeforeNext: moveTime
-                });
+
+                if (currentPass === 1) {
+                    const currentIndex = partitionB.length - 1;
+                    animation.push({
+                        animationCallback: () => {
+                            return moveNode(network, node.id, calculateX(currentIndex, 1, nodes.length), calculateY(currentIndex, 1, nodes.length), 5 * moveTime);
+                        },
+                        description: `Move node ${node.id} to partition B`,
+                        timeBeforeNext: moveTime
+                    });
+                }
+
             }
         });
 
-        animation[animation.length - 1].timeBeforeNext = 500;
+        if (currentPass === 1) {
+            animation[animation.length - 1].timeBeforeNext = 500;
 
-        animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLInitialPartitioning' }, currentPass === 1));
+            animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLInitialPartitioning' }, currentPass === 1));
+        }
 
         const dValueUpdates = nodes.map(node => (
             {
@@ -561,7 +571,7 @@ export function runKernighanLin(
                 return highlightNodes(nodeDataSet, nodeIds, '#2EFF57', '#90FF90', 2, { color: { highlight: 600, hold: 50, fade: 600 }, width: { highlight: 600, hold: 50, fade: 600 } });
             },
             description: `Unlock nodes`,
-            timeBeforeNext: 0
+            timeBeforeNext: 1250
         });
 
         // Final cut size calculation
