@@ -1,5 +1,6 @@
 import { DataSet } from "vis-network/standalone/esm/vis-network";
 import { getNextNodeLabel, resetNodeIdCounter } from "./constants";
+import { calculateX, calculateY } from "./positioning";
 
 export function generateRandomGraph(
   nodeDataSet: DataSet<any, "id">,
@@ -17,8 +18,21 @@ export function generateRandomGraph(
   resetNodeIdCounter(0);
 
   const nodeCount = Math.floor(Math.random() * (hi - lo + 1)) + lo;
+  let currentIndexA = 0;
+  let currentIndexB = 0;
 
-  const nodeRecords = Array.from({ length: nodeCount }, () => ({ label: getNextNodeLabel() }));
+  const nodeRecords = Array.from({ length: nodeCount }, () => {
+    const nextLabel = getNextNodeLabel();
+    const currentIndex = 
+      (Number(nextLabel) % 2 === 0)
+        ? currentIndexA++
+        : currentIndexB++;
+    return {
+      label: nextLabel,
+      x: calculateX(currentIndex, Number(nextLabel) % 2, nodeCount),
+      y: calculateY(currentIndex, Number(nextLabel) % 2, nodeCount)
+    }
+  });
   const nodeIds = nodeDataSet.add(nodeRecords);
 
   const edgeRecords: { from: any; to: any }[] = [];
