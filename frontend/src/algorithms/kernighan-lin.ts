@@ -32,7 +32,9 @@ export function runKernighanLin(
     network: Network,
     nodeDataSet: DataSet<any, "id">,
     edgeDataSet: DataSet<any, "id">,
-    algorithmPasses: number = 0
+    algorithmPasses: number = 0,
+    activeNodeIds?: string[],
+    existingPartition?: { [key: string]: number }
 ): {
     partition: { [key: string]: number };
     initialCutSize: number;
@@ -41,6 +43,8 @@ export function runKernighanLin(
 } {
     const animation: Animation[] = [];
 
+    const activeNodeIdSet = new Set(activeNodeIds?.filter(Boolean));
+
     resetStats();
 
     let anchorIndex = 0;
@@ -48,8 +52,12 @@ export function runKernighanLin(
     // Convert DataSet to array format with index mapping
     // Time complexity: O(n + m) where n = nodes, m = edges
 
-    const originalNodes = nodeDataSet.get();
-    const originalEdges = edgeDataSet.get();
+    const originalNodes = (activeNodeIdSet.size > 0)
+        ? nodeDataSet.get([...activeNodeIdSet])
+        : nodeDataSet.get();
+    const originalEdges = (activeNodeIdSet.size > 0)
+        ? edgeDataSet.get().filter(edge => activeNodeIdSet.has(edge.from) && activeNodeIdSet.has(edge.to))
+        : edgeDataSet.get();
 
     console.log('Original nodes and edges fetched from DataSet: ', originalNodes, originalEdges);
 
@@ -73,7 +81,7 @@ export function runKernighanLin(
         dValue: 0,
         cValue: Array<number>(originalNodes.length).fill(0),
         edges: Array<string | null>(originalNodes.length).fill(null),
-        partition: idx % 2, // Initial partitioning: even index -> partition 0, odd index -> partition 1
+        partition: existingPartition?.[node.id] ?? (idx % 2), // Initial partitioning: even index -> partition 0, odd index -> partition 1
         locked: false,
         label: node.label
     }));
@@ -172,6 +180,10 @@ export function runKernighanLin(
 
             }
         });
+
+        if (currentPass === 1 && (partitionA.length - partitionB.length > 1 || partitionB.length - partitionA.length > 1)) {
+            console.warn(`Initial partitioning is unbalanced: Partition A has ${partitionA.length} nodes, Partition B has ${partitionB.length} nodes.`);
+        }
 
         if (currentPass === 1) {
             animation[animation.length - 1].timeBeforeNext = 500;
