@@ -352,6 +352,7 @@ const Sidebar = ({
                     value={i18n.language}
                     onValueChange={(e) => i18n.changeLanguage(e.value || undefined)}
                     w={"100%"}
+                    colorPalette={"blue"}
                   >
                     <HStack gap="6" justifyContent={"space-between"}>
                       {languageOptions.map((language) => (
@@ -383,6 +384,7 @@ const Sidebar = ({
                   <RadioGroup.Root
                     value={shouldOpenStepDialog}
                     onValueChange={(e) => e.value && onShouldOpenStepDialogChange(e.value as StepSettingMode)}
+                    colorPalette={"blue"}
                   >
                     <VStack align="start" gap={2}>
                       {stepSettingModes.map((mode) => (
@@ -411,6 +413,7 @@ const Sidebar = ({
                   <RadioGroup.Root
                     value={shouldPause}
                     onValueChange={(e) => e.value && onShouldPauseChange(e.value as StepSettingMode)}
+                    colorPalette={"blue"}
                   >
                     <VStack align="start" gap={2}>
                       {stepSettingModes.map((mode) => (
