@@ -407,8 +407,9 @@ function App() {
 
   // Grid Moving Background
 
-  const updateBackground = useCallback(() => {
+  const updateBackground = useCallback((ctx: CanvasRenderingContext2D) => {
     if (!networkRef.current || !containerRef.current) return;
+    const canvas = ctx.canvas;
     const view = (networkRef.current as any).canvas.body.view;
     const { translation, scale } = view;
 
@@ -416,27 +417,52 @@ function App() {
     const baseGridSize = 40;
     const gridSize = baseGridSize * scale;
 
-    // Offset comes directly from the translation values
-    const offsetX = translation.x % gridSize;
-    const offsetY = translation.y % gridSize;
+    const width = canvas.width;
+    const height = canvas.height;
 
-    containerRef.current.style.backgroundSize = `${gridSize}px ${gridSize}px`;
-    containerRef.current.style.backgroundPosition = `${offsetX}px ${offsetY}px`;
+    const gridColor = "#e0e0e0";
+    const lineWidth = 1 / scale;
+
+    const horizontalLines = Math.ceil(height / gridSize);
+    const verticalLines = Math.ceil(width / gridSize);
+
+    const startingX = -(translation.x / scale);
+    const startingY = -(translation.y / scale);
+
+    const endingX = startingX + (width / scale);
+    const endingY = startingY + (height / scale);
+
+    const startingHorizontalLine = Math.ceil(startingY / baseGridSize);
+    const startingVerticalLine = Math.ceil(startingX / baseGridSize);
+    
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = lineWidth;
+
+    ctx.beginPath();
+
+    for (let i = 0; i < horizontalLines; i++) {
+      ctx.moveTo(startingX, (startingHorizontalLine + i) * baseGridSize)
+      ctx.lineTo(endingX, (startingHorizontalLine + i) * baseGridSize)
+    }
+
+    for (let j = 0; j < verticalLines; j++) {
+      ctx.moveTo((startingVerticalLine + j) * baseGridSize, startingY)
+      ctx.lineTo((startingVerticalLine + j) * baseGridSize, endingY)
+    }
+
+    ctx.stroke();
+
   }, [networkRef, containerRef]);
 
   useEffect(() => {
     if (networkRef.current) {
       // Update on zoom and drag
-      networkRef.current.on("zoom", updateBackground);
-      networkRef.current.on("dragEnd", updateBackground);
-      networkRef.current.on("afterDrawing", updateBackground);
+      networkRef.current.on("beforeDrawing", updateBackground);
     }
 
     return () => {
       if (networkRef.current) {
-        networkRef.current.off("zoom", updateBackground);
-        networkRef.current.off("dragEnd", updateBackground);
-        networkRef.current.off("afterDrawing", updateBackground);
+        networkRef.current.off("beforeDrawing", updateBackground);
       }
     }
   }, [networkRef, updateBackground]);

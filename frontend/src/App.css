@@ -27,10 +27,6 @@ body,
   left: 0;
   border: none;
   background-color: #f9fafb;
-  background-image:
-    linear-gradient(to right, #e0e0e0 1px, transparent 1px),
-    linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
-  background-size: 40px 40px;
   overflow: hidden;
 }
 
