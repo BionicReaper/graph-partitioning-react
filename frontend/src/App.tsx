@@ -22,6 +22,7 @@ import { getStats } from './utils/stats';
 import { useSnackbar } from 'notistack';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import LocalizedStatsText from './components/LocalizedSnackbarText/LocallizedStatsText';
+import { runFiducciaMattheyses } from './algorithms/fiduccia-mattheyses';
 type ActiveMode = 'node' | 'edge' | null;
 
 function App() {
@@ -298,9 +299,9 @@ function App() {
     if (!networkRef.current || isRunning) return;
 
     const runSelectedAlgorithm =
-      (currentAlgorithmId === 'kernighan-lin')       ? runKernighanLin :
-      (currentAlgorithmId === 'fiduccia-mattheyses') ? undefined       :
-      (currentAlgorithmId === 'metis')               ? undefined       :
+      (currentAlgorithmId === 'kernighan-lin')       ? runKernighanLin       :
+      (currentAlgorithmId === 'fiduccia-mattheyses') ? runFiducciaMattheyses :
+      (currentAlgorithmId === 'metis')               ? undefined             :
       undefined;
 
     if (!runSelectedAlgorithm) {
