@@ -36,6 +36,8 @@ const StepDialog = ({ isOpen, onOpenChange, anchor, algorithmId }: StepDialogPro
           gap={6}
           rounded="md"
           shadow="lg"
+          overflowY="auto"
+          maxHeight="95vh"
         >
           <Dialog.Header>
             <Dialog.CloseTrigger asChild top={4} right={4}>

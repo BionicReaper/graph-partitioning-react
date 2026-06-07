@@ -38,6 +38,8 @@ const AlgorithmDialog = ({ isOpen, onOpenChange, algorithm }: AlgorithmDialogPro
           gap={6}
           rounded="md"
           shadow="lg"
+          overflowY="auto"
+          maxHeight="95vh"
         >
           <Dialog.Header>
             <Dialog.CloseTrigger asChild top={4} right={4}>
