@@ -246,6 +246,12 @@ function moveNodeBetweenPartitions(
     removeCellFromBucket(node.cell);
 }
 
+function emptyBuckets(buckets: FMBucket[]) {
+    buckets.forEach(bucket => {
+        bucket.headCell.nextCell = null;
+    });
+}
+
 export function runFiducciaMattheyses(
     network: Network,
     nodeDataSet: DataSet<any, "id">,
@@ -466,6 +472,8 @@ export function runFiducciaMattheyses(
             }
         }, 0);
 
+        emptyBuckets(bucketArrayLeft);
+        emptyBuckets(bucketArrayRight);
     }
 
     
