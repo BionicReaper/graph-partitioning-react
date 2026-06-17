@@ -362,6 +362,29 @@ export function runFiducciaMattheyses(
 
         return nodeObject;
     });
+    
+    if (originalNodes.length === 0 || originalEdges.length === 0) {
+        resetStats();
+        // Any partition will do
+        nodes.forEach(node => {
+            partitionResult[node.id] = node.partition;
+        });
+
+        setInitialCutSize(0);
+        setFinalCutSize(0);
+        incrementReads(2); // Reading nodes and edges length
+        incrementComparisons(2); // Comparing nodes and edges length to 0
+
+        return {
+            partition: partitionResult,
+            initialCutSize: 0,
+            finalCutSize: 0,
+            animation: []
+        };
+    } else {
+        incrementReads(2); // Reading nodes and edges length
+        incrementComparisons(2); // Comparing nodes and edges length to 0
+    }
 
     const maxNodeWeight = Math.max(...nodes.map(node => node.weight));
 

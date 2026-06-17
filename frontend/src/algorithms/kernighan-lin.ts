@@ -86,6 +86,29 @@ export function runKernighanLin(
         label: node.label
     }));
 
+    if (originalNodes.length === 0 || originalEdges.length === 0) {
+        resetStats();
+        // Any partition will do
+        nodes.forEach(node => {
+            partitionResult[node.id] = node.partition;
+        });
+
+        setInitialCutSize(0);
+        setFinalCutSize(0);
+        incrementReads(2); // Reading nodes and edges length
+        incrementComparisons(2); // Comparing nodes and edges length to 0
+
+        return {
+            partition: partitionResult,
+            initialCutSize: 0,
+            finalCutSize: 0,
+            animation: []
+        };
+    } else {
+        incrementReads(2); // Reading nodes and edges length
+        incrementComparisons(2); // Comparing nodes and edges length to 0
+    }
+
     while (startNextPass(algorithmPasses, previousCutSize, finalCutSize, currentPass)) {
 
         currentPass += 1;
