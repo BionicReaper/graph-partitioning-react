@@ -1,4 +1,13 @@
-let stats = {
+export interface Stats {
+    initialCutSize: number;
+    finalCutSize: number;
+    reads: number;
+    writes: number;
+    additions: number;
+    comparisons: number;
+}
+
+let stats: Stats = {
     initialCutSize: 0,
     finalCutSize: 0,
     reads: 0,
@@ -6,6 +15,8 @@ let stats = {
     additions: 0,
     comparisons: 0
 }
+
+let stashedStats: Stats | null = null;
 
 export const resetStats = () => {
     stats = {
@@ -16,6 +27,29 @@ export const resetStats = () => {
         additions: 0,
         comparisons: 0
     }
+}
+
+export const stashStats = () => {
+    if (stashedStats) {
+        throw new Error("Stats have already been stashed. Please merge or reset before stashing again.");
+    }
+    stashedStats = { ...stats };
+}
+
+export const mergeStats = () => {
+    if (stashedStats) {
+        stats.initialCutSize += stashedStats.initialCutSize;
+        stats.finalCutSize += stashedStats.finalCutSize;
+        stats.reads += stashedStats.reads;
+        stats.writes += stashedStats.writes;
+        stats.additions += stashedStats.additions;
+        stats.comparisons += stashedStats.comparisons;
+    }
+    stashedStats = null;
+}
+
+export const discardStash = () => {
+    stashedStats = null;
 }
 
 export const setInitialCutSize = (cutSize: number) => {
