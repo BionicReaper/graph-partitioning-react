@@ -148,18 +148,35 @@ function getBestGainCells(bucketArrayLeft: FMBucket[], bucketArrayRight: FMBucke
     return bestCells;
 }
 
+let balanceMode: 'FM' | 'METIS' = 'FM';
+
+function setBalanceMode(mode: 'FM' | 'METIS') {
+    balanceMode = mode;
+}
+
 function filterBestGainCellsByBalance(cells: FMCell[], nodes: FMNode[], weightLeft: number, weightRight: number, maxNodeWeight: number, balanceFactor: number = 2): FMCell[] {
-    return cells.filter(cell => {
-        const node = nodes[cell.nodeIdx];
-        const partition = node.partition;
+    if (balanceMode === 'FM') {
+        return cells.filter(cell => {
+            const node = nodes[cell.nodeIdx];
+            const partition = node.partition;
 
-        const newWeightLeft = partition === 0 ? weightLeft - node.weight : weightLeft + node.weight;
-        const newWeightRight = partition === 1 ? weightRight - node.weight : weightRight + node.weight;
+            const newWeightLeft = partition === 0 ? weightLeft - node.weight : weightLeft + node.weight;
+            const newWeightRight = partition === 1 ? weightRight - node.weight : weightRight + node.weight;
 
-        const remainsBalanced = Math.abs(newWeightLeft - newWeightRight) <= balanceFactor * maxNodeWeight;
+            const remainsBalanced = Math.abs(newWeightLeft - newWeightRight) <= balanceFactor * maxNodeWeight;
 
-        return remainsBalanced;
-    });
+            return remainsBalanced;
+        });
+    } else if (balanceMode === 'METIS') {
+        // In METIS, balancing is achieved by always moving nodes from the heavier partition to the lighter one
+        const sideToUse = weightLeft <= weightRight ? 1 : 0;
+        return cells.filter(cell => {
+            const node = nodes[cell.nodeIdx];
+            return node.partition === sideToUse;
+        });
+    } else {
+        throw new Error(`Unknown balance mode: ${balanceMode}`);
+    }
 }
 
 function getNextCellToMove(
@@ -513,4 +530,23 @@ export function runFiducciaMattheyses(
         finalCutSize: finalCutSize,
         animation: []
     };
+}
+
+export function runFiducciaMattheysesWithMetisBalance(
+    network: Network,
+    nodeDataSet: DataSet<any, "id">,
+    edgeDataSet: DataSet<any, "id">,
+    algorithmPasses: number = 0,
+    activeNodeIds?: string[],
+    existingPartition?: { [key: string]: number }
+): {
+    partition: { [key: string]: number };
+    initialCutSize: number;
+    finalCutSize: number;
+    animation: Animation[];
+} {
+    setBalanceMode('METIS');
+    const result = runFiducciaMattheyses(network, nodeDataSet, edgeDataSet, algorithmPasses, activeNodeIds, existingPartition);
+    setBalanceMode('FM');
+    return result;
 }
