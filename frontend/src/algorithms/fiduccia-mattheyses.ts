@@ -45,9 +45,27 @@ function removeCellFromBucket(cell: FMCell) {
     const previousCell = cell.previousCell;
     const nextCell = cell.nextCell;
 
-    if (previousCell) previousCell.nextCell = nextCell;
-    if (nextCell) nextCell.previousCell = previousCell;
+    incrementReads(2);
 
+    if (previousCell) {
+        previousCell.nextCell = nextCell;
+
+        incrementReads(1);
+        incrementWrites(1);
+    }
+
+    incrementReads(1);
+    incrementComparisons(1);
+
+    if (nextCell) {
+        nextCell.previousCell = previousCell;
+
+        incrementReads(1);
+        incrementWrites(1);
+    }
+
+    incrementReads(1);
+    incrementComparisons(1);
 }
 
 function insertCellToBucket(cell: FMCell, bucket: FMBucket) {
@@ -55,12 +73,29 @@ function insertCellToBucket(cell: FMCell, bucket: FMBucket) {
     const headCell = bucket.headCell;
     const firstCell = bucket.headCell.nextCell;
 
+    incrementReads(2);
+
     cell.previousCell = headCell;
     cell.nextCell = firstCell;
     cell.gain = headCell.gain;
 
+    incrementReads(3);
+    incrementWrites(3);
+
     headCell.nextCell = cell;
-    if (firstCell) firstCell.previousCell = cell;
+
+    incrementReads(1);
+    incrementWrites(1);
+
+    if (firstCell) {
+        firstCell.previousCell = cell;
+
+        incrementReads(1);
+        incrementWrites(1);
+    }
+
+    incrementReads(1);
+    incrementComparisons(1);
 }
 
 function moveCellToBucket(cell: FMCell, bucket: FMBucket) {
@@ -73,7 +108,16 @@ function moveCellToBucket(cell: FMCell, bucket: FMBucket) {
 
 function getBucketByGain(buckets: FMBucket[], gain: number): FMBucket {
     const maxGain = (buckets.length - 1) / 2;
-    return buckets[gain + maxGain];
+
+    incrementReads(1);
+    incrementAdditions(1);
+
+    const bucket = buckets[gain + maxGain];
+
+    incrementReads(1);
+    incrementAdditions(1);
+
+    return bucket;
 }
 
 function insertNodesToBuckets(bucketsLeft: FMBucket[], bucketsRight: FMBucket[], nodes: FMNode[]): { 
@@ -82,27 +126,65 @@ function insertNodesToBuckets(bucketsLeft: FMBucket[], bucketsRight: FMBucket[],
 } {
     const maxGain = (bucketsLeft.length - 1) / 2;
 
+    incrementReads(1);
+    incrementAdditions(1);
+
     const bestGains: { left: number, right: number } = { left: -maxGain, right: -maxGain };
+
+    incrementReads(1);
+    incrementWrites(2);
 
     nodes.forEach(node => {
         const gain = node.edges.reduce(
             (acc, edge) => {
                 const otherNodeIdx = edge.from === node.index ? edge.to : edge.from;
                 const otherNode = nodes[otherNodeIdx];
+
+                incrementReads(4);
+                incrementComparisons(1);
+
                 if (node.partition === otherNode.partition) {
+
+                    incrementReads(2);
+                    incrementAdditions(1);
+                    incrementComparisons(1);
+
                     return acc - edge.weight;
                 } else {
+
+                    incrementReads(2);
+                    incrementAdditions(1);
+                    incrementComparisons(1);
+
                     return acc + edge.weight;
                 }
             },
         0);
         insertCellToBucket(node.cell, getBucketByGain(node.partition === 0 ? bucketsLeft : bucketsRight, gain));
+
+        incrementReads(4);
+        incrementComparisons(1);
+
         if (node.partition === 0 && (bestGains.left === null || gain > bestGains.left)) {
+            
             bestGains.left = gain;
+
+            incrementWrites(1);
         }
+
+        incrementReads(3);
+        incrementComparisons(3);
+
         if (node.partition === 1 && (bestGains.right === null || gain > bestGains.right)) {
+
             bestGains.right = gain;
+
+            incrementWrites(1);
         }
+
+        incrementReads(3);
+        incrementComparisons(3);
+
     });
 
     return bestGains;
@@ -111,13 +193,23 @@ function insertNodesToBuckets(bucketsLeft: FMBucket[], bucketsRight: FMBucket[],
 function getBestGainCell(bucketArray: FMBucket[], bestGain: number): FMCell | null {
     const firstCell: FMCell | null = bucketArray[bestGain + (bucketArray.length - 1) / 2].headCell.nextCell;
 
+    incrementReads(3);
+    incrementAdditions(2);
+
+    incrementComparisons(1);
     if (!firstCell) {
         // This bucket is empty, find the next non-empty bucket
         for (let gain = bestGain - 1; gain >= -(bucketArray.length - 1) / 2; gain--) {
+
             const cell = bucketArray[gain + (bucketArray.length - 1) / 2].headCell.nextCell;
+            incrementReads(3);
+            incrementAdditions(2);
+            
+            incrementComparisons(1);
             if (cell) {
                 return cell;
             }
+
         }
     }
 
@@ -132,18 +224,31 @@ function getBestGainCells(bucketArrayLeft: FMBucket[], bucketArrayRight: FMBucke
         setBestGainLeft(bestCellLeft ? bestCellLeft.gain : -((bucketArrayLeft.length - 1) / 2));
     }
 
+    incrementReads(2);
+    incrementComparisons(1);
+
     if (bestCellRight?.gain !== bestGainRight) {
         setBestGainRight(bestCellRight ? bestCellRight.gain : -((bucketArrayRight.length - 1) / 2));
     }
+
+    incrementReads(2);
+    incrementComparisons(1);
 
     const bestCells = [];
 
     if (bestCellLeft) {
         bestCells.push(bestCellLeft);
     }
+
+    incrementReads(1);
+    incrementComparisons(1);
+
     if (bestCellRight) {
         bestCells.push(bestCellRight);
     }
+
+    incrementReads(1);
+    incrementComparisons(1);
 
     return bestCells;
 }
@@ -165,13 +270,24 @@ function filterBestGainCellsByBalance(cells: FMCell[], nodes: FMNode[], weightLe
 
             const remainsBalanced = Math.abs(newWeightLeft - newWeightRight) <= balanceFactor * maxNodeWeight;
 
+            incrementReads(9);
+            incrementAdditions(3);
+            incrementComparisons(1);
+
             return remainsBalanced;
         });
     } else if (balanceMode === 'METIS') {
         // In METIS, balancing is achieved by always moving nodes from the heavier partition to the lighter one
         const sideToUse = weightLeft <= weightRight ? 1 : 0;
+
+        incrementComparisons(1);
+
         return cells.filter(cell => {
             const node = nodes[cell.nodeIdx];
+
+            incrementReads(1);
+
+            incrementComparisons(1);
             return node.partition === sideToUse;
         });
     } else {
@@ -194,12 +310,29 @@ function getNextCellToMove(
     const bestCells = getBestGainCells(bucketArrayLeft, bucketArrayRight, bestGainLeft, bestGainRight, setBestGainLeft, setBestGainRight);
     const filteredBestCells = filterBestGainCellsByBalance(bestCells, nodes, weightLeft, weightRight, maxNodeWeight);
     if (filteredBestCells.length === 0) {
+
+        incrementReads(1);
+        incrementComparisons(1);
+
         return null;
+
     } else if (filteredBestCells.length === 1) {
+
+        incrementReads(1);
+        incrementComparisons(2);
+
         return filteredBestCells[0];
     } else if (filteredBestCells[0].gain >= filteredBestCells[1].gain) {
+
+        incrementReads(3);
+        incrementComparisons(3);
+
         return filteredBestCells[0];
     } else {
+
+        incrementReads(3);
+        incrementComparisons(3);
+
         return filteredBestCells[1];
     }
 }
@@ -224,6 +357,9 @@ function moveNodeBetweenPartitions(
             const affectedNodeIdx = edge.from === node.index ? edge.to : edge.from;
             const affectedNode = nodes[affectedNodeIdx];
 
+            incrementReads(4);
+            incrementComparisons(1);
+
             if (affectedNode.locked) {
                 continue; // Locked node - has already moved
             }
@@ -233,20 +369,34 @@ function moveNodeBetweenPartitions(
 
             const bucketArray = affectedNode.partition === 0 ? leftBucketArray : rightBucketArray;
 
+            incrementReads(1);
+            incrementComparisons(1);
+
             const currentGain = affectedNode.cell.gain;
 
+            incrementReads(1);
+
             const gainChange = (affectedNode.partition === fromPartition) ? 2 * edge.weight : -2 * edge.weight;
+
+            incrementReads(2);
+            incrementComparisons(1);
 
             const newBucket = getBucketByGain(
                 bucketArray,
                 currentGain + gainChange
             );
+            incrementAdditions(1);
 
             moveCellToBucket(affectedNode.cell, newBucket);
+            incrementReads(1);
 
             if (bestGain < currentGain + gainChange) {
                 setBestGain(currentGain + gainChange);
+                incrementReads(2);
             }
+
+            incrementReads(3);
+            incrementComparisons(1);
         }
     }
 
