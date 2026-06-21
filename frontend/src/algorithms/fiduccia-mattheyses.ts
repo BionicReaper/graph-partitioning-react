@@ -270,7 +270,7 @@ function filterBestGainCellsByBalance(cells: FMCell[], nodes: FMNode[], weightLe
 
             const remainsBalanced = Math.abs(newWeightLeft - newWeightRight) <= balanceFactor * maxNodeWeight;
 
-            incrementReads(9);
+            incrementReads(10);
             incrementAdditions(3);
             incrementComparisons(1);
 
@@ -280,14 +280,12 @@ function filterBestGainCellsByBalance(cells: FMCell[], nodes: FMNode[], weightLe
         // In METIS, balancing is achieved by always moving nodes from the heavier partition to the lighter one
         const sideToUse = weightLeft <= weightRight ? 1 : 0;
 
+        incrementReads(2);
         incrementComparisons(1);
 
         return cells.filter(cell => {
             const node = nodes[cell.nodeIdx];
 
-            incrementReads(1);
-
-            incrementComparisons(1);
             return node.partition === sideToUse;
         });
     } else {
@@ -352,6 +350,8 @@ function moveNodeBetweenPartitions(
     const fromPartition = node.partition;
     const toPartition = fromPartition === 0 ? 1 : 0;
 
+    incrementReads(1);
+
     if (!node.locked) {
         for (const edge of node.edges) {
             const affectedNodeIdx = edge.from === node.index ? edge.to : edge.from;
@@ -369,7 +369,7 @@ function moveNodeBetweenPartitions(
 
             const bucketArray = affectedNode.partition === 0 ? leftBucketArray : rightBucketArray;
 
-            incrementReads(1);
+            incrementReads(4);
             incrementComparisons(1);
 
             const currentGain = affectedNode.cell.gain;
@@ -395,13 +395,16 @@ function moveNodeBetweenPartitions(
                 incrementReads(2);
             }
 
-            incrementReads(3);
+            incrementAdditions(1);
             incrementComparisons(1);
         }
     }
 
     const leftWeightChange = node.partition === 0 ? -node.weight : node.weight;
     const rightWeightChange = -leftWeightChange;
+
+    incrementReads(2);
+    incrementComparisons(1);
 
     changeWeightLeft(leftWeightChange);
     changeWeightRight(rightWeightChange);
@@ -410,7 +413,10 @@ function moveNodeBetweenPartitions(
 
     node.locked = true;
 
+    incrementWrites(2);
+
     removeCellFromBucket(node.cell);
+    incrementReads(1);
 }
 
 function emptyBuckets(buckets: FMBucket[]) {
@@ -460,9 +466,17 @@ export function runFiducciaMattheyses(
     originalEdges.forEach((edge) => {
         totalEdgeWeight[edge.from] = totalEdgeWeight[edge.from] ? totalEdgeWeight[edge.from] + (edge.weight || 1) : (edge.weight || 1);
         totalEdgeWeight[edge.to] = totalEdgeWeight[edge.to] ? totalEdgeWeight[edge.to] + (edge.weight || 1) : (edge.weight || 1);
+
+        incrementReads(4);
+        incrementAdditions(2);
+        incrementWrites(2);
     });
 
     const maxEdgeWeightSum = Math.max(...Object.values(totalEdgeWeight));
+
+    incrementReads(totalEdgeWeight ? Object.keys(totalEdgeWeight).length : 0);
+    incrementComparisons(totalEdgeWeight ? Object.keys(totalEdgeWeight).length : 0);
+    incrementWrites(1);
 
     console.log('Max edge weight sum calculated: ', maxEdgeWeightSum);
 
@@ -487,6 +501,8 @@ export function runFiducciaMattheyses(
             gain: index - maxEdgeWeightSum
         }
     }));
+
+    incrementWrites(4 * maxEdgeWeightSum + 2);
 
     let currentPass = 0;
     let initialCutSize = 0;
@@ -534,7 +550,7 @@ export function runFiducciaMattheyses(
         resetStats();
         // Any partition will do
         nodes.forEach(node => {
-            partitionResult[node.id] = node.partition;
+            partitionResult[node.id] = node.partition || node.index % 2;
         });
 
         setInitialCutSize(0);
@@ -558,10 +574,11 @@ export function runFiducciaMattheyses(
     // Convert edges to array format using index mapping - O(m)
     const edges: FMEdge[] = originalEdges
         .map(originalEdge => {
-            incrementReads(1); // Reading from edgeDataSet
 
             const fromIdx = idToIndex.get(originalEdge.from);
             const toIdx = idToIndex.get(originalEdge.to);
+
+            incrementReads(2);
 
             if (fromIdx === undefined || toIdx === undefined) {
                 console.error(`Edge with id ${originalEdge.id} has invalid node references: from ${originalEdge.from} to ${originalEdge.to}`);
@@ -577,7 +594,14 @@ export function runFiducciaMattheyses(
             
             if (nodes[fromIdx].partition !== nodes[toIdx].partition) {
                 initialCutSize += edgeObject.weight;
+
+                incrementReads(1);
+                incrementAdditions(1);
+                incrementWrites(1);
             }
+
+            incrementReads(2);
+            incrementComparisons(1);
 
             nodes[fromIdx!].edges.push(edgeObject);
             nodes[toIdx!].edges.push(edgeObject);
@@ -597,23 +621,63 @@ export function runFiducciaMattheyses(
         previousCutSize = finalCutSize;
         finalCutSize = 0;
 
+        incrementReads(1)
+        incrementWrites(3);
+
         const initialBestGains = insertNodesToBuckets(bucketArrayLeft, bucketArrayRight, nodes);
 
         bestGainLeft = initialBestGains.left;
         bestGainRight = initialBestGains.right;
 
+        incrementWrites(2);
+
         const exchangeNodes: Array<{ nodeIdx: number; gain: number }> = [];
 
         for (
-            let cell = getNextCellToMove(bucketArrayLeft, bucketArrayRight, bestGainLeft, bestGainRight, weightLeft, weightRight, maxNodeWeight, (gain) => bestGainLeft = gain, (gain) => bestGainRight = gain, nodes);
+            let cell = getNextCellToMove(
+                bucketArrayLeft,
+                bucketArrayRight,
+                bestGainLeft,
+                bestGainRight,
+                weightLeft,
+                weightRight,
+                maxNodeWeight,
+                (gain) => {bestGainLeft = gain; incrementWrites(1)},
+                (gain) => {bestGainRight = gain; incrementWrites(1)},
+                nodes
+            );
             cell !== null;
-            cell = getNextCellToMove(bucketArrayLeft, bucketArrayRight, bestGainLeft, bestGainRight, weightLeft, weightRight, maxNodeWeight, (gain) => bestGainLeft = gain, (gain) => bestGainRight = gain, nodes)
+            cell = getNextCellToMove(
+                bucketArrayLeft,
+                bucketArrayRight,
+                bestGainLeft,
+                bestGainRight,
+                weightLeft,
+                weightRight,
+                maxNodeWeight,
+                (gain) => {bestGainLeft = gain; incrementWrites(1)},
+                (gain) => {bestGainRight = gain; incrementWrites(1)},
+                nodes)
         ) {
             const node = nodes[cell.nodeIdx];
 
+            incrementReads(1);
+
             exchangeNodes.push({ nodeIdx: cell.nodeIdx, gain: cell.gain });
 
-            moveNodeBetweenPartitions(node, nodes, bucketArrayLeft, bucketArrayRight, bestGainLeft, bestGainRight, (gain) => bestGainLeft = gain, (gain) => bestGainRight = gain, (delta) => weightLeft += delta, (delta) => weightRight += delta);
+            incrementReads(2)
+
+            moveNodeBetweenPartitions(
+                node,
+                nodes,
+                bucketArrayLeft,
+                bucketArrayRight,
+                bestGainLeft,
+                bestGainRight,
+                (gain) => {bestGainLeft = gain; incrementWrites(1)},
+                (gain) => {bestGainRight = gain; incrementWrites(1)},
+                (delta) => {weightLeft += delta; incrementReads(1); incrementAdditions(1); incrementWrites(1)},
+                (delta) => {weightRight += delta; incrementReads(1); incrementAdditions(1); incrementWrites(1)});
         }
 
         // Calculate cumulative gains
@@ -621,12 +685,21 @@ export function runFiducciaMattheyses(
         let cumulative = 0;
         exchangeNodes.forEach(node => {
             cumulative += node.gain;
+
+            incrementReads(2);
+            incrementAdditions(1);
+            incrementWrites(1);
+
             cumulativeGains.push(
                 {
                     totalGain: cumulative,
                     balance: Math.abs(weightLeft - weightRight)
                 }
             );
+
+            incrementReads(3);
+            incrementAdditions(1);
+            incrementWrites(1);
         });
 
         // Find k that maximizes the cumulative gain
@@ -638,10 +711,20 @@ export function runFiducciaMattheyses(
                 maxCumulativeGain = gain.totalGain;
                 bestBalance = gain.balance;
                 k = index;
+
+                incrementReads(3);
+                incrementWrites(3);
             } else if (gain.totalGain === maxCumulativeGain && gain.balance < bestBalance) {
                 bestBalance = gain.balance;
                 k = index;
+
+                incrementReads(4);
+                incrementComparisons(2);
+                incrementWrites(2);
             }
+
+            incrementReads(2);
+            incrementComparisons(1);
         });
 
         // Undo swaps beyond k
@@ -651,13 +734,31 @@ export function runFiducciaMattheyses(
             const nodeIdx = exchangeNodes[i].nodeIdx;
             const node = nodes[nodeIdx];
 
-            moveNodeBetweenPartitions(node, nodes, bucketArrayLeft, bucketArrayRight, bestGainLeft, bestGainRight, (gain) => bestGainLeft = gain, (gain) => bestGainRight = gain, (delta) => weightLeft += delta, (delta) => weightRight += delta);
+            incrementReads(2);
+
+            moveNodeBetweenPartitions(
+                node,
+                nodes,
+                bucketArrayLeft,
+                bucketArrayRight,
+                bestGainLeft,
+                bestGainRight,
+                (gain) => {bestGainLeft = gain; incrementWrites(1)},
+                (gain) => {bestGainRight = gain; incrementWrites(1)},
+                (delta) => {weightLeft += delta; incrementReads(1); incrementAdditions(1); incrementWrites(1)},
+                (delta) => {weightRight += delta; incrementReads(1); incrementAdditions(1); incrementWrites(1)}
+            );
         }
 
         finalCutSize = edges.reduce((acc, edge) => {
             if (nodes[edge.from].partition !== nodes[edge.to].partition) {
+                incrementReads(4);
+                incrementAdditions(1);
+                incrementComparisons(1);
                 return acc + edge.weight;
             } else {
+                incrementReads(4);
+                incrementComparisons(1);
                 return acc;
             }
         }, 0);
