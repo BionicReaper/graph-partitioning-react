@@ -171,8 +171,11 @@ export function runKernighanLin(
         const lockedNodesA: number[] = [];
         const lockedNodesB: number[] = [];
 
+        const totalInitialPartitionTime = 4000;
+
+        const moveTime = totalInitialPartitionTime / nodes.length;
+
         nodes.forEach(node => {
-            const moveTime = 100;
             if (node.partition === 0) {
                 partitionA.push(node.index);
 
@@ -180,7 +183,7 @@ export function runKernighanLin(
                     const currentIndex = partitionA.length - 1;
                     animation.push({
                         animationCallback: () => {
-                            return moveNode(network, node.id, calculateX(currentIndex, 0, nodes.length), calculateY(currentIndex, 0, nodes.length), 5 * moveTime);
+                            return moveNode(network, node.id, calculateX(currentIndex, 0, nodes.length), calculateY(currentIndex, 0, nodes.length), 500);
                         },
                         description: `Move node ${node.id} to partition A`,
                         timeBeforeNext: moveTime
@@ -194,7 +197,7 @@ export function runKernighanLin(
                     const currentIndex = partitionB.length - 1;
                     animation.push({
                         animationCallback: () => {
-                            return moveNode(network, node.id, calculateX(currentIndex, 1, nodes.length), calculateY(currentIndex, 1, nodes.length), 5 * moveTime);
+                            return moveNode(network, node.id, calculateX(currentIndex, 1, nodes.length), calculateY(currentIndex, 1, nodes.length), 500);
                         },
                         description: `Move node ${node.id} to partition B`,
                         timeBeforeNext: moveTime
