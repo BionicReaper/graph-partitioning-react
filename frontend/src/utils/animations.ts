@@ -301,6 +301,23 @@ export const moveNode = (
     return step;
 }
 
+export const moveNodeRelative = (
+    network: Network | undefined,
+    movedNodeId: string,
+    originNodeId: string,
+    deltaX: number,
+    deltaY: number,
+    duration: number = 1000
+) => {
+    if (!network) return () => { return true; };
+
+    const { x: originX, y: originY } = network.getPosition(originNodeId);
+    const targetX = originX + deltaX;
+    const targetY = originY + deltaY;
+
+    return moveNode(network, movedNodeId, targetX, targetY, duration);
+}
+
 export const swapNodePositions = (
     network: Network | undefined,
     idA: string,
