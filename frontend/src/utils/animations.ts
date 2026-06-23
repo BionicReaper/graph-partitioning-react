@@ -111,78 +111,83 @@ export const highlightNodes = (
     function step(timestamp: DOMHighResTimeStamp) {
         if (!startTime) startTime = timestamp;
 
-        if (keepColorAfterHighlight && (timestamp - startTime >= duration.color.highlight)) {
-            if (ids.length > 0) {
-                ids.forEach((nodeId) => {
-                    queueNodeUpdate({ id: nodeId, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: null});
-                });
-            } else {
-                nodes.get().forEach((node) => {
-                    queueNodeUpdate({ id: node.id, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: null});
-                });
-            }
-
-            return true; // End animation immediately after reaching highlight color
-        }
-
         const progress = timestamp - startTime;
-        const colorInterpolationMultiplier = calcInterpolationMultiplier(progress, duration.color);
+
+        const animationEnd: boolean = progress >= totalDuration;
+
         const widthInterpolationMultiplier = calcInterpolationMultiplier(progress, duration.width);
-
-        // Interpolate border color
-        const borderRedIntensity = Math.floor(
-            colorInterpolationMultiplier * (targetBorderRed - defaultBorderRed) + defaultBorderRed
-        );
-        const borderGreenIntensity = Math.floor(
-            colorInterpolationMultiplier * (targetBorderGreen - defaultBorderGreen) + defaultBorderGreen
-        );
-        const borderBlueIntensity = Math.floor(
-            colorInterpolationMultiplier * (targetBorderBlue - defaultBorderBlue) + defaultBorderBlue
-        );
-
-        const borderColorValue = `#${borderRedIntensity.toString(16).padStart(2, '0')}${borderGreenIntensity.toString(16).padStart(2, '0')}${borderBlueIntensity.toString(16).padStart(2, '0')}`;
-
-        // Interpolate background color
-        const bgRedIntensity = Math.floor(
-            colorInterpolationMultiplier * (targetBgRed - defaultBgRed) + defaultBgRed
-        );
-        const bgGreenIntensity = Math.floor(
-            colorInterpolationMultiplier * (targetBgGreen - defaultBgGreen) + defaultBgGreen
-        );
-        const bgBlueIntensity = Math.floor(
-            colorInterpolationMultiplier * (targetBgBlue - defaultBgBlue) + defaultBgBlue
-        );
-
-        const bgColorValue = `#${bgRedIntensity.toString(16).padStart(2, '0')}${bgGreenIntensity.toString(16).padStart(2, '0')}${bgBlueIntensity.toString(16).padStart(2, '0')}`;
 
         const width = Math.floor(
             widthInterpolationMultiplier * (highlightWidthMultiplier * defaultWidth - defaultWidth) + defaultWidth
         );
 
-        const animationEnd: boolean = progress >= totalDuration;
-        if (ids.length > 0) {
-            if (!animationEnd) {
-                ids.forEach((nodeId) => {
-                    queueNodeUpdate({ id: nodeId, color: { border: borderColorValue, background: bgColorValue, highlight: { border: borderColorValue, background: bgColorValue } }, borderWidth: width });
-                });
-            } else {
-                ids.forEach((nodeId) => {
-                    queueNodeUpdate({ id: nodeId, color: null, borderWidth: null });
-                });
-            }
-        } else {
-            if (!animationEnd) {
-                nodes.get().forEach((node) => {
-                    queueNodeUpdate({ id: node.id, color: { border: borderColorValue, background: bgColorValue, highlight: { border: borderColorValue, background: bgColorValue } }, borderWidth: width });
-                });
-            } else {
-                nodes.get().forEach((node) => {
-                    queueNodeUpdate({ id: node.id, color: null, borderWidth: null });
-                });
-            }
-        }
+        if (keepColorAfterHighlight && (timestamp - startTime >= duration.color.highlight)) {
 
-        return animationEnd;
+            if (ids.length > 0) {
+                ids.forEach((nodeId) => {
+                    queueNodeUpdate({ id: nodeId, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: animationEnd ? null : width});
+                });
+            } else {
+                nodes.get().forEach((node) => {
+                    queueNodeUpdate({ id: node.id, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: animationEnd ? null : width});
+                });
+            }
+
+            return animationEnd; // End animation immediately after reaching highlight color
+        } else {
+
+            const colorInterpolationMultiplier = calcInterpolationMultiplier(progress, duration.color);
+
+            // Interpolate border color
+            const borderRedIntensity = Math.floor(
+                colorInterpolationMultiplier * (targetBorderRed - defaultBorderRed) + defaultBorderRed
+            );
+            const borderGreenIntensity = Math.floor(
+                colorInterpolationMultiplier * (targetBorderGreen - defaultBorderGreen) + defaultBorderGreen
+            );
+            const borderBlueIntensity = Math.floor(
+                colorInterpolationMultiplier * (targetBorderBlue - defaultBorderBlue) + defaultBorderBlue
+            );
+
+            const borderColorValue = `#${borderRedIntensity.toString(16).padStart(2, '0')}${borderGreenIntensity.toString(16).padStart(2, '0')}${borderBlueIntensity.toString(16).padStart(2, '0')}`;
+
+            // Interpolate background color
+            const bgRedIntensity = Math.floor(
+                colorInterpolationMultiplier * (targetBgRed - defaultBgRed) + defaultBgRed
+            );
+            const bgGreenIntensity = Math.floor(
+                colorInterpolationMultiplier * (targetBgGreen - defaultBgGreen) + defaultBgGreen
+            );
+            const bgBlueIntensity = Math.floor(
+                colorInterpolationMultiplier * (targetBgBlue - defaultBgBlue) + defaultBgBlue
+            );
+
+            const bgColorValue = `#${bgRedIntensity.toString(16).padStart(2, '0')}${bgGreenIntensity.toString(16).padStart(2, '0')}${bgBlueIntensity.toString(16).padStart(2, '0')}`;
+
+            if (ids.length > 0) {
+                if (!animationEnd) {
+                    ids.forEach((nodeId) => {
+                        queueNodeUpdate({ id: nodeId, color: { border: borderColorValue, background: bgColorValue, highlight: { border: borderColorValue, background: bgColorValue } }, borderWidth: width });
+                    });
+                } else {
+                    ids.forEach((nodeId) => {
+                        queueNodeUpdate({ id: nodeId, color: null, borderWidth: null });
+                    });
+                }
+            } else {
+                if (!animationEnd) {
+                    nodes.get().forEach((node) => {
+                        queueNodeUpdate({ id: node.id, color: { border: borderColorValue, background: bgColorValue, highlight: { border: borderColorValue, background: bgColorValue } }, borderWidth: width });
+                    });
+                } else {
+                    nodes.get().forEach((node) => {
+                        queueNodeUpdate({ id: node.id, color: null, borderWidth: null });
+                    });
+                }
+            }
+
+            return animationEnd;
+        }
     }
 
     // Return a cancel function
