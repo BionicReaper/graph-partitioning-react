@@ -108,7 +108,8 @@ export const runStandalone = (
 }
 
 export const changeSize = (
-    id: string,
+    nodes: DataSet<any, "id">,
+    ids: string[] = [],
     duration: number = 300,
     startingSize: number = 1,
     targetSize: number = defaultVisOptions.nodes.size || 26
@@ -128,7 +129,29 @@ export const changeSize = (
 
         const size = startingSize + easedT * (targetSize - startingSize);
 
-        queueNodeUpdate({ id, size });
+        const animationEnd: boolean = progress >= duration;
+
+        if (ids.length > 0) {
+            if (animationEnd) {
+                ids.forEach((nodeId) => {
+                    queueNodeUpdate({ id: nodeId, size: targetSize });
+                });
+            } else {
+                ids.forEach((nodeId) => {
+                    queueNodeUpdate({ id: nodeId, size });
+                });
+            }
+        } else {
+            if (animationEnd) {
+                nodes.get().forEach((node) => {
+                    queueNodeUpdate({ id: node.id, size: targetSize });
+                });
+            } else {
+                nodes.get().forEach((node) => {
+                    queueNodeUpdate({ id: node.id, size });
+                });
+            }
+        }
 
         return progress >= duration;
     }

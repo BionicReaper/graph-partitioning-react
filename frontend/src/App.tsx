@@ -48,7 +48,7 @@ function App() {
         manipulation: {
           ...defaultVisOptions.manipulation,
           addNode: (data: any, callback: any) => {
-            runStandalone(nodesRef.current, edgesRef.current, changeSize(data.id, 300, 1, defaultVisOptions.nodes.size || 26));
+            runStandalone(nodesRef.current, edgesRef.current, changeSize(nodesRef.current, [data.id], 300, 1, defaultVisOptions.nodes.size || 26));
             
             if (defaultVisOptions.manipulation?.addNode) {
               // preserve any behavior in default options (like dispatching events)
