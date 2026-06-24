@@ -23,6 +23,7 @@ import { useSnackbar } from 'notistack';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import LocalizedStatsText from './components/LocalizedSnackbarText/LocallizedStatsText';
 import { runFiducciaMattheyses } from './algorithms/fiduccia-mattheyses';
+import { changeSize, runStandalone } from './utils/animations';
 type ActiveMode = 'node' | 'edge' | null;
 
 function App() {
@@ -46,6 +47,16 @@ function App() {
         ...defaultVisOptions,
         manipulation: {
           ...defaultVisOptions.manipulation,
+          addNode: (data: any, callback: any) => {
+            runStandalone(nodesRef.current, edgesRef.current, changeSize(data.id, 300, 1, defaultVisOptions.nodes.size || 26));
+            
+            if (defaultVisOptions.manipulation?.addNode) {
+              // preserve any behavior in default options (like dispatching events)
+              defaultVisOptions.manipulation.addNode(data, callback);
+            } else {
+              callback(data);
+            }
+          },
           addEdge: (data: any, callback: any) => {
             // Prevent self-loop
             if (data.to === data.from) return;

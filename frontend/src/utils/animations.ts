@@ -14,7 +14,8 @@ type NodeUpdate = {
             background: string
         }
     } | null,
-    borderWidth?: number | null
+    borderWidth?: number | null,
+    size?: number
 };
 
 type EdgeUpdate = {
@@ -54,6 +55,9 @@ const queueNodeUpdate = (update: NodeUpdate) => {
     if (update.borderWidth !== undefined) {
         existing.borderWidth = update.borderWidth;
     }
+    if (update.size !== undefined) {
+        existing.size = update.size;
+    }
     nodeUpdates[update.id] = existing;
 };
 
@@ -67,6 +71,70 @@ const queueEdgeUpdate = (update: EdgeUpdate) => {
     }
     edgeUpdates[update.id] = existing;
 };
+
+
+export const runStandalone = (
+    nodes: DataSet<any, "id">,
+    edges: DataSet<any, "id">,
+    stepFn: (timestamp: DOMHighResTimeStamp) => boolean
+): () => void => {
+    let animationFrameId: number | null = null;
+
+    const step = (timestamp: DOMHighResTimeStamp) => {
+
+        const done = stepFn(timestamp);
+
+        const nodeUpdates = extractNodeUpdates();
+        const edgeUpdates = extractEdgeUpdates();
+
+        nodes.update(nodeUpdates);
+        edges.update(edgeUpdates);
+
+        if (!done) {
+            animationFrameId = requestAnimationFrame(step);
+        } else {
+            animationFrameId = null;
+        }
+    };
+    animationFrameId = requestAnimationFrame(step);
+
+    // Return a cancel function
+    return () => {
+        if (animationFrameId !== null) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+    };
+}
+
+export const changeSize = (
+    id: string,
+    duration: number = 300,
+    startingSize: number = 1,
+    targetSize: number = defaultVisOptions.nodes.size || 26
+) => {
+    let startTime: DOMHighResTimeStamp | null = null;
+
+    function step(timestamp: DOMHighResTimeStamp) {
+        if (!startTime) startTime = timestamp;
+
+        const progress = timestamp - startTime;
+
+        const t = (duration <= 0) 
+            ? 1 
+            : Math.min(progress / duration, 1);
+
+        const easedT = easeInOutCubic(t);
+
+        const size = startingSize + easedT * (targetSize - startingSize);
+
+        queueNodeUpdate({ id, size });
+
+        return progress >= duration;
+    }
+
+    return step;
+}
 
 export const highlightNodes = (
     nodes: DataSet<any, "id">,
