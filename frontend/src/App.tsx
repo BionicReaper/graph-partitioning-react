@@ -349,6 +349,7 @@ function App() {
       <LocalizedStatsText stats={{
           initialCutSize: stats.initialCutSize,
           finalCutSize: stats.finalCutSize,
+          passes: stats.passes,
           reads: stats.reads,
           writes: stats.writes,
           additions: stats.additions,

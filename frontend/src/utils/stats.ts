@@ -1,6 +1,7 @@
 export interface Stats {
     initialCutSize: number;
     finalCutSize: number;
+    passes: number;
     reads: number;
     writes: number;
     additions: number;
@@ -10,6 +11,7 @@ export interface Stats {
 let stats: Stats = {
     initialCutSize: 0,
     finalCutSize: 0,
+    passes: 0,
     reads: 0,
     writes: 0,
     additions: 0,
@@ -22,6 +24,7 @@ export const resetStats = () => {
     stats = {
         initialCutSize: 0,
         finalCutSize: 0,
+        passes: 0,
         reads: 0,
         writes: 0,
         additions: 0,
@@ -40,6 +43,7 @@ export const mergeStats = () => {
     if (stashedStats) {
         stats.initialCutSize += stashedStats.initialCutSize;
         stats.finalCutSize += stashedStats.finalCutSize;
+        stats.passes += stashedStats.passes;
         stats.reads += stashedStats.reads;
         stats.writes += stashedStats.writes;
         stats.additions += stashedStats.additions;
@@ -58,6 +62,10 @@ export const setInitialCutSize = (cutSize: number) => {
 
 export const setFinalCutSize = (cutSize: number) => {
     stats.finalCutSize = cutSize;
+}
+
+export const setPasses = (passes: number) => {
+    stats.passes = passes;
 }
 
 export const incrementReads = (count: number = 1) => {

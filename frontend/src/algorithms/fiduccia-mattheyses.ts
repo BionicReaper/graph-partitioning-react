@@ -2,7 +2,7 @@ import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { highlightEdges, highlightNodes, moveNode, moveNodeRelative } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
 import { generateSetAnchorAnimation } from "../utils/anchoring";
-import { resetStats, setInitialCutSize, setFinalCutSize, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
+import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
 import { startNextPass } from "../utils/startNextPass";
 
 export interface FMNode {
@@ -1239,6 +1239,7 @@ export function runFiducciaMattheyses(
 
     
     setFinalCutSize(finalCutSize);
+    setPasses(currentPass);
 
     // Map partitions back to original IDs
     nodes.forEach(node => {
