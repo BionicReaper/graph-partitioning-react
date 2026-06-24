@@ -112,48 +112,45 @@ export const changeSize = (
     ids: string[] = [],
     duration: number = 300,
     startingSize: number = 1,
-    targetSize: number = defaultVisOptions.nodes.size || 26
+    targetSize: number = defaultVisOptions.nodes.size || 26,
+    gradual: number = 0
 ) => {
+    const nodeIds: string[] = ids.length > 0
+        ? ids
+        : nodes.get().map((node) => node.id);
+
+    const count = nodeIds.length;
+
+    const concurrency = (gradual <= 0) ? count : Math.min(gradual, count);
+    const staggered = concurrency < count;
+
+    const stagger = staggered ? duration / (count - 1 + concurrency) : 0;
+    const nodeDuration = staggered ? concurrency * stagger : duration;
+
     let startTime: DOMHighResTimeStamp | null = null;
 
     function step(timestamp: DOMHighResTimeStamp) {
         if (!startTime) startTime = timestamp;
 
-        const progress = timestamp - startTime;
+        const elapsed = timestamp - startTime;
 
-        const t = (duration <= 0) 
-            ? 1 
-            : Math.min(progress / duration, 1);
+        nodeIds.forEach((nodeId, index) => {
+            const nodeProgress = elapsed - index * stagger;
 
-        const easedT = easeInOutCubic(t);
-
-        const size = startingSize + easedT * (targetSize - startingSize);
-
-        const animationEnd: boolean = progress >= duration;
-
-        if (ids.length > 0) {
-            if (animationEnd) {
-                ids.forEach((nodeId) => {
-                    queueNodeUpdate({ id: nodeId, size: targetSize });
-                });
+            let size: number;
+            if (nodeProgress <= 0) {
+                size = startingSize;
+            } else if (nodeDuration <= 0 || nodeProgress >= nodeDuration) {
+                size = targetSize;
             } else {
-                ids.forEach((nodeId) => {
-                    queueNodeUpdate({ id: nodeId, size });
-                });
+                const easedT = easeInOutCubic(nodeProgress / nodeDuration);
+                size = startingSize + easedT * (targetSize - startingSize);
             }
-        } else {
-            if (animationEnd) {
-                nodes.get().forEach((node) => {
-                    queueNodeUpdate({ id: node.id, size: targetSize });
-                });
-            } else {
-                nodes.get().forEach((node) => {
-                    queueNodeUpdate({ id: node.id, size });
-                });
-            }
-        }
 
-        return progress >= duration;
+            queueNodeUpdate({ id: nodeId, size });
+        });
+
+        return elapsed >= duration;
     }
 
     return step;

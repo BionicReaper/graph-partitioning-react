@@ -1,5 +1,5 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { highlightEdges, highlightNodes, moveNode, moveNodeRelative } from "../utils/animations";
+import { changeSize, highlightEdges, highlightNodes, moveNode, moveNodeRelative } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
 import { generateSetAnchorAnimation } from "../utils/anchoring";
 import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
@@ -803,10 +803,19 @@ export function runFiducciaMattheyses(
         return {
             id: `dummyBlackNode-${partition}-(${gain})`,
             label: `Bucket: ${gain}`,
-            size: 50,
+            size: 0,
             x: dummyPositionX,
             y: dummyPositionY,
             color: { background: '#888888', border: '#000000' } };
+    });
+
+    animation.push({
+        animationCallback: () => {
+            network.fit();
+            return changeSize(nodeDataSet, dummyBlackNodes.map(node => node.id), 2000, 0, 50, 5);
+        },
+        description: `Add dummy black nodes for buckets`,
+        timeBeforeNext: 2000
     });
 
     const previousNodes = nodeDataSet.get();
