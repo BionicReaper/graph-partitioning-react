@@ -986,6 +986,7 @@ export function runFiducciaMattheyses(
                 animation
             );
 
+            const destinationPartition = node.partition === 0 ? 1 : 0;
             animation.push({
                 animationCallback: () => {
                     return moveNode(
@@ -993,12 +994,12 @@ export function runFiducciaMattheyses(
                         node.id,
                         calculateX(
                             0,
-                            node.partition === 0 ? 1 : 0,
+                            destinationPartition,
                             2 * (bucketArrayLeft.length)
                         ),
                         calculateY(
                             0,
-                            node.partition === 0 ? 1 : 0,
+                            destinationPartition,
                             2 * (bucketArrayLeft.length)
                         ) + 500,
                         500
