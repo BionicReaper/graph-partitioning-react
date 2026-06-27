@@ -36,7 +36,7 @@ export function runKernighanLin(
         algorithmPasses?: number,
         activeNodeIds?: string[],
         existingPartition?: { [key: string]: number },
-        startringAnchorIndex?: number
+        startingAnchorIndex?: number
     } = {}
 ): {
     partition: { [key: string]: number };
@@ -44,7 +44,7 @@ export function runKernighanLin(
     finalCutSize: number;
     animation: Animation[];
 } {
-    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startringAnchorIndex = 0 } = options;
+    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0 } = options;
 
     const animation: Animation[] = [];
 
@@ -52,7 +52,7 @@ export function runKernighanLin(
 
     resetStats();
 
-    let anchorIndex = startringAnchorIndex;
+    let anchorIndex = startingAnchorIndex;
 
     // Convert DataSet to array format with index mapping
     // Time complexity: O(n + m) where n = nodes, m = edges
