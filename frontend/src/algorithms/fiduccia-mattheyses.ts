@@ -612,7 +612,8 @@ export function runFiducciaMattheyses(
     options: {
         algorithmPasses?: number,
         activeNodeIds?: string[],
-        existingPartition?: { [key: string]: number }
+        existingPartition?: { [key: string]: number },
+        startringAnchorIndex?: number
     }
 ): {
     partition: { [key: string]: number };
@@ -620,7 +621,7 @@ export function runFiducciaMattheyses(
     finalCutSize: number;
     animation: Animation[];
 } {
-    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {} } = options;
+    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startringAnchorIndex = 0 } = options;
 
     const animation: Animation[] = [];
     
@@ -628,7 +629,7 @@ export function runFiducciaMattheyses(
 
     resetStats();
 
-    let anchorIndex = 0;
+    let anchorIndex = startringAnchorIndex;
 
     const originalNodes = (activeNodeIdSet.size > 0)
         ? nodeDataSet.get([...activeNodeIdSet])
