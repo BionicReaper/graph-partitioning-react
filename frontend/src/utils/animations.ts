@@ -404,7 +404,12 @@ export const moveNodeRelative = (
 ) => {
     if (!network) return () => { return true; };
 
-    const { x: originX, y: originY } = network.getPosition(originNodeId);
+    const {x: scheduledX, y: scheduledY} = nodeUpdates[movedNodeId] ?? { x: undefined, y: undefined };
+
+    const { x: originX, y: originY } = 
+        (scheduledX !== undefined && scheduledY !== undefined)
+            ? { x: scheduledX, y: scheduledY }
+            : network.getPosition(originNodeId);
     const targetX = originX + deltaX;
     const targetY = originY + deltaY;
 
@@ -421,8 +426,17 @@ export const swapNodePositions = (
 
     const internalDuration = duration;
 
-    const { x: startAx, y: startAy } = network.getPosition(idA);
-    const { x: startBx, y: startBy } = network.getPosition(idB);
+    const { x: scheduledAx, y: scheduledAy } = nodeUpdates[idA] ?? { x: undefined, y: undefined };
+    const { x: scheduledBx, y: scheduledBy } = nodeUpdates[idB] ?? { x: undefined, y: undefined };
+
+    const { x: startAx, y: startAy } = 
+        (scheduledAx !== undefined && scheduledAy !== undefined)
+            ? { x: scheduledAx, y: scheduledAy }
+            : network.getPosition(idA);
+    const { x: startBx, y: startBy } = 
+        (scheduledBx !== undefined && scheduledBy !== undefined)
+                ? { x: scheduledBx, y: scheduledBy }
+                : network.getPosition(idB);
 
     const stepFn1 = moveNode(network, idA, startBx, startBy, internalDuration);
     const stepFn2 = moveNode(network, idB, startAx, startAy, internalDuration);
