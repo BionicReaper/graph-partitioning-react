@@ -609,15 +609,19 @@ export function runFiducciaMattheyses(
     network: Network,
     nodeDataSet: DataSet<any, "id">,
     edgeDataSet: DataSet<any, "id">,
-    algorithmPasses: number = 0,
-    activeNodeIds?: string[],
-    existingPartition?: { [key: string]: number }
+    options: {
+        algorithmPasses?: number,
+        activeNodeIds?: string[],
+        existingPartition?: { [key: string]: number }
+    }
 ): {
     partition: { [key: string]: number };
     initialCutSize: number;
     finalCutSize: number;
     animation: Animation[];
 } {
+    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {} } = options;
+
     const animation: Animation[] = [];
     
     const activeNodeIdSet = new Set(activeNodeIds?.filter(Boolean));
@@ -1268,9 +1272,11 @@ export function runFiducciaMattheysesWithMetisBalance(
     network: Network,
     nodeDataSet: DataSet<any, "id">,
     edgeDataSet: DataSet<any, "id">,
-    algorithmPasses: number = 0,
-    activeNodeIds?: string[],
-    existingPartition?: { [key: string]: number }
+    options: {
+        algorithmPasses?: number,
+        activeNodeIds?: string[],
+        existingPartition?: { [key: string]: number }
+    } = {}
 ): {
     partition: { [key: string]: number };
     initialCutSize: number;
@@ -1278,7 +1284,7 @@ export function runFiducciaMattheysesWithMetisBalance(
     animation: Animation[];
 } {
     setBalanceMode('METIS');
-    const result = runFiducciaMattheyses(network, nodeDataSet, edgeDataSet, algorithmPasses, activeNodeIds, existingPartition);
+    const result = runFiducciaMattheyses(network, nodeDataSet, edgeDataSet, options);
     setBalanceMode('FM');
     return result;
 }

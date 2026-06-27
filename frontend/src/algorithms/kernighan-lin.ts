@@ -32,15 +32,19 @@ export function runKernighanLin(
     network: Network,
     nodeDataSet: DataSet<any, "id">,
     edgeDataSet: DataSet<any, "id">,
-    algorithmPasses: number = 0,
-    activeNodeIds?: string[],
-    existingPartition?: { [key: string]: number }
+    options: {
+        algorithmPasses?: number,
+        activeNodeIds?: string[],
+        existingPartition?: { [key: string]: number }
+    } = {}
 ): {
     partition: { [key: string]: number };
     initialCutSize: number;
     finalCutSize: number;
     animation: Animation[];
 } {
+    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {} } = options;
+
     const animation: Animation[] = [];
 
     const activeNodeIdSet = new Set(activeNodeIds?.filter(Boolean));
