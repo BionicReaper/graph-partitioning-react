@@ -61,14 +61,6 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
             waitUntil = timestamp;
         }
 
-        // Schedule new steps if their time has come
-        while (timestamp >= waitUntil && nextStepIndex < animationSteps.length) {
-            const step = animationSteps[nextStepIndex];
-            //console.log(`Scheduling animation step ${nextStepIndex + 1}/${animationSteps.length}: ${step.description}`);
-            steps.push(step.animationCallback());
-            waitUntil = timestamp + step.timeBeforeNext;
-            nextStepIndex++;
-        }
 
         // Draw scheduled steps and remove those that are done
         if (steps.length > 0) {
@@ -80,13 +72,25 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
                     i = i - 1;
                 }
             }
-
-            const nodeUpdates = extractNodeUpdates();
-            const edgeUpdates = extractEdgeUpdates();
-
-            nodes.update(nodeUpdates);
-            edges.update(edgeUpdates);
         }
+
+        // Schedule new steps if their time has come
+        while (timestamp >= waitUntil && nextStepIndex < animationSteps.length) {
+            const step = animationSteps[nextStepIndex];
+            //console.log(`Scheduling animation step ${nextStepIndex + 1}/${animationSteps.length}: ${step.description}`);
+            steps.push(step.animationCallback());
+            steps[steps.length - 1](waitUntil); // Initiate the step exactly at wait until
+            steps[steps.length - 1](timestamp); // Update the step immediately with the current timestamp in case next steps rely on it
+            waitUntil = waitUntil + step.timeBeforeNext;
+            nextStepIndex++;
+        }
+
+        // Render the current state of nodes and edges
+        const nodeUpdates = extractNodeUpdates();
+        const edgeUpdates = extractEdgeUpdates();
+
+        nodes.update(nodeUpdates);
+        edges.update(edgeUpdates);
     }
 
     // Rendering termination/continuation logic
