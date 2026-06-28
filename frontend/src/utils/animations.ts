@@ -404,7 +404,7 @@ export const moveNodeRelative = (
 ) => {
     if (!network) return () => { return true; };
 
-    const {x: scheduledX, y: scheduledY} = nodeUpdates[movedNodeId] ?? { x: undefined, y: undefined };
+    const {x: scheduledX, y: scheduledY} = nodeUpdates[originNodeId] ?? { x: undefined, y: undefined };
 
     const { x: originX, y: originY } = 
         (scheduledX !== undefined && scheduledY !== undefined)
