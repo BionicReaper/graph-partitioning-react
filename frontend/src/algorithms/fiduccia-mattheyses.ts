@@ -816,20 +816,20 @@ export function runFiducciaMattheyses(
 
     animation.push({
         animationCallback: () => {
+            const previousNodes = nodeDataSet.get();
+
+            nodeDataSet.remove(previousNodes.map(node => node.id));
+
+            nodeDataSet.add(dummyBlackNodes);
+
+            nodeDataSet.add(previousNodes);
+            
             network.fit();
             return changeSize(nodeDataSet, dummyBlackNodes.map(node => node.id), 2000, 0, 50, 5);
         },
         description: `Add dummy black nodes for buckets`,
         timeBeforeNext: 2000
     });
-
-    const previousNodes = nodeDataSet.get();
-
-    nodeDataSet.remove(previousNodes.map(node => node.id));
-
-    nodeDataSet.add(dummyBlackNodes);
-
-    nodeDataSet.add(previousNodes);
 
     setInitialCutSize(initialCutSize);
     
