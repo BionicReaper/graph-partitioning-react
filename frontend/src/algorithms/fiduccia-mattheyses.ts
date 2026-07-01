@@ -722,7 +722,7 @@ export function runFiducciaMattheyses(
             },
             partition:
                 existingPartition?.[node.id] ??
-                weightLeft > weightRight ? 1 : 0,
+                weightLeft > weightRight ? 0 : 0,
             locked: false,
             label: node.label
         }
@@ -841,7 +841,11 @@ export function runFiducciaMattheyses(
     previousCutSize = initialCutSize;
     finalCutSize = initialCutSize;
 
-    while (startNextPass(algorithmPasses, previousCutSize, finalCutSize, currentPass)) {
+    let willBeBalanced = isBalanced(weightLeft, weightRight, maxNodeWeight);
+
+    const initiallyBalanced = willBeBalanced;
+
+    while (startNextPass(algorithmPasses + (initiallyBalanced ? 0 : 1), previousCutSize, finalCutSize, currentPass)) {
 
         currentPass += 1;
         previousCutSize = finalCutSize;
@@ -1138,28 +1142,41 @@ export function runFiducciaMattheyses(
         let k = -1;
         cumulativeGains.forEach((gain, index) => {
             const isPartitionBalanced = isBalanced(gain.balance, 0, maxNodeWeight);
-            if (!isPartitionBalanced) {
-                incrementReads(1);
+            if (!willBeBalanced) {
+                if (isPartitionBalanced) {
+                    console.log('Balanced the partition');
+                    maxCumulativeGain = gain.totalGain;
+                    bestBalance = gain.balance;
+                    k = index;
+
+                    willBeBalanced = true;
+                    initialCutSize = initialCutSize - gain.totalGain;
+                    setInitialCutSize(initialCutSize);
+
+                    incrementReads(4);
+                    incrementWrites(5);
+                }
+                
                 incrementComparisons(1);
-                return;
             } else if (gain.totalGain > maxCumulativeGain) {
                 maxCumulativeGain = gain.totalGain;
                 bestBalance = gain.balance;
                 k = index;
 
                 incrementReads(3);
+                incrementComparisons(1);
                 incrementWrites(3);
             } else if (gain.totalGain === maxCumulativeGain && gain.balance < bestBalance) {
                 bestBalance = gain.balance;
                 k = index;
 
                 incrementReads(4);
-                incrementComparisons(2);
+                incrementComparisons(3);
                 incrementWrites(2);
             }
 
-            incrementReads(2);
-            incrementComparisons(1);
+            incrementReads(3);
+            incrementComparisons(2);
         });
 
         // Undo swaps beyond k
