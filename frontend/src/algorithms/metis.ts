@@ -262,9 +262,18 @@ export function runMetis(
         : edgeDataSet.get();
 
     if (originalNodes.length === 0 || originalEdges.length === 0) {
-        return originalNodes.reduce((acc: any, node: any, idx: number) => {
-            return { ...acc, [node?.id]: existingPartition?.[node.id] ?? (idx % 2) }
+        setInitialCutSize(0);
+        setFinalCutSize(0);
+        incrementReads(2); // Reading nodes and edges length
+        incrementComparisons(2); // Comparing nodes and edges length to 0
+
+        const partition = originalNodes.reduce((acc: any, node: any, idx: number) => {
+            return {...acc, [node?.id]: existingPartition?.[node.id] ?? (idx % 2)}
         }, {})
+        return { partition, initialCutSize: 0, finalCutSize: 0, animation: [] }
+    } else {
+        incrementReads(2); // Reading nodes and edges length
+        incrementComparisons(2); // Comparing nodes and edges length to 0
     }
     
     // nodeRouteMap key format: matchingLevel|nodeId
