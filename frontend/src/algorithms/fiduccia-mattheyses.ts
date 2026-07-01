@@ -845,7 +845,7 @@ export function runFiducciaMattheyses(
 
     const initiallyBalanced = willBeBalanced;
 
-    while (startNextPass(algorithmPasses + (initiallyBalanced ? 0 : 1), previousCutSize, finalCutSize, currentPass)) {
+    while (startNextPass(algorithmPasses + (initiallyBalanced ? 0 : 1), previousCutSize, finalCutSize, currentPass) || (currentPass === 1 && !initiallyBalanced)) {
 
         currentPass += 1;
         previousCutSize = finalCutSize;
