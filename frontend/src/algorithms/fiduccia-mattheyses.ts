@@ -722,7 +722,7 @@ export function runFiducciaMattheyses(
             },
             partition:
                 existingPartition?.[node.id] ??
-                weightLeft > weightRight ? 0 : 0,
+                weightLeft > weightRight ? 1 : 0,
             locked: false,
             label: node.label
         }
