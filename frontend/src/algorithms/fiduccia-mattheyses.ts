@@ -276,8 +276,13 @@ function setBalanceMode(mode: 'FM' | 'METIS') {
     balanceMode = mode;
 }
 
+function isBalanced(weightLeft: number, weightRight: number, maxNodeWeight: number, balanceFactor: number = 2): boolean {
+    return Math.abs(weightLeft - weightRight) <= balanceFactor * maxNodeWeight;
+}
+
 function filterBestGainCellsByBalance(cells: FMCell[], nodes: FMNode[], weightLeft: number, weightRight: number, maxNodeWeight: number, balanceFactor: number = 2): FMCell[] {
-    if (balanceMode === 'FM') {
+    const currentlyBalanced = isBalanced(weightLeft, weightRight, maxNodeWeight, balanceFactor);
+    if (balanceMode === 'FM' && currentlyBalanced) {
         return cells.filter(cell => {
             const node = nodes[cell.nodeIdx];
             const partition = node.partition;
@@ -285,7 +290,7 @@ function filterBestGainCellsByBalance(cells: FMCell[], nodes: FMNode[], weightLe
             const newWeightLeft = partition === 0 ? weightLeft - node.weight : weightLeft + node.weight;
             const newWeightRight = partition === 1 ? weightRight - node.weight : weightRight + node.weight;
 
-            const remainsBalanced = Math.abs(newWeightLeft - newWeightRight) <= balanceFactor * maxNodeWeight;
+            const remainsBalanced = isBalanced(newWeightLeft, newWeightRight, maxNodeWeight, balanceFactor);
 
             incrementReads(10);
             incrementAdditions(3);
@@ -293,7 +298,7 @@ function filterBestGainCellsByBalance(cells: FMCell[], nodes: FMNode[], weightLe
 
             return remainsBalanced;
         });
-    } else if (balanceMode === 'METIS') {
+    } else if (balanceMode === 'METIS' || !currentlyBalanced) {
         // In METIS, balancing is achieved by always moving nodes from the heavier partition to the lighter one
         const sideToUse = weightLeft <= weightRight ? 1 : 0;
 
@@ -1132,7 +1137,12 @@ export function runFiducciaMattheyses(
         let bestBalance: number = Number.POSITIVE_INFINITY;
         let k = -1;
         cumulativeGains.forEach((gain, index) => {
-            if (gain.totalGain > maxCumulativeGain) {
+            const isPartitionBalanced = isBalanced(gain.balance, 0, maxNodeWeight);
+            if (!isPartitionBalanced) {
+                incrementReads(1);
+                incrementComparisons(1);
+                return;
+            } else if (gain.totalGain > maxCumulativeGain) {
                 maxCumulativeGain = gain.totalGain;
                 bestBalance = gain.balance;
                 k = index;
