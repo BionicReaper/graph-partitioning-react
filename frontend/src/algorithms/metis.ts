@@ -41,6 +41,36 @@ export interface Animation {
     timeBeforeNext: number;
 }
 
+function animateCircleOrganization(
+    network: Network,
+    originalNodes: DatasetNode[],
+    animation: Animation[]
+): void {
+    const circleOrganizationMoveTime = MAX_CIRCLE_ORGANIZATION_TIME / originalNodes.length;
+
+    for (let i = 0; i < originalNodes.length; i++) {
+        const nodeId = originalNodes[i].id;
+        const {x, y} = calculateCirclePoint(i, originalNodes.length);
+        animation.push({
+            animationCallback: () => {
+                return moveNode(network, nodeId, x, y, 500);
+            },
+            description: `Move node ${nodeId} to position (${x}, ${y})`,
+            timeBeforeNext: circleOrganizationMoveTime
+        });
+    }
+}
+
+function restoreLabelingOrder(nodeDataSet: DataSet<any, "id">): void {
+    const currentNodes = nodeDataSet.get();
+    currentNodes.sort((a, b) => {
+        return Number(a.label) - Number(b.label);
+    });
+
+    nodeDataSet.clear();
+    nodeDataSet.update(currentNodes);
+}
+
 function selectEdgeForMatching(node: DatasetNode, matchedNodeIds: Set<string>, edges: DatasetEdge[], mode: string = "HEM"): DatasetEdge | null {
     if (mode === "HEM") {
         const bestEdge = edges.reduce((best: DatasetEdge | null, edge: DatasetEdge) => {
@@ -411,6 +441,8 @@ export function runMetis(
     }
 
     setFinalCutSize(finalCutSize);
+
+    restoreLabelingOrder(nodeDataSet);
 
     return {
         partition: currentPartition,
