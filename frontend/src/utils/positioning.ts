@@ -6,6 +6,16 @@ const baseDistanceBetweenPartitions = 800;
 const baseCircleRadius = 300;
 const startAngle = Math.PI / 2; // 90 degrees
 
+export const calculateCirclePoint = (index: number, totalNodes: number): { x: number; y: number } => {
+    const angle = (2 * Math.PI * index) / totalNodes;
+    const scaleFactor = totalNodes / 10;
+    const circleRadius = baseCircleRadius * scaleFactor;
+    return {
+        x: centerX  + circleRadius * Math.cos(angle) + 1,
+        y: centerY  + circleRadius * Math.sin(angle) + 1
+    };
+}
+
 export const calculateX = (index: number, partition: number, totalNodes: number): number => {
     const nodesInPartition = (partition === 0) ? Math.ceil(totalNodes / 2) : Math.floor(totalNodes / 2);
     
