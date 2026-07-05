@@ -22,6 +22,7 @@ interface DatasetNode {
         }
     }
     children: [DatasetNode, DatasetNode];
+    createdAtLevel?: number;
 }
 
 interface DatasetEdge {
@@ -83,7 +84,8 @@ function collapseNodes(
             x: (nodeA.x + nodeB.x) / 2,
             y: (nodeA.y + nodeB.y) / 2,
             weight: (nodeA.weight ?? 1) + (nodeB.weight ?? 1),
-            children: [nodeA, nodeB]
+            children: [nodeA, nodeB],
+            createdAtLevel: matchingLevel
         };
         newNodes.push(newNode);
     });
@@ -236,7 +238,8 @@ function coarsenGraph(
 
 function splitCompoundNodes(
     nodeDataSet: DataSet<any, "id">,
-    currentPartition: { [key: string]: number }
+    currentPartition: { [key: string]: number },
+    targetLevel: number
 ) {
     const allNodes = nodeDataSet.get();
 
@@ -245,7 +248,7 @@ function splitCompoundNodes(
     const nodesToAdd: DatasetNode[] = [];
 
     for (const node of allNodes) {
-        if (node.children && node.children.length === 2) {
+        if (node.children && node.children.length === 2 && node.createdAtLevel === targetLevel) {
             const [childA, childB] = node.children;
 
             nodeIdsToDelete.push(node.id);
@@ -299,7 +302,7 @@ function uncoarsenGraph(
     currentPartition: { [key: string]: number },
     matchingLevel: number
 ): void {
-    splitCompoundNodes(nodeDataSet, currentPartition);
+    splitCompoundNodes(nodeDataSet, currentPartition, matchingLevel);
 
     recoverEdges(nodeDataSet, edgeDataSet, edgesMap, matchingLevel);
 }
