@@ -287,7 +287,8 @@ export const highlightEdges = (
     ids: string[] = [],
     highlightColor: string = '#00FF00',
     highlightWidthMultiplier: number = 5,
-    duration: Record<string, { highlight: number, hold: number, fade: number }> = { color: { highlight: 500, hold: 0, fade: 500 }, width: { highlight: 500, hold: 0, fade: 500 } }
+    duration: Record<string, { highlight: number, hold: number, fade: number }> = { color: { highlight: 500, hold: 0, fade: 500 }, width: { highlight: 500, hold: 0, fade: 500 } },
+    keepColorAfterHighlight: boolean = false
 ) => {
     let startTime: DOMHighResTimeStamp | null = null;
     const totalDuration = Math.max(
@@ -313,50 +314,69 @@ export const highlightEdges = (
         if (!startTime) startTime = timestamp;
 
         const progress = timestamp - startTime;
-        const colorInterpolationMultiplier = calcInterpolationMultiplier(progress, duration.color);
+
+        const animationEnd: boolean = progress >= totalDuration;
+
         const widthInterpolationMultiplier = calcInterpolationMultiplier(progress, duration.width);
-
-        // Interpolate color
-        const redIntensity = Math.floor(
-            colorInterpolationMultiplier * (targetRed - defaultRed) + defaultRed
-        );
-        const greenIntensity = Math.floor(
-            colorInterpolationMultiplier * (targetGreen - defaultGreen) + defaultGreen
-        );
-        const blueIntensity = Math.floor(
-            colorInterpolationMultiplier * (targetBlue - defaultBlue) + defaultBlue
-        );
-
-        const colorValue = `#${redIntensity.toString(16).padStart(2, '0')}${greenIntensity.toString(16).padStart(2, '0')}${blueIntensity.toString(16).padStart(2, '0')}`;
 
         const width = Math.floor(
             widthInterpolationMultiplier * (highlightWidthMultiplier * defaultWidth - defaultWidth) + defaultWidth
         );
 
-        const animationEnd: boolean = progress >= totalDuration;
-        if (ids.length > 0) {
-            if (!animationEnd) {
-                ids.forEach((edgeId) => {
-                    queueEdgeUpdate({ id: edgeId, color: { color: colorValue }, width: width });
-                });
-            } else {
-                ids.forEach((edgeId) => {
-                    queueEdgeUpdate({ id: edgeId, color: null, width: null });
-                });
-            }
-        } else {
-            if (!animationEnd) {
-                edges.get().forEach((edge) => {
-                    queueEdgeUpdate({ id: edge.id, color: { color: colorValue }, width: width });
-                });
-            } else {
-                edges.get().forEach((edge) => {
-                    queueEdgeUpdate({ id: edge.id, color: null, width: null });
-                });
-            }
-        }
+        if (keepColorAfterHighlight && (timestamp - startTime >= duration.color.highlight)) {
 
-        return animationEnd;
+            if (ids.length > 0) {
+                ids.forEach((edgeId) => {
+                    queueEdgeUpdate({ id: edgeId, color: { color: highlightColor }, width: animationEnd ? null : width });
+                });
+            } else {
+                edges.get().forEach((edge) => {
+                    queueEdgeUpdate({ id: edge.id, color: { color: highlightColor }, width: animationEnd ? null : width });
+                });
+            }
+
+            return animationEnd; // End animation immediately after reaching highlight color
+        } else {
+
+            const colorInterpolationMultiplier = calcInterpolationMultiplier(progress, duration.color);
+
+            // Interpolate color
+            const redIntensity = Math.floor(
+                colorInterpolationMultiplier * (targetRed - defaultRed) + defaultRed
+            );
+            const greenIntensity = Math.floor(
+                colorInterpolationMultiplier * (targetGreen - defaultGreen) + defaultGreen
+            );
+            const blueIntensity = Math.floor(
+                colorInterpolationMultiplier * (targetBlue - defaultBlue) + defaultBlue
+            );
+
+            const colorValue = `#${redIntensity.toString(16).padStart(2, '0')}${greenIntensity.toString(16).padStart(2, '0')}${blueIntensity.toString(16).padStart(2, '0')}`;
+
+            if (ids.length > 0) {
+                if (!animationEnd) {
+                    ids.forEach((edgeId) => {
+                        queueEdgeUpdate({ id: edgeId, color: { color: colorValue }, width: width });
+                    });
+                } else {
+                    ids.forEach((edgeId) => {
+                        queueEdgeUpdate({ id: edgeId, color: null, width: null });
+                    });
+                }
+            } else {
+                if (!animationEnd) {
+                    edges.get().forEach((edge) => {
+                        queueEdgeUpdate({ id: edge.id, color: { color: colorValue }, width: width });
+                    });
+                } else {
+                    edges.get().forEach((edge) => {
+                        queueEdgeUpdate({ id: edge.id, color: null, width: null });
+                    });
+                }
+            }
+
+            return animationEnd;
+        }
     }
 
     return step;
