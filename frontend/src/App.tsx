@@ -24,6 +24,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import LocalizedStatsText from './components/LocalizedSnackbarText/LocallizedStatsText';
 import { runFiducciaMattheyses } from './algorithms/fiduccia-mattheyses';
 import { changeSize, runStandalone } from './utils/animations';
+import { runMetis } from './algorithms/metis';
 type ActiveMode = 'node' | 'edge' | null;
 
 function App() {
@@ -312,7 +313,7 @@ function App() {
     const runSelectedAlgorithm =
       (currentAlgorithmId === 'kernighan-lin')       ? runKernighanLin       :
       (currentAlgorithmId === 'fiduccia-mattheyses') ? runFiducciaMattheyses :
-      (currentAlgorithmId === 'metis')               ? undefined             :
+      (currentAlgorithmId === 'metis')               ? runMetis              :
       undefined;
 
     if (!runSelectedAlgorithm) {

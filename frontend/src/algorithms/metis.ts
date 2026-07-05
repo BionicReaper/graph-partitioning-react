@@ -34,6 +34,12 @@ interface DatasetEdge {
     }
 }
 
+export interface Animation {
+    animationCallback: () => (timestamp: DOMHighResTimeStamp) => boolean;
+    description: string;
+    timeBeforeNext: number;
+}
+
 function selectEdgeForMatching(node: DatasetNode, matchedNodeIds: Set<string>, edges: DatasetEdge[], mode: string = "HEM"): DatasetEdge | null {
     if (mode === "HEM") {
         const bestEdge = edges.reduce((best: DatasetEdge | null, edge: DatasetEdge) => {
@@ -211,7 +217,6 @@ function coarsenGraph(
         }
 
         if (matchedNodeIds.size > 0) {
-            matchingLevel++;
             collapseNodes(
                 nodeDataSet,
                 edgeDataSet,
@@ -221,11 +226,82 @@ function coarsenGraph(
                 edgesMap,
                 matchingLevel
             );
+            matchingLevel++;
         }
 
     } while (matchedNodeIds.size > 0);
 
     return matchingLevel;
+}
+
+function splitCompoundNodes(
+    nodeDataSet: DataSet<any, "id">,
+    currentPartition: { [key: string]: number }
+) {
+    const allNodes = nodeDataSet.get();
+
+    const nodeIdsToDelete: string[] = [];
+
+    const nodesToAdd: DatasetNode[] = [];
+
+    for (const node of allNodes) {
+        if (node.children && node.children.length === 2) {
+            const [childA, childB] = node.children;
+
+            nodeIdsToDelete.push(node.id);
+            nodesToAdd.push(childA, childB);
+
+            currentPartition[childA.id] = currentPartition[node.id];
+            currentPartition[childB.id] = currentPartition[node.id];
+
+            delete currentPartition[node.id];
+        }
+    }
+
+    nodeDataSet.remove(nodeIdsToDelete);
+    nodeDataSet.update(nodesToAdd);
+}
+
+function recoverEdges(
+    nodeDataSet: DataSet<any, "id">,
+    edgeDataSet: DataSet<any, "id">,
+    edgesMap: Map<string, Map<string, DatasetEdge>>,
+    matchingLevel: number
+) {
+    const allNodes = nodeDataSet.get();
+
+    const newEdges: DatasetEdge[] = [];
+
+    const recoveredNodeIds = new Set<string>();
+
+    for (const node of allNodes) {
+        const nodeKey = `${matchingLevel}|${node.id}`;
+        const edgesForNode = edgesMap.get(nodeKey);
+
+        if (edgesForNode) {
+            for (const [neighborId, edge] of edgesForNode.entries()) {
+                if (!recoveredNodeIds.has(neighborId)) {
+                    newEdges.push(edge);
+                }
+            }
+            recoveredNodeIds.add(node.id);
+        }
+    }
+    
+    edgeDataSet.clear();
+    edgeDataSet.update(newEdges);
+}
+
+function uncoarsenGraph(
+    nodeDataSet: DataSet<any, "id">,
+    edgeDataSet: DataSet<any, "id">,
+    edgesMap: Map<string, Map<string, DatasetEdge>>,
+    currentPartition: { [key: string]: number },
+    matchingLevel: number
+): void {
+    splitCompoundNodes(nodeDataSet, currentPartition);
+
+    recoverEdges(nodeDataSet, edgeDataSet, edgesMap, matchingLevel);
 }
 
 export function runMetis(
@@ -275,6 +351,8 @@ export function runMetis(
         incrementReads(2); // Reading nodes and edges length
         incrementComparisons(2); // Comparing nodes and edges length to 0
     }
+
+    const currentPartition = {...existingPartition};
     
     // nodeRouteMap key format: matchingLevel|nodeId
     const nodeRouteMap = new Map<string, string>();
@@ -283,6 +361,7 @@ export function runMetis(
     // inner key: nodeId of the neighbor node
     const edgesMap = new Map<string, Map<string, DatasetEdge>>();
 
+    let initialCutSize = 0;
     let previousCutSize = 0;
     let finalCutSize = 0;
 
@@ -296,10 +375,44 @@ export function runMetis(
         edgesMap
     );
 
+    for (let currentLevel = matchingLevel; currentLevel >= 0; currentLevel--) {
+        const fmResult = runFiducciaMattheysesWithMetisBalance(
+            network,
+            nodeDataSet,
+            edgeDataSet,
+            {
+                algorithmPasses,
+                activeNodeIds,
+                existingPartition: currentPartition
+            }
+        );
+
+        for (const [nodeId, partitionId] of Object.entries(fmResult.partition)) {
+            currentPartition[nodeId] = partitionId;
+        }
+        if (currentLevel === matchingLevel) {
+            initialCutSize = fmResult.initialCutSize;
+            setInitialCutSize(initialCutSize);
+        }
+        finalCutSize = fmResult.finalCutSize;
+
+        if (currentLevel > 0) {
+            uncoarsenGraph(
+                nodeDataSet,
+                edgeDataSet,
+                edgesMap,
+                currentPartition,
+                currentLevel - 1
+            );
+        }
+    }
+
+    setFinalCutSize(finalCutSize);
+
     return {
-        partition: {},
-        initialCutSize: 0,
-        finalCutSize: 0,
+        partition: currentPartition,
+        initialCutSize: initialCutSize,
+        finalCutSize: finalCutSize,
         animation: []
     }
 }
