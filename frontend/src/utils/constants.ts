@@ -31,7 +31,7 @@ export const defaultVisOptions: any = {
     width: 2,
     color: { color: '#848484' },
     smooth: {
-      enabled: true,
+      enabled: false,
       type: 'continuous',
       roundness: 0
     },
