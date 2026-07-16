@@ -61,6 +61,12 @@ const queueNodeUpdate = (update: NodeUpdate) => {
     nodeUpdates[update.id] = existing;
 };
 
+const discardNodeUpdates = (ids: string[]) => {
+    for (const id of ids) {
+        delete nodeUpdates[id];
+    }
+};
+
 const queueEdgeUpdate = (update: EdgeUpdate) => {
     const existing = edgeUpdates[update.id] ?? { id: update.id };
     if (update.color !== undefined) {
@@ -468,4 +474,50 @@ export const swapNodePositions = (
 
         return step1Done && step2Done; // Animation is done when both stepFn1 and stepFn2 are done
     };
+}
+
+export const replaceNodesWithCompoundNode = (
+    network: Network,
+    nodes: DataSet<any, "id">,
+    nodeIds: string[],
+    compoundNode: any,
+    duration: number = 1000
+) => {
+    if (!network || !nodeIds || nodeIds.length < 2) return () => { return true; };
+
+    const { x: targetX, y: targetY } = network.getPosition(nodeIds[0]);
+
+    const stepFnArray: ((timestamp: DOMHighResTimeStamp) => boolean)[] = [];
+    for (const [index, nodeId] of nodeIds.entries()) {
+        if (index === 0) continue; // Skip the first node, as it will be replaced by the compound node
+
+        // The rest move to the position of the first node
+        stepFnArray.push(moveNode(network, nodeId, targetX, targetY, duration));
+    }
+
+    return (timestamp: DOMHighResTimeStamp) => {
+
+        let allDone = true;
+        for (const stepFn of stepFnArray) {
+            const done = stepFn(timestamp);
+            if (!done) {
+                allDone = false;
+            }
+        }
+
+        if (allDone) {
+            // Drop the position updates the final moveNode frame queued, otherwise the
+            // renderer's nodes.update() would re-insert the removed ids as bare nodes
+            discardNodeUpdates(nodeIds);
+
+            // After all nodes have moved, replace them with the compound node
+            nodes.remove(nodeIds);
+
+            compoundNode.x = targetX;
+            compoundNode.y = targetY;
+
+            nodes.add(compoundNode);
+        }
+        return allDone;
+    }
 }
