@@ -78,9 +78,17 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
         while (timestamp >= waitUntil && nextStepIndex < animationSteps.length) {
             const step = animationSteps[nextStepIndex];
             //console.log(`Scheduling animation step ${nextStepIndex + 1}/${animationSteps.length}: ${step.description}`);
-            steps.push(step.animationCallback());
-            steps[steps.length - 1](waitUntil); // Initiate the step exactly at wait until
-            steps[steps.length - 1](timestamp); // Update the step immediately with the current timestamp in case next steps rely on it
+
+            const newStepCallback = step.animationCallback();
+
+            const firstTryDone = newStepCallback(waitUntil); // Initiate the step exactly at wait until
+            if (!firstTryDone) {
+                const secondTryDone = newStepCallback(timestamp); // Update the step immediately with the current timestamp in case next steps rely on it
+                if (!secondTryDone) {
+                    steps.push(newStepCallback);
+                }
+            }
+
             waitUntil = waitUntil + step.timeBeforeNext;
             nextStepIndex++;
         }
