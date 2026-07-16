@@ -35,6 +35,9 @@ export const defaultVisOptions: any = {
       type: 'continuous',
       roundness: 0
     },
+    font: {
+      align: 'horizontal'
+    }
   },
   physics: {
     enabled: true,
