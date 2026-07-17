@@ -463,7 +463,12 @@ export const moveNode = (
     if (!network) return () => { return true; };
     let startTime: DOMHighResTimeStamp | null = null;
 
-    const { x: startingX, y: startingY } = network.getPosition(id);
+    const { x: scheduledX, y: scheduledY } = nodeUpdates[id] ?? { x: undefined, y: undefined };
+
+    const { x: startingX, y: startingY } =
+        (scheduledX !== undefined && scheduledY !== undefined)
+            ? { x: scheduledX, y: scheduledY }
+            : network.getPosition(id);
 
     function step(timestamp: DOMHighResTimeStamp) {
         if (!network) return true;
