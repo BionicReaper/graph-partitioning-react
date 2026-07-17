@@ -409,6 +409,9 @@ export function runMetis(
     );
 
     for (let currentLevel = matchingLevel; currentLevel >= 0; currentLevel--) {
+
+        stashStats();
+
         const fmResult = runFiducciaMattheysesWithMetisBalance(
             network,
             nodeDataSet,
@@ -419,6 +422,8 @@ export function runMetis(
                 existingPartition: currentPartition
             }
         );
+
+        mergeStats();
 
         for (const [nodeId, partitionId] of Object.entries(fmResult.partition)) {
             currentPartition[nodeId] = partitionId;
