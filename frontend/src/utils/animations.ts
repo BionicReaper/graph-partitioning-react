@@ -15,15 +15,24 @@ type NodeUpdate = {
         }
     } | null,
     borderWidth?: number | null,
-    size?: number
+    size?: number,
+    label?: string,
+    weight?: number,
+    children?: any[],
+    createdAtLevel?: number
 };
 
 type EdgeUpdate = {
     id: string,
+    from?: string,
+    to?: string,
     color?: {
         color?: string
     } | null,
-    width?: number | null
+    width?: number | null,
+    label?: string,
+    weight?: number,
+    children?: any[]
 };
 
 let nodeUpdates: Record<string, NodeUpdate> = {};
@@ -81,6 +90,18 @@ const queueNodeUpdate = (update: NodeUpdate) => {
     if (update.size !== undefined) {
         existing.size = update.size;
     }
+    if (update.label !== undefined) {
+        existing.label = update.label;
+    }
+    if (update.weight !== undefined) {
+        existing.weight = update.weight;
+    }
+    if (update.children !== undefined) {
+        existing.children = update.children;
+    }
+    if (update.createdAtLevel !== undefined) {
+        existing.createdAtLevel = update.createdAtLevel;
+    }
     nodeUpdates[update.id] = existing;
 };
 
@@ -98,11 +119,26 @@ export const discardEdgeUpdates = (ids: string[]) => {
 
 const queueEdgeUpdate = (update: EdgeUpdate) => {
     const existing = edgeUpdates[update.id] ?? { id: update.id };
+    if (update.from !== undefined) {
+        existing.from = update.from;
+    }
+    if (update.to !== undefined) {
+        existing.to = update.to;
+    }
     if (update.color !== undefined) {
         existing.color = update.color;
     }
     if (update.width !== undefined) {
         existing.width = update.width;
+    }
+    if (update.label !== undefined) {
+        existing.label = update.label;
+    }
+    if (update.weight !== undefined) {
+        existing.weight = update.weight;
+    }
+    if (update.children !== undefined) {
+        existing.children = update.children;
     }
     edgeUpdates[update.id] = existing;
 };
@@ -548,5 +584,47 @@ export const replaceNodesWithCompoundNode = (
             nodes.add(compoundNode);
         }
         return allDone;
+    }
+}
+
+export const splitCompoundNodes = (
+    network: Network,
+    splits: Array<{ compoundNodeId: string, childNodes: NodeUpdate[] }>
+) => {
+    if (!network || !splits || splits.length === 0) return () => { return true; };
+
+    return () => {
+
+        for (const split of splits) {
+            const { compoundNodeId, childNodes } = split;
+            const { x: targetX, y: targetY } = network.getPosition(compoundNodeId);
+
+            // Remove the compound node
+            queueNodeDelete(compoundNodeId);
+
+            // Add the child nodes at the position of the compound node
+            for (const childNode of childNodes) {
+                childNode.x = targetX;
+                childNode.y = targetY;
+                queueNodeUpdate(childNode);
+            }
+        }
+    }
+}
+
+export const replaceEdgeSet = (
+    deleteEdgeIds: string[],
+    addEdges: EdgeUpdate[]
+) => {
+    return () => {
+
+        for (const edgeId of deleteEdgeIds) {
+            queueEdgeDelete(edgeId);
+        }
+
+        // Add the child edges
+        for (const edge of addEdges) {
+            queueEdgeUpdate(edge);
+        }
     }
 }
