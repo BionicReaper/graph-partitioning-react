@@ -588,16 +588,23 @@ export const replaceNodesWithCompoundNode = (
 }
 
 export const splitCompoundNodes = (
-    network: Network,
+    nodes: DataSet<any, "id">,
     splits: Array<{ compoundNodeId: string, childNodes: NodeUpdate[] }>
 ) => {
-    if (!network || !splits || splits.length === 0) return () => { return true; };
+    if (!nodes || !splits || splits.length === 0) return () => { return true; };
+
+    const positionMap: Map<string, { x: number, y: number }> = new Map();
+    for (const split of splits) {
+        const { compoundNodeId } = split;
+        const { x, y } = nodes.get(compoundNodeId) ?? { x: 0, y: 0 };
+        positionMap.set(compoundNodeId, { x, y });
+    }
 
     return () => {
 
         for (const split of splits) {
             const { compoundNodeId, childNodes } = split;
-            const { x: targetX, y: targetY } = network.getPosition(compoundNodeId);
+            const { x: targetX, y: targetY } = positionMap.get(compoundNodeId) ?? { x: 0, y: 0 };
 
             // Remove the compound node
             queueNodeDelete(compoundNodeId);
