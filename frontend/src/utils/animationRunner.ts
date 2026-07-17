@@ -94,17 +94,18 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
         }
 
         // Render the current state of nodes and edges
+        const nodeUpdates = extractNodeUpdates();
+        const edgeUpdates = extractEdgeUpdates();
+
+        nodes.update(nodeUpdates);
+        edges.update(edgeUpdates);
+
         const nodeDeletes = extractNodeDeletes();
         const edgeDeletes = extractEdgeDeletes();
 
         nodes.remove(nodeDeletes);
         edges.remove(edgeDeletes);
 
-        const nodeUpdates = extractNodeUpdates();
-        const edgeUpdates = extractEdgeUpdates();
-
-        nodes.update(nodeUpdates);
-        edges.update(edgeUpdates);
     }
 
     // Rendering termination/continuation logic
