@@ -609,6 +609,8 @@ export const splitCompoundNodes = (
                 queueNodeUpdate(childNode);
             }
         }
+
+        return true;
     }
 }
 
@@ -626,5 +628,7 @@ export const replaceEdgeSet = (
         for (const edge of addEdges) {
             queueEdgeUpdate(edge);
         }
+
+        return true;
     }
 }
