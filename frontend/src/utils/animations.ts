@@ -61,9 +61,15 @@ const queueNodeUpdate = (update: NodeUpdate) => {
     nodeUpdates[update.id] = existing;
 };
 
-const discardNodeUpdates = (ids: string[]) => {
+export const discardNodeUpdates = (ids: string[]) => {
     for (const id of ids) {
         delete nodeUpdates[id];
+    }
+};
+
+export const discardEdgeUpdates = (ids: string[]) => {
+    for (const id of ids) {
+        delete edgeUpdates[id];
     }
 };
 
