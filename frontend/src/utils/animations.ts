@@ -29,6 +29,9 @@ type EdgeUpdate = {
 let nodeUpdates: Record<string, NodeUpdate> = {};
 let edgeUpdates: Record<string, EdgeUpdate> = {};
 
+let nodeDeletes: Set<string> = new Set();
+let edgeDeletes: Set<string> = new Set();
+
 export const extractNodeUpdates = () => {
     const extracted = Object.values(nodeUpdates);
     nodeUpdates = {};
@@ -39,6 +42,26 @@ export const extractEdgeUpdates = () => {
     const extracted = Object.values(edgeUpdates);
     edgeUpdates = {};
     return extracted;
+}
+
+export const extractNodeDeletes = () => {
+    const extracted = Array.from(nodeDeletes);
+    nodeDeletes.clear();
+    return extracted;
+}
+
+export const extractEdgeDeletes = () => {
+    const extracted = Array.from(edgeDeletes);
+    edgeDeletes.clear();
+    return extracted;
+}
+
+const queueNodeDelete = (id: string) => {
+    nodeDeletes.add(id);
+}
+
+const queueEdgeDelete = (id: string) => {
+    edgeDeletes.add(id);
 }
 
 const queueNodeUpdate = (update: NodeUpdate) => {
