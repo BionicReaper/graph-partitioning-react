@@ -1,5 +1,5 @@
 import { getAnchor, setTargetAnchor } from "./anchoring";
-import { extractNodeUpdates, extractEdgeUpdates } from "./animations";
+import { extractNodeUpdates, extractEdgeUpdates, extractEdgeDeletes, extractNodeDeletes } from "./animations";
 import { DataSet } from 'vis-network/standalone/esm/vis-network';
 import { StepSettingMode } from "./constants";
 
@@ -94,6 +94,12 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
         }
 
         // Render the current state of nodes and edges
+        const nodeDeletes = extractNodeDeletes();
+        const edgeDeletes = extractEdgeDeletes();
+
+        nodes.remove(nodeDeletes);
+        edges.remove(edgeDeletes);
+
         const nodeUpdates = extractNodeUpdates();
         const edgeUpdates = extractEdgeUpdates();
 
