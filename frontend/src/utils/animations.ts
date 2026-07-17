@@ -576,12 +576,14 @@ export const replaceNodesWithCompoundNode = (
             discardNodeUpdates(nodeIds);
 
             // After all nodes have moved, replace them with the compound node
-            nodes.remove(nodeIds);
+            for (const nodeId of nodeIds) {
+                queueNodeDelete(nodeId);
+            }
 
             compoundNode.x = targetX;
             compoundNode.y = targetY;
 
-            nodes.add(compoundNode);
+            queueNodeUpdate(compoundNode);
         }
         return allDone;
     }
