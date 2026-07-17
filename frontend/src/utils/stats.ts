@@ -41,8 +41,7 @@ export const stashStats = () => {
 
 export const mergeStats = () => {
     if (stashedStats) {
-        stats.initialCutSize += stashedStats.initialCutSize;
-        stats.finalCutSize += stashedStats.finalCutSize;
+        stats.initialCutSize = stashedStats.initialCutSize;
         stats.passes += stashedStats.passes;
         stats.reads += stashedStats.reads;
         stats.writes += stashedStats.writes;
