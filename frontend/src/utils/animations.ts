@@ -587,7 +587,7 @@ export const replaceNodesWithCompoundNode = (
     }
 }
 
-export const splitCompoundNodes = (
+export const animateSplitCompoundNodes = (
     nodes: DataSet<any, "id">,
     splits: Array<{ compoundNodeId: string, childNodes: NodeUpdate[] }>
 ) => {
@@ -621,7 +621,7 @@ export const splitCompoundNodes = (
     }
 }
 
-export const replaceEdgeSet = (
+export const animateReplaceEdgeSet = (
     deleteEdgeIds: string[],
     addEdges: EdgeUpdate[]
 ) => {
