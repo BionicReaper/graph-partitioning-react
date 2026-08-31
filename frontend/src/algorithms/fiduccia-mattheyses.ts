@@ -1,5 +1,5 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { changeSize, highlightEdges, highlightNodes, moveNode, moveNodeRelative } from "../utils/animations";
+import { changeSize, flushQueues, highlightEdges, highlightNodes, moveNode, moveNodeRelative } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
 import { generateSetAnchorAnimation } from "../utils/anchoring";
 import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
@@ -830,6 +830,8 @@ export function runFiducciaMattheyses(
 
     animation.push({
         animationCallback: () => {
+            flushQueues(nodeDataSet, edgeDataSet);
+
             const previousNodes = nodeDataSet.get();
 
             nodeDataSet.remove(previousNodes.map(node => node.id));
@@ -1283,7 +1285,7 @@ export function runFiducciaMattheyses(
     const previousLastAnimationCallback = animation[animation.length - 1].animationCallback;
 
     animation[animation.length - 1].animationCallback = () => {
-        // Remove dummy black nodes from the network
+        flushQueues(nodeDataSet, edgeDataSet);
         nodeDataSet.remove(dummyBlackNodes.map(node => node.id));
         return previousLastAnimationCallback();
     }

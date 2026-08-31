@@ -159,6 +159,23 @@ const queueEdgeUpdate = (update: EdgeUpdate) => {
     edgeUpdates[update.id] = existing;
 };
 
+export const flushQueues = (
+    nodes: DataSet<any, "id">,
+    edges: DataSet<any, "id">
+) => {
+    const nodeUpdates = extractNodeUpdates();
+    const edgeUpdates = extractEdgeUpdates();
+
+    nodes.update(nodeUpdates);
+    edges.update(edgeUpdates);
+
+    const nodeDeletes = extractNodeDeletes();
+    const edgeDeletes = extractEdgeDeletes();
+
+    nodes.remove(nodeDeletes);
+    edges.remove(edgeDeletes);
+}
+
 
 export const runStandalone = (
     nodes: DataSet<any, "id">,
