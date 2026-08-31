@@ -97,5 +97,14 @@ export const stepSettingLabelKeys: Record<StepSettingMode, string> = {
   never: 'StepSettingNever',
 };
 
+export type GraphGenerationMode = 'uniform' | 'regions';
+
+export const graphGenerationModes: GraphGenerationMode[] = ['uniform', 'regions'];
+
+export const graphGenerationModeLabelKeys: Record<GraphGenerationMode, string> = {
+  uniform: 'GraphGenerationUniform',
+  regions: 'GraphGenerationRegions',
+};
+
 export const shouldTriggerOnStep = (mode: StepSettingMode, firstReach: boolean): boolean =>
   mode === 'always' || (mode === 'onFirstReach' && firstReach);

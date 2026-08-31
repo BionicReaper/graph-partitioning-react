@@ -11,7 +11,7 @@ import { runKernighanLin } from './algorithms/kernighan-lin';
 import { getPauseStatus, getSimulationSpeedFactor, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
 import { restoreLabelingOrder } from './utils/ordering';
-import { generateRandomGraph } from './utils/graphGeneration';
+import { generateRandomGraph, generateRegionGraph, type GraphGenerationOptions } from './utils/graphGeneration';
 import FullscreenButton from './components/Buttons/FullscreenButton';
 import { useTranslation } from 'react-i18next';
 import DeleteButton from './components/Buttons/DeleteButton';
@@ -208,7 +208,7 @@ function App() {
   }, [setPhysicsEnabled]);
 
   // Generate random graph handler
-  const generateGraph = useCallback((minNodes: number, maxNodes: number, edgeProbability: number): void => {
+  const generateGraph = useCallback((options: GraphGenerationOptions): void => {
     if (!networkRef.current || isRunning) return;
 
     setActiveMode(null);
@@ -216,7 +216,11 @@ function App() {
     unselectAll();
     setHasSelection(false);
 
-    generateRandomGraph(nodesRef.current, edgesRef.current, minNodes, maxNodes, edgeProbability);
+    if (options.mode === 'regions') {
+      generateRegionGraph(nodesRef.current, edgesRef.current, options.regionNodeCounts, options.intraRegionProbability, options.interRegionProbability);
+    } else {
+      generateRandomGraph(nodesRef.current, edgesRef.current, options.nodeCount, options.edgeProbability);
+    }
 
   }, [networkRef, nodesRef, edgesRef, isRunning, setPhysicsEnabled, setActiveMode, unselectAll, setHasSelection]);
 

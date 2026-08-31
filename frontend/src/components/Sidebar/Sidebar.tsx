@@ -18,7 +18,8 @@ import { Menu, GitBranch, Globe, Waypoints, ChevronLeft, ChevronRight } from 'lu
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
-import { stepSettingLabelKeys, stepSettingModes, type StepSettingMode } from '../../utils/constants';
+import { graphGenerationModeLabelKeys, graphGenerationModes, stepSettingLabelKeys, stepSettingModes, type GraphGenerationMode, type StepSettingMode } from '../../utils/constants';
+import type { GraphGenerationOptions } from '../../utils/graphGeneration';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 interface SidebarProps {
@@ -27,7 +28,7 @@ interface SidebarProps {
   disablePhysicsToggle?: boolean;
   physicsEnabled: boolean;
   onTogglePhysics: () => void;
-  onGenerateGraph: (minNodes: number, maxNodes: number, edgeProbability: number) => void;
+  onGenerateGraph: (options: GraphGenerationOptions) => void;
   disableGraphGeneration?: boolean;
   algorithmPasses: number;
   onAlgorithmPassesChange: (value: number) => void;
@@ -72,9 +73,13 @@ const Sidebar = ({
     algorithm: null,
   });
 
-  const [minNodes, setMinNodes] = useLocalStorage<number>('minNodes', 5);
-  const [maxNodes, setMaxNodes] = useLocalStorage<number>('maxNodes', 10);
+  const [graphGenerationMode, setGraphGenerationMode] = useLocalStorage<GraphGenerationMode>('graphGenerationMode', 'uniform');
+  const [nodeCount, setNodeCount] = useLocalStorage<number>('nodeCount', 10);
   const [edgeChance, setEdgeChance] = useLocalStorage<number>('edgeChance', 30); // percentage 0-100
+  const [regionANodes, setRegionANodes] = useLocalStorage<number>('regionANodes', 5);
+  const [regionBNodes, setRegionBNodes] = useLocalStorage<number>('regionBNodes', 5);
+  const [intraRegionEdgeChance, setIntraRegionEdgeChance] = useLocalStorage<number>('intraRegionEdgeChance', 60); // percentage 0-100
+  const [interRegionEdgeChance, setInterRegionEdgeChance] = useLocalStorage<number>('interRegionEdgeChance', 5); // percentage 0-100
 
   const languageOptions = useMemo(() => {
     return i18n.store.data ? Object.keys(i18n.store.data) : [];
@@ -187,72 +192,177 @@ const Sidebar = ({
                   {t('GraphGeneration')} <Waypoints size={20} style={{ display: 'inline', marginLeft: '4px' }} />
                 </Heading>
                 <VStack gap={4} align="stretch">
-                  {/* Minimum nodes */}
                   <Box p={3} bg="gray.50" borderRadius="md">
-                    <Text fontSize="sm" color="gray.700" fontWeight="500" mb={2}>
-                      {t('MinNodes')}
-                    </Text>
-                    <NumberInput.Root
-                      value={String(minNodes)}
-                      min={1}
-                      step={1}
-                      width="100%"
-                      size="sm"
-                      onValueChange={(e) => setMinNodes(Number.isNaN(e.valueAsNumber) ? 1 : Math.min(Math.max(1, Math.floor(e.valueAsNumber)), maxNodes))}
+                    <RadioGroup.Root
+                      value={graphGenerationMode}
+                      onValueChange={(e) => e.value && setGraphGenerationMode(e.value as GraphGenerationMode)}
+                      colorPalette={"blue"}
                     >
-                      <NumberInput.Control />
-                      <NumberInput.Input />
-                    </NumberInput.Root>
+                      <VStack align="start" gap={2}>
+                        {graphGenerationModes.map((mode) => (
+                          <RadioGroup.Item key={mode} value={mode}>
+                            <RadioGroup.ItemHiddenInput />
+                            <RadioGroup.ItemIndicator />
+                            <RadioGroup.ItemText fontSize="sm" color="gray.700">
+                              {t(graphGenerationModeLabelKeys[mode])}
+                            </RadioGroup.ItemText>
+                          </RadioGroup.Item>
+                        ))}
+                      </VStack>
+                    </RadioGroup.Root>
                   </Box>
 
-                  {/* Maximum nodes */}
-                  <Box p={3} bg="gray.50" borderRadius="md">
-                    <Text fontSize="sm" color="gray.700" fontWeight="500" mb={2}>
-                      {t('MaxNodes')}
-                    </Text>
-                    <NumberInput.Root
-                      value={String(maxNodes)}
-                      min={1}
-                      step={1}
-                      width="100%"
-                      size="sm"
-                      onValueChange={(e) => setMaxNodes(Number.isNaN(e.valueAsNumber) ? 1 : Math.max(1, Math.floor(e.valueAsNumber), minNodes))}
-                    >
-                      <NumberInput.Control />
-                      <NumberInput.Input />
-                    </NumberInput.Root>
-                  </Box>
+                  {graphGenerationMode === 'uniform' ? (
+                    <>
+                      <Box p={3} bg="gray.50" borderRadius="md">
+                        <Text fontSize="sm" color="gray.700" fontWeight="500" mb={2}>
+                          {t('NodeCount')}
+                        </Text>
+                        <NumberInput.Root
+                          value={String(nodeCount)}
+                          min={1}
+                          step={1}
+                          width="100%"
+                          size="sm"
+                          onValueChange={(e) => setNodeCount(Number.isNaN(e.valueAsNumber) ? 1 : Math.max(1, Math.floor(e.valueAsNumber)))}
+                        >
+                          <NumberInput.Control />
+                          <NumberInput.Input />
+                        </NumberInput.Root>
+                      </Box>
 
-                  {/* Edge inclusion chance */}
-                  <Box p={3} bg="gray.50" borderRadius="md">
-                    <HStack justifyContent="space-between" mb={2}>
-                      <Text fontSize="sm" color="gray.700" fontWeight="500">
-                        {t('EdgeChance')}
-                      </Text>
-                      <Text fontSize="sm" color="gray.600" fontWeight="500">
-                        {edgeChance}%
-                      </Text>
-                    </HStack>
-                    <Slider.Root
-                      value={[edgeChance]}
-                      min={0}
-                      max={100}
-                      step={0.01}
-                      colorPalette="blue"
-                      onValueChange={(e) => setEdgeChance(e.value[0])}
-                    >
-                      <Slider.Control>
-                        <Slider.Track>
-                          <Slider.Range />
-                        </Slider.Track>
-                        <Slider.Thumbs />
-                      </Slider.Control>
-                    </Slider.Root>
-                  </Box>
+                      <Box p={3} bg="gray.50" borderRadius="md">
+                        <HStack justifyContent="space-between" mb={2}>
+                          <Text fontSize="sm" color="gray.700" fontWeight="500">
+                            {t('EdgeChance')}
+                          </Text>
+                          <Text fontSize="sm" color="gray.600" fontWeight="500">
+                            {edgeChance}%
+                          </Text>
+                        </HStack>
+                        <Slider.Root
+                          value={[edgeChance]}
+                          min={0}
+                          max={100}
+                          step={0.01}
+                          colorPalette="blue"
+                          onValueChange={(e) => setEdgeChance(e.value[0])}
+                        >
+                          <Slider.Control>
+                            <Slider.Track>
+                              <Slider.Range />
+                            </Slider.Track>
+                            <Slider.Thumbs />
+                          </Slider.Control>
+                        </Slider.Root>
+                      </Box>
+                    </>
+                  ) : (
+                    <>
+                      <Box p={3} bg="gray.50" borderRadius="md">
+                        <Text fontSize="sm" color="gray.700" fontWeight="500" mb={2}>
+                          {t('RegionANodeCount')}
+                        </Text>
+                        <NumberInput.Root
+                          value={String(regionANodes)}
+                          min={1}
+                          step={1}
+                          width="100%"
+                          size="sm"
+                          onValueChange={(e) => setRegionANodes(Number.isNaN(e.valueAsNumber) ? 1 : Math.max(1, Math.floor(e.valueAsNumber)))}
+                        >
+                          <NumberInput.Control />
+                          <NumberInput.Input />
+                        </NumberInput.Root>
+                      </Box>
+
+                      <Box p={3} bg="gray.50" borderRadius="md">
+                        <Text fontSize="sm" color="gray.700" fontWeight="500" mb={2}>
+                          {t('RegionBNodeCount')}
+                        </Text>
+                        <NumberInput.Root
+                          value={String(regionBNodes)}
+                          min={1}
+                          step={1}
+                          width="100%"
+                          size="sm"
+                          onValueChange={(e) => setRegionBNodes(Number.isNaN(e.valueAsNumber) ? 1 : Math.max(1, Math.floor(e.valueAsNumber)))}
+                        >
+                          <NumberInput.Control />
+                          <NumberInput.Input />
+                        </NumberInput.Root>
+                      </Box>
+
+                      <Box p={3} bg="gray.50" borderRadius="md">
+                        <HStack justifyContent="space-between" mb={2}>
+                          <Text fontSize="sm" color="gray.700" fontWeight="500">
+                            {t('IntraRegionEdgeChance')}
+                          </Text>
+                          <Text fontSize="sm" color="gray.600" fontWeight="500">
+                            {intraRegionEdgeChance}%
+                          </Text>
+                        </HStack>
+                        <Slider.Root
+                          value={[intraRegionEdgeChance]}
+                          min={0}
+                          max={100}
+                          step={0.01}
+                          colorPalette="blue"
+                          onValueChange={(e) => setIntraRegionEdgeChance(e.value[0])}
+                        >
+                          <Slider.Control>
+                            <Slider.Track>
+                              <Slider.Range />
+                            </Slider.Track>
+                            <Slider.Thumbs />
+                          </Slider.Control>
+                        </Slider.Root>
+                      </Box>
+
+                      <Box p={3} bg="gray.50" borderRadius="md">
+                        <HStack justifyContent="space-between" mb={2}>
+                          <Text fontSize="sm" color="gray.700" fontWeight="500">
+                            {t('InterRegionEdgeChance')}
+                          </Text>
+                          <Text fontSize="sm" color="gray.600" fontWeight="500">
+                            {interRegionEdgeChance}%
+                          </Text>
+                        </HStack>
+                        <Slider.Root
+                          value={[interRegionEdgeChance]}
+                          min={0}
+                          max={100}
+                          step={0.01}
+                          colorPalette="blue"
+                          onValueChange={(e) => setInterRegionEdgeChance(e.value[0])}
+                        >
+                          <Slider.Control>
+                            <Slider.Track>
+                              <Slider.Range />
+                            </Slider.Track>
+                            <Slider.Thumbs />
+                          </Slider.Control>
+                        </Slider.Root>
+                      </Box>
+                    </>
+                  )}
 
                   <Button
                     colorPalette="blue"
-                    onClick={() => onGenerateGraph(minNodes, maxNodes, edgeChance / 100)}
+                    onClick={() => onGenerateGraph(
+                      (graphGenerationMode === 'regions')
+                        ? {
+                          mode: 'regions',
+                          regionNodeCounts: [regionANodes, regionBNodes],
+                          intraRegionProbability: intraRegionEdgeChance / 100,
+                          interRegionProbability: interRegionEdgeChance / 100
+                        }
+                        : {
+                          mode: 'uniform',
+                          nodeCount,
+                          edgeProbability: edgeChance / 100
+                        }
+                    )}
                     disabled={disableGraphGeneration}
                   >
                     {t('GenerateGraph')}
