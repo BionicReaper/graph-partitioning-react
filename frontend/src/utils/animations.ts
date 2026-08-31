@@ -564,7 +564,6 @@ export const swapNodePositions = (
 
 export const replaceNodesWithCompoundNode = (
     network: Network,
-    nodes: DataSet<any, "id">,
     nodeIds: string[],
     compoundNode: any,
     duration: number = 1000
@@ -647,6 +646,24 @@ export const animateSplitCompoundNodes = (
                 childNode.y = targetY;
                 queueNodeUpdate(childNode);
             }
+        }
+
+        return true;
+    }
+}
+
+export const animateReplaceNodeSet = (
+    deleteNodeIds: string[],
+    addNodes: NodeUpdate[]
+) => {
+    return () => {
+
+        for (const nodeId of deleteNodeIds) {
+            queueNodeDelete(nodeId);
+        }
+
+        for (const node of addNodes) {
+            queueNodeUpdate(node);
         }
 
         return true;

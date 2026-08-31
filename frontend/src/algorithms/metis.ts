@@ -1,10 +1,13 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { highlightEdges, highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
-import { calculateX, calculateY } from "../utils/positioning";
+import { animateReplaceEdgeSet, animateSplitCompoundNodes, discardEdgeUpdates, discardNodeUpdates, highlightEdges, highlightNodes, moveNode, replaceNodesWithCompoundNode, swapNodePositions } from "../utils/animations";
+import { calculateCirclePoint, calculateX, calculateY } from "../utils/positioning";
 import { generateSetAnchorAnimation } from "../utils/anchoring";
-import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
+import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons, stashStats, mergeStats } from "../utils/stats";
 import { startNextPass } from "../utils/startNextPass";
 import { runFiducciaMattheysesWithMetisBalance } from "./fiduccia-mattheyses";
+import { defaultVisOptions } from "../utils/constants";
+
+const MAX_CIRCLE_ORGANIZATION_TIME = 3000;
 
 interface DatasetNode {
     id: string;
@@ -14,11 +17,11 @@ interface DatasetNode {
     x: number;
     y: number;
     color?: {
-        border?: string;
-        background?: string;
-        highlight?: {
-            border?: string;
-            background?: string;
+        border: string;
+        background: string;
+        highlight: {
+            border: string;
+            background: string;
         }
     }
     children: [DatasetNode, DatasetNode];
@@ -30,6 +33,7 @@ interface DatasetEdge {
     from: string;
     to: string;
     weight?: number;
+    label?: string;
     color?: {
         color?: string;
     }
@@ -53,12 +57,30 @@ function animateCircleOrganization(
         const {x, y} = calculateCirclePoint(i, originalNodes.length);
         animation.push({
             animationCallback: () => {
-                return moveNode(network, nodeId, x, y, 500);
+                return moveNode(network, nodeId, x, y, circleOrganizationMoveTime);
             },
             description: `Move node ${nodeId} to position (${x}, ${y})`,
             timeBeforeNext: circleOrganizationMoveTime
         });
     }
+}
+
+function addWeightLabelsToEdges(edgeDataSet: DataSet<any, "id">): void {
+    const edges = edgeDataSet.get();
+    edges.forEach(edge => {
+        edge.label = edge.weight?.toString() ?? '1';
+    });
+    edgeDataSet.update(edges);
+}
+
+function removeWeightLabelsFromEdges(edgeDataSet: DataSet<any, "id">): void {
+    const edges = edgeDataSet.get();
+    const edgesWithoutLabels = edges.map(edge => ({ ...edge, label: null }));
+
+    const originalEdgeIds = edges.map(edge => edge.id);
+
+    edgeDataSet.remove(originalEdgeIds);
+    edgeDataSet.update(edgesWithoutLabels);
 }
 
 function restoreLabelingOrder(nodeDataSet: DataSet<any, "id">): void {
@@ -93,13 +115,15 @@ function selectEdgeForMatching(node: DatasetNode, matchedNodeIds: Set<string>, e
 }
 
 function collapseNodes(
+    network: Network,
     nodeDataSet: DataSet<any, "id">,
     edgeDataSet: DataSet<any, "id">,
     nodesToCollapse: Array<[DatasetNode, DatasetNode, string]>,
     matchedNodeIds: Set<string>,
     nodeRouteMap: Map<string, string>,
     edgesMap: Map<string, Map<string, DatasetEdge>>,
-    matchingLevel: number
+    matchingLevel: number,
+    animation: Animation[]
 ): void {
     const newMatchingLevel = matchingLevel + 1;
     const nodeIdsToDelete = Array.from(matchedNodeIds);
@@ -110,14 +134,24 @@ function collapseNodes(
         const newNode: DatasetNode = {
             id: compoundNodeId,
             label: compoundNodeId,
-            size: (nodeA.size + nodeB.size) / 2,
-            x: (nodeA.x + nodeB.x) / 2,
-            y: (nodeA.y + nodeB.y) / 2,
+            size: ((nodeA.size || defaultVisOptions.nodes.size) + (nodeB.size || defaultVisOptions.nodes.size)) / 2,
+            x: nodeA.x,
+            y: nodeA.y,
             weight: (nodeA.weight ?? 1) + (nodeB.weight ?? 1),
-            children: [nodeA, nodeB],
+            children: [{...nodeA}, {...nodeB}],
             createdAtLevel: matchingLevel
         };
         newNodes.push(newNode);
+
+        const nodeIdTuple = [nodeA.id, nodeB.id];
+
+        animation.push({
+            animationCallback: () => {
+                return replaceNodesWithCompoundNode(network, nodeIdTuple, newNode, 500);
+            },
+            description: `Collapse nodes ${nodeA.id} and ${nodeB.id} into compound node ${compoundNodeId}`,
+            timeBeforeNext: 0
+        });
     });
 
     const newEdges: DatasetEdge[] = [];
@@ -162,6 +196,23 @@ function collapseNodes(
         }
     }
 
+    newEdges.forEach(edge => {
+        edge.label = edge.weight?.toString() ?? '1';
+    });
+
+    animation[animation.length - 1].timeBeforeNext = 500;
+
+    animation.push({
+        animationCallback: () => {
+            return animateReplaceEdgeSet(
+                edgeDataSet.getIds() as string[],
+                newEdges
+            );
+        },
+        description: `Replace edges with new edges after collapsing nodes`,
+        timeBeforeNext: 0
+    });
+
     nodeDataSet.remove(nodeIdsToDelete);
     nodeDataSet.update(newNodes);
 
@@ -170,11 +221,13 @@ function collapseNodes(
 }
 
 function coarsenGraph(
+    network: Network,
     nodeDataSet: DataSet<any, "id">,
     edgeDataSet: DataSet<any, "id">,
     activeNodeIdSet: Set<string>,
     nodeRouteMap: Map<string, string>,
-    edgesMap: Map<string, Map<string, DatasetEdge>>
+    edgesMap: Map<string, Map<string, DatasetEdge>>,
+    animation: Animation[]
 ): number {
     let compoundNodeIdCounter = 0;
 
@@ -226,11 +279,54 @@ function coarsenGraph(
             if (matchedNodeIds.has(node.id)) {
                 continue;
             }
+
+            animation.push({
+                animationCallback: () => {
+                    return highlightNodes(nodeDataSet, [node.id], '#FFA500', '#FFFF40', 5, { color: { highlight: 500, hold: 0, fade: 0 }, width: { highlight: 175, hold: 200, fade: 125 } }, true);
+                },
+                description: `Highlight node ${node.id} for matching`,
+                timeBeforeNext: 0
+            });
+
             const edges = edgesMap.get(`${matchingLevel}|${node.id}`);
+            const edgeIds = Array.from(edges?.values() || []).map(edge => edge.id);
+
+            if (edgeIds.length > 0) {
+                animation.push({
+                    animationCallback: () => {
+                        return highlightEdges(edgeDataSet, edgeIds, '#FFA500', 5, { color: { highlight: 500, hold: 0, fade: 0 }, width: { highlight: 175, hold: 200, fade: 125 } }, true);
+                    },
+                    description: `Highlight edges connected to node ${node.id} for matching`,
+                    timeBeforeNext: 1000
+                },
+                {
+                    animationCallback: () => {
+                        return highlightEdges(edgeDataSet, edgeIds, '#FFA500', 5, { color: { highlight: 0, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } }, false);
+                    },
+                    description: `Unhighlight edges connected to node ${node.id} after matching`,
+                    timeBeforeNext: 0
+                });
+            }
 
             const selectedEdge = selectEdgeForMatching(node, matchedNodeIds, edges ? Array.from(edges.values()) : []);
 
             if (selectedEdge !== null) {
+
+                animation.push({
+                    animationCallback: () => {
+                        return highlightNodes(nodeDataSet, [node.id, otherNode.id], '#800080', '#D8BFD8', 5, { color: { highlight: 500, hold: 0, fade: 0 }, width: { highlight: 175, hold: 200, fade: 125 } }, true);
+                    },
+                    description: `Highlight node ${node.id} as matched`,
+                    timeBeforeNext: 0
+                }, {
+                    animationCallback: () => {
+                        return highlightEdges(edgeDataSet, [selectedEdge.id], '#800080', 5, { color: { highlight: 500, hold: 0, fade: 0 }, width: { highlight: 175, hold: 200, fade: 125 } }, true);
+                    },
+                    description: `Highlight edge ${selectedEdge.id} as matched`,
+                    timeBeforeNext: 500
+                });
+
+
                 const otherNodeId = (selectedEdge.from === node.id) ? selectedEdge.to : selectedEdge.from;
                 const otherNode = nodeDataSet.get(otherNodeId);
 
@@ -245,18 +341,28 @@ function coarsenGraph(
 
                 nodeRouteMap.set(`${matchingLevel}|${node.id}`, compoundNodeId);
                 nodeRouteMap.set(`${matchingLevel}|${otherNodeId}`, compoundNodeId);
+            } else {
+                animation.push({
+                    animationCallback: () => {
+                        return highlightNodes(nodeDataSet, [node.id], '#FF0000', '#FF8080', 5, { color: { highlight: 0, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } }, false);
+                    },
+                    description: `Unhighlight node ${node.id} as no match found`,
+                    timeBeforeNext: 500
+                });
             }
         }
 
         if (matchedNodeIds.size > 0) {
             collapseNodes(
+                network,
                 nodeDataSet,
                 edgeDataSet,
                 nodesToCollapse,
                 matchedNodeIds,
                 nodeRouteMap,
                 edgesMap,
-                matchingLevel
+                matchingLevel,
+                animation
             );
             matchingLevel++;
         }
@@ -269,13 +375,16 @@ function coarsenGraph(
 function splitCompoundNodes(
     nodeDataSet: DataSet<any, "id">,
     currentPartition: { [key: string]: number },
-    targetLevel: number
+    targetLevel: number,
+    animation: Animation[]
 ) {
     const allNodes = nodeDataSet.get();
 
     const nodeIdsToDelete: string[] = [];
 
     const nodesToAdd: DatasetNode[] = [];
+
+    const splits: Array<{ compoundNodeId: string, childNodes: DatasetNode[] }> = [];
 
     for (const node of allNodes) {
         if (node.children && node.children.length === 2 && node.createdAtLevel === targetLevel) {
@@ -284,12 +393,25 @@ function splitCompoundNodes(
             nodeIdsToDelete.push(node.id);
             nodesToAdd.push(childA, childB);
 
+            splits.push({
+                compoundNodeId: node.id,
+                childNodes: [childA, childB]
+            });
+
             currentPartition[childA.id] = currentPartition[node.id];
             currentPartition[childB.id] = currentPartition[node.id];
 
             delete currentPartition[node.id];
         }
     }
+
+    animation.push({
+        animationCallback: () => {
+            return animateSplitCompoundNodes(nodeDataSet, splits);
+        },
+        description: `Split compound nodes at level ${targetLevel}`,
+        timeBeforeNext: 0
+    });
 
     nodeDataSet.remove(nodeIdsToDelete);
     nodeDataSet.update(nodesToAdd);
@@ -299,7 +421,8 @@ function recoverEdges(
     nodeDataSet: DataSet<any, "id">,
     edgeDataSet: DataSet<any, "id">,
     edgesMap: Map<string, Map<string, DatasetEdge>>,
-    matchingLevel: number
+    matchingLevel: number,
+    animation: Animation[]
 ) {
     const allNodes = nodeDataSet.get();
 
@@ -320,7 +443,18 @@ function recoverEdges(
             recoveredNodeIds.add(node.id);
         }
     }
-    
+
+    animation.push({
+        animationCallback: () => {
+            return animateReplaceEdgeSet(
+                edgeDataSet.getIds() as string[],
+                newEdges
+            );
+        },
+        description: `Recover edges at level ${matchingLevel}`,
+        timeBeforeNext: 0
+    });
+
     edgeDataSet.clear();
     edgeDataSet.update(newEdges);
 }
@@ -330,11 +464,12 @@ function uncoarsenGraph(
     edgeDataSet: DataSet<any, "id">,
     edgesMap: Map<string, Map<string, DatasetEdge>>,
     currentPartition: { [key: string]: number },
-    matchingLevel: number
+    matchingLevel: number,
+    animation: Animation[]
 ): void {
-    splitCompoundNodes(nodeDataSet, currentPartition, matchingLevel);
+    splitCompoundNodes(nodeDataSet, currentPartition, matchingLevel, animation);
 
-    recoverEdges(nodeDataSet, edgeDataSet, edgesMap, matchingLevel);
+    recoverEdges(nodeDataSet, edgeDataSet, edgesMap, matchingLevel, animation);
 }
 
 export function runMetis(
@@ -361,6 +496,8 @@ export function runMetis(
 
     resetStats();
 
+    restoreLabelingOrder(nodeDataSet);
+
     let anchorIndex = startingAnchorIndex;
 
     const originalNodes = (activeNodeIdSet.size > 0)
@@ -385,6 +522,8 @@ export function runMetis(
         incrementComparisons(2); // Comparing nodes and edges length to 0
     }
 
+    addWeightLabelsToEdges(edgeDataSet);
+
     const currentPartition = {...existingPartition};
     
     // nodeRouteMap key format: matchingLevel|nodeId
@@ -400,12 +539,20 @@ export function runMetis(
 
     console.log('Original nodes and edges fetched from DataSet: ', originalNodes, originalEdges);
 
+    // Organize nodes in a circle
+
+    animateCircleOrganization(network, originalNodes, animation);
+
+    animation[animation.length - 1].timeBeforeNext = 500;
+
     let matchingLevel = coarsenGraph(
+        network,
         nodeDataSet,
         edgeDataSet,
         activeNodeIdSet,
         nodeRouteMap,
-        edgesMap
+        edgesMap,
+        animation
     );
 
     for (let currentLevel = matchingLevel; currentLevel >= 0; currentLevel--) {
@@ -425,6 +572,9 @@ export function runMetis(
 
         mergeStats();
 
+
+        animation.push(...fmResult.animation);
+
         for (const [nodeId, partitionId] of Object.entries(fmResult.partition)) {
             currentPartition[nodeId] = partitionId;
         }
@@ -440,10 +590,56 @@ export function runMetis(
                 edgeDataSet,
                 edgesMap,
                 currentPartition,
-                currentLevel - 1
+                currentLevel - 1,
+                animation
             );
         }
+
+        const partitionCounts = [0, 0];
+
+        const nodes = nodeDataSet.get();
+
+        nodes.forEach(node => {
+            partitionCounts[currentPartition[node.id]] += 1;
+        });
+
+        let currentIndexA = 0;
+        let currentIndexB = 0;
+
+        nodes.forEach(node => {
+            const moveTime = 150;
+            if (currentPartition[node.id] === 0) {
+                const currentIndex = currentIndexA++;
+                animation.push({
+                    animationCallback: () => {
+                        return moveNode(network, node.id, calculateX(currentIndex, 0, partitionCounts[0] * 2), calculateY(currentIndex, 0, partitionCounts[0] * 2), 2 * moveTime);
+                    },
+                    description: `Move node ${node.id} to partition A`,
+                    timeBeforeNext: 0
+                });
+            } else {
+                const currentIndex = currentIndexB++;
+                animation.push({
+                    animationCallback: () => {
+                        return moveNode(network, node.id, calculateX(currentIndex, 1, partitionCounts[1] * 2), calculateY(currentIndex, 1, partitionCounts[1] * 2), 2 * moveTime);
+                    },
+                    description: `Move node ${node.id} to partition B`,
+                    timeBeforeNext: 0
+                });
+            }
+        });
+
+        animation[animation.length - 1].timeBeforeNext = 500;
     }
+
+    animation.push({
+        animationCallback: () => () => {
+            removeWeightLabelsFromEdges(edgeDataSet);
+            return true;
+        },
+        description: `Remove weight labels from edges after partitioning`,
+        timeBeforeNext: 0
+    });
 
     setFinalCutSize(finalCutSize);
 
@@ -453,6 +649,6 @@ export function runMetis(
         partition: currentPartition,
         initialCutSize: initialCutSize,
         finalCutSize: finalCutSize,
-        animation: []
+        animation: animation
     }
 }
