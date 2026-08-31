@@ -66,14 +66,26 @@ export const extractEdgeDeletes = () => {
 }
 
 const queueNodeDelete = (id: string) => {
+    if (nodeUpdates[id]) {
+        delete nodeUpdates[id];
+    }
+
     nodeDeletes.add(id);
 }
 
 const queueEdgeDelete = (id: string) => {
+    if (edgeUpdates[id]) {
+        delete edgeUpdates[id];
+    }
+
     edgeDeletes.add(id);
 }
 
 const queueNodeUpdate = (update: NodeUpdate) => {
+    if (nodeDeletes.has(update.id)) {
+        nodeDeletes.delete(update.id);
+    }
+
     const existing = nodeUpdates[update.id] ?? { id: update.id };
     if (update.x !== undefined) {
         existing.x = update.x;
@@ -118,6 +130,10 @@ export const discardEdgeUpdates = (ids: string[]) => {
 };
 
 const queueEdgeUpdate = (update: EdgeUpdate) => {
+    if (edgeDeletes.has(update.id)) {
+        edgeDeletes.delete(update.id);
+    }
+
     const existing = edgeUpdates[update.id] ?? { id: update.id };
     if (update.from !== undefined) {
         existing.from = update.from;
