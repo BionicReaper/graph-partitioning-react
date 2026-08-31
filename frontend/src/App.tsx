@@ -10,6 +10,7 @@ import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRigh
 import { runKernighanLin } from './algorithms/kernighan-lin';
 import { getPauseStatus, getSimulationSpeedFactor, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
+import { restoreLabelingOrder } from './utils/ordering';
 import { generateRandomGraph } from './utils/graphGeneration';
 import FullscreenButton from './components/Buttons/FullscreenButton';
 import { useTranslation } from 'react-i18next';
@@ -343,6 +344,7 @@ function App() {
     networkRef.current?.disableEditMode();
 
     updateDataSetPositions(networkRef.current, nodesRef.current);
+    restoreLabelingOrder(nodesRef.current, edgesRef.current);
     console.log('Current graph state before algorithm:');
     console.log(nodesRef.current.get(), edgesRef.current.get());
 
