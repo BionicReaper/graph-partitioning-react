@@ -14,9 +14,6 @@ const positionMap = {
   bottom: '20px',
 };
 
-// Sienna injects its own floating button (.asw-menu-btn), which App.css hides so the
-// widget matches the rest of the controls. Forwarding the click to it opens the panel.
-// Queried on click rather than on mount because the CDN script loads async.
 const openAccessibilityMenu = () => {
   document.querySelector<HTMLElement>('.asw-menu-btn')?.click();
 };
