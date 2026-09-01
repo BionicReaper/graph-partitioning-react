@@ -144,6 +144,8 @@ function collapseNodes(
         });
     });
 
+    animation[animation.length - 1].timeBeforeNext = 500;
+
     const newEdges: DatasetEdge[] = [];
 
     const existingEdges = edgeDataSet.get();
