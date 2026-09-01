@@ -41,3 +41,8 @@ body,
     opacity: 0.8;
   }
 }
+/* Sienna's own floating button is replaced by AccessibilityButton; the panel
+   (.asw-menu) lives in a separate container and stays fully functional. */
+.asw-widget {
+  display: none !important;
+}
