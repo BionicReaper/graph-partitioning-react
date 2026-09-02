@@ -47,7 +47,7 @@ const AlgorithmDialog = ({ isOpen, onOpenChange, algorithm }: AlgorithmDialogPro
             </Dialog.CloseTrigger>
             <Dialog.Title fontSize="2xl" mb={2}>{algorithm}</Dialog.Title>
           </Dialog.Header>
-          <Dialog.Description fontSize="md">{t(algorithmDescriptionKey)}</Dialog.Description>
+          <Dialog.Description fontSize="md" whiteSpace="pre-line">{t(algorithmDescriptionKey)}</Dialog.Description>
 
           {/* Pseudocode Section */}
           <Box>
