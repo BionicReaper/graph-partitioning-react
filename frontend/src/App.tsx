@@ -6,13 +6,14 @@ import PlayButton from './components/Buttons/PlayButton';
 import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import { algorithms, defaultVisOptions, shouldTriggerOnStep, type StepSettingMode } from './utils/constants';
-import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRight, X, PersonStanding } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
 import { getPauseStatus, getSimulationSpeedFactor, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
 import { restoreLabelingOrder } from './utils/ordering';
 import { generateRandomGraph, generateRegionGraph, type GraphGenerationOptions } from './utils/graphGeneration';
 import FullscreenButton from './components/Buttons/FullscreenButton';
+import AccessibilityButton from './components/Buttons/AccessibilityButton';
 import { useTranslation } from 'react-i18next';
 import DeleteButton from './components/Buttons/DeleteButton';
 import InfoButton from './components/Buttons/InfoButton';
@@ -628,6 +629,12 @@ function App() {
         isRunning={isRunning}
         isPaused={isPaused}
         animationStarted={animationStarted}
+      />
+      <AccessibilityButton
+        icon={PersonStanding}
+        label={t('AccessibilityMenu')}
+        position="top"
+        colorPalette="blue"
       />
       <FullscreenButton
         onClick={toggleFullscreen}
