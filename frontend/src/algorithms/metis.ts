@@ -296,16 +296,16 @@ function coarsenGraph(
                 continue;
             }
 
+            const edges = edgesMap.get(`${matchingLevel}|${node.id}`);
+            const edgeIds = Array.from(edges?.values() || []).map(edge => edge.id);
+
             animation.push({
                 animationCallback: () => {
                     return highlightNodes(nodeDataSet, [node.id], '#FFA500', '#FFFF40', 5, { color: { highlight: 500, hold: 0, fade: 0 }, width: { highlight: 175, hold: 200, fade: 125 } }, true);
                 },
                 description: `Highlight node ${node.id} for matching`,
-                timeBeforeNext: 0
+                timeBeforeNext: edgeIds.length > 0 ? 0 : 1000
             });
-
-            const edges = edgesMap.get(`${matchingLevel}|${node.id}`);
-            const edgeIds = Array.from(edges?.values() || []).map(edge => edge.id);
 
             if (edgeIds.length > 0) {
                 animation.push({
