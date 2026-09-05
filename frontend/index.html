@@ -9,6 +9,17 @@
   <style>
     .asw-widget { display: none !important; }
   </style>
+  <script>
+    (function () {
+      var stored = null;
+      try { stored = window.localStorage.getItem('darkMode'); } catch (e) { }
+      var isDark = stored === null
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+        : stored === 'true';
+      document.documentElement.classList.add(isDark ? 'dark' : 'light');
+      document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    })();
+  </script>
 </head>
 
 <body>

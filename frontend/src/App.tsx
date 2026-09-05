@@ -23,6 +23,7 @@ import { clearAnchorReachedCallback, getAnchor, goingToAnchor, setAnchor, setAnc
 import { getStats } from './utils/stats';
 import { useSnackbar } from 'notistack';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useColorMode } from './hooks/useColorMode';
 import LocalizedStatsText from './components/LocalizedSnackbarText/LocallizedStatsText';
 import { runFiducciaMattheyses } from './algorithms/fiduccia-mattheyses';
 import { changeSize, runStandalone } from './utils/animations';
@@ -31,6 +32,8 @@ type ActiveMode = 'node' | 'edge' | null;
 
 function App() {
   const { t } = useTranslation();
+
+  const { isDarkMode } = useColorMode();
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -394,6 +397,8 @@ function App() {
     networkRef.current?.setOptions(
       {
         ...defaultVisOptions,
+        nodes: { ...defaultVisOptions.nodes, font: { ...defaultVisOptions.nodes.font, ...labelFontsRef.current.nodes } },
+        edges: { ...defaultVisOptions.edges, font: { ...defaultVisOptions.edges.font, ...labelFontsRef.current.edges } },
         physics: { ...defaultVisOptions.physics, enabled: false },
         manipulation: {
           ...defaultVisOptions.manipulation,
@@ -442,7 +447,7 @@ function App() {
     const width = canvas.width;
     const height = canvas.height;
 
-    const gridColor = "#e0e0e0";
+    const gridColor = isDarkMode ? "#2b2b2b" : "#e0e0e0";
     const lineWidth = 1 / scale;
 
     const horizontalLines = Math.ceil(height / gridSize);
@@ -474,7 +479,7 @@ function App() {
 
     ctx.stroke();
 
-  }, [networkRef, containerRef]);
+  }, [networkRef, containerRef, isDarkMode]);
 
   useEffect(() => {
     if (networkRef.current) {
@@ -499,6 +504,23 @@ function App() {
       });
     }
   }, [networkRef, physicsEnabled]);
+
+  const labelFontsRef = useRef({
+    nodes: { color: '#000000' },
+    edges: { color: '#343434', strokeColor: '#ffffff' },
+  });
+
+  useEffect(() => {
+    const labelFonts = isDarkMode
+      ? { nodes: { color: '#f4f4f5' }, edges: { color: '#d4d4d8', strokeColor: '#101010' } }
+      : { nodes: { color: '#000000' }, edges: { color: '#343434', strokeColor: '#ffffff' } };
+    labelFontsRef.current = labelFonts;
+    networkRef.current?.setOptions({
+      nodes: { font: labelFonts.nodes },
+      edges: { font: labelFonts.edges },
+    });
+    networkRef.current?.redraw();
+  }, [networkRef, isDarkMode, ensureControlsAttached]);
 
   // Pause handler
   const [isPaused, setIsPaused] = useState<boolean>(getPauseStatus());
@@ -602,7 +624,7 @@ function App() {
   }, [isRunning, animationStarted, networkRef, setActiveMode, simulationKeyDownFunction, idleKeyDownFunction, keyUpFunction, ensureControlsAttached]);
 
   return (
-    <Box className="app" w="100dvw" h="100dvh" bg="gray.50">
+    <Box className="app" w="100dvw" h="100dvh" bg={{ base: 'gray.50', _dark: 'gray.950' }}>
       <div ref={containerRef} className="graph-canvas" style={{ height: '100dvh' }} />
       <Sidebar
         isOpen={isSidebarOpen}

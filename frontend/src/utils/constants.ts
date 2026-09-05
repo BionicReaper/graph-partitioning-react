@@ -36,7 +36,9 @@ export const defaultVisOptions: any = {
       roundness: 0
     },
     font: {
-      align: 'horizontal'
+      align: 'horizontal',
+      color: '#343434',
+      strokeColor: '#ffffff'
     }
   },
   physics: {

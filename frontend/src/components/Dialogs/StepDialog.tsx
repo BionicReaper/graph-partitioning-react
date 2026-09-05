@@ -31,7 +31,7 @@ const StepDialog = ({ isOpen, onOpenChange, anchor, algorithmId }: StepDialogPro
       />
       <Dialog.Positioner>
         <Dialog.Content
-          bg="white"
+          bg={{ base: 'white', _dark: 'gray.900' }}
           p={6}
           gap={6}
           rounded="md"

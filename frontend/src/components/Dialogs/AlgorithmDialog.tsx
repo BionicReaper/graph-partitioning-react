@@ -33,7 +33,7 @@ const AlgorithmDialog = ({ isOpen, onOpenChange, algorithm }: AlgorithmDialogPro
       />
       <Dialog.Positioner>
         <Dialog.Content
-          bg="white"
+          bg={{ base: 'white', _dark: 'gray.900' }}
           p={6}
           gap={6}
           rounded="md"
@@ -55,7 +55,7 @@ const AlgorithmDialog = ({ isOpen, onOpenChange, algorithm }: AlgorithmDialogPro
             <Box
               as="pre"
               p={4}
-              bg="gray.800"
+              bg={{ base: 'gray.800', _dark: 'gray.950' }}
               color="gray.100"
               rounded="md"
               fontSize="sm"

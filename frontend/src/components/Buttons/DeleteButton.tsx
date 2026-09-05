@@ -47,6 +47,10 @@ const DeleteButton = ({
         boxShadow: '2xl',
         bg: `${colorPalette}.600`,
       }}
+      _dark={{
+        bg: `${colorPalette}.600`,
+        _hover: { bg: `${colorPalette}.700` },
+      }}
       _active={{
         transform: 'scale(0.95)',
       }}

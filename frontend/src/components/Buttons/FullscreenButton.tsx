@@ -51,6 +51,10 @@ const FullscreenButton = ({
         boxShadow: '2xl',
         bg: isFullscreen ? `${fullscreenColorPalette}.600` : `${colorPalette}.600`,
       }}
+      _dark={{
+        bg: isFullscreen ? `${fullscreenColorPalette}.700` : `${colorPalette}.600`,
+        _hover: { bg: isFullscreen ? `${fullscreenColorPalette}.700` : `${colorPalette}.700` },
+      }}
       _active={{
         transform: 'scale(0.95)',
       }}

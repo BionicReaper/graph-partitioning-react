@@ -42,6 +42,7 @@ const AnchorNavigationButton = ({
       h={'60px'}
       colorPalette={colorPalette}
       bg={`${colorPalette}.500`}
+      color={'white'}
       rounded="full"
       boxShadow={'lg'}
       zIndex={1000}
@@ -53,6 +54,10 @@ const AnchorNavigationButton = ({
         transform: 'scale(1.05)',
         boxShadow: '2xl',
         bg: `${colorPalette}.600`,
+      }}
+      _dark={{
+        bg: `${colorPalette}.600`,
+        _hover: { bg: `${colorPalette}.700` },
       }}
       _active={{
         transform: 'scale(0.95)',

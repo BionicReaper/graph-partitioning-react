@@ -46,6 +46,10 @@ const AccessibilityButton = ({
         boxShadow: '2xl',
         bg: `${colorPalette}.600`,
       }}
+      _dark={{
+        bg: `${colorPalette}.700`,
+        _hover: { bg: `${colorPalette}.500` },
+      }}
       _active={{
         transform: 'scale(0.95)',
       }}

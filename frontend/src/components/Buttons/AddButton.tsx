@@ -49,6 +49,11 @@ const AddButton = ({
         boxShadow: '2xl',
         bg: `${colorPalette}.600`,
       }}
+      _dark={{
+        bg: active ? `${colorPalette}.700` : `${colorPalette}.600`,
+        borderColor: active ? `${colorPalette}.400` : 'transparent',
+        _hover: { bg: `${colorPalette}.700` },
+      }}
       _active={{
         transform: 'scale(0.95)',
       }}

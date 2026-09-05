@@ -86,12 +86,12 @@ const PlayButton = ({
           top="0px"
           right="1"
           w="220px"
-          bg="white"
+          bg={{ base: 'white', _dark: 'gray.900' }}
           borderRadius="xl"
           boxShadow="lg"
           overflow="hidden"
           border="1px solid"
-          borderColor="gray.200"
+          borderColor={{ base: 'gray.200', _dark: 'gray.700' }}
           zIndex={1000}
         >
           {algorithms.map((algorithm) => (
@@ -101,12 +101,14 @@ const PlayButton = ({
               py={3}
               cursor="pointer"
               borderBottom="1px solid"
-              borderColor="gray.100"
+              borderColor={{ base: 'gray.100', _dark: 'gray.800' }}
               _last={{ borderBottom: 'none' }}
-              bg={algorithm.id === currentAlgorithmId ? 'purple.50' : 'white'}
+              bg={algorithm.id === currentAlgorithmId
+                ? { base: 'purple.50', _dark: 'purple.900' }
+                : { base: 'white', _dark: 'gray.900' }}
               _hover={{
-                bg: 'purple.50',
-                color: 'purple.700',
+                bg: { base: 'purple.50', _dark: 'purple.900' },
+                color: { base: 'purple.700', _dark: 'purple.100' },
               }}
               transition="all 0.2s"
               onClick={() => handleAlgorithmClick(algorithm.id)}
@@ -115,7 +117,7 @@ const PlayButton = ({
                 {algorithm.name}
               </Text>
               {algorithm.description && (
-                <Text fontSize="xs" color="gray.600" mt={1}>
+                <Text fontSize="xs" color={{ base: 'gray.600', _dark: 'gray.400' }} mt={1}>
                   {t(algorithm.description)}
                 </Text>
               )}
@@ -129,7 +131,7 @@ const PlayButton = ({
         display="flex"
         alignItems="center"
         h="60px"
-        bg={'purple.600'}
+        bg={{ base: 'purple.600', _dark: 'purple.700' }}
         borderRadius="full"
         boxShadow={'lg'}
         overflow="hidden"
@@ -152,7 +154,7 @@ const PlayButton = ({
           visibility={isExpanded ? 'visible' : 'hidden'}
           transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
           _hover={{
-            bg: isRunning ? 'transparent' : 'purple.700',
+            bg: isRunning ? 'transparent' : { base: 'purple.700', _dark: 'purple.800' },
           }}
           whiteSpace="nowrap"
         >
@@ -188,6 +190,10 @@ const PlayButton = ({
           onClick={handlePlayClick}
           _hover={{
             bg: 'purple.700',
+          }}
+          _dark={{
+            bg: 'purple.700',
+            _hover: { bg: 'purple.800' },
           }}
           colorPalette={"purple"}
           transition="background 0.2s"

@@ -41,3 +41,11 @@ body,
     opacity: 0.8;
   }
 }
+
+.dark .app {
+  background-color: #111111;
+}
+
+.dark .graph-canvas {
+  background-color: #101010;
+}
