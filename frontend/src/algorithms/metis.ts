@@ -81,6 +81,30 @@ function removeWeightLabelsFromEdges(edgeDataSet: DataSet<any, "id">): void {
     edgeDataSet.update(edgesWithoutLabels);
 }
 
+const NODE_WEIGHT_LABEL_PATTERN = /\s*\(weight = \d+\)$/;
+
+function buildNodeWeightLabel(label: string, weight?: number): string {
+    return `${label.replace(NODE_WEIGHT_LABEL_PATTERN, '')} (weight = ${weight ?? 1})`;
+}
+
+function addWeightLabelsToNodes(nodeDataSet: DataSet<any, "id">): void {
+    const nodes = nodeDataSet.get();
+    nodes.forEach(node => {
+        node.label = buildNodeWeightLabel(node.label ?? '', node.weight);
+    });
+    nodeDataSet.update(nodes);
+}
+
+function removeWeightLabelsFromNodes(nodeDataSet: DataSet<any, "id">): void {
+    const nodes = nodeDataSet.get();
+    const nodesWithoutWeightLabels = nodes.map(node => ({
+        ...node,
+        label: (node.label ?? '').replace(NODE_WEIGHT_LABEL_PATTERN, '')
+    }));
+
+    nodeDataSet.update(nodesWithoutWeightLabels);
+}
+
 function selectEdgeForMatching(node: DatasetNode, matchedNodeIds: Set<string>, edges: DatasetEdge[], mode: string = "HEM"): DatasetEdge | null {
     if (mode === "HEM") {
         const bestEdge = edges.reduce((best: DatasetEdge | null, edge: DatasetEdge) => {
@@ -119,13 +143,15 @@ function collapseNodes(
     const newNodes: DatasetNode[] = [];
 
     nodesToCollapse.forEach(([nodeA, nodeB, compoundNodeId]) => {
+        const compoundNodeWeight = (nodeA.weight ?? 1) + (nodeB.weight ?? 1);
+
         const newNode: DatasetNode = {
             id: compoundNodeId,
-            label: compoundNodeId,
+            label: buildNodeWeightLabel(compoundNodeId, compoundNodeWeight),
             size: ((nodeA.size || defaultVisOptions.nodes.size) + (nodeB.size || defaultVisOptions.nodes.size)) / 2,
             x: nodeA.x,
             y: nodeA.y,
-            weight: (nodeA.weight ?? 1) + (nodeB.weight ?? 1),
+            weight: compoundNodeWeight,
             children: [{...nodeA}, {...nodeB}],
             createdAtLevel: matchingLevel
         };
@@ -511,6 +537,7 @@ export function runMetis(
     }
 
     addWeightLabelsToEdges(edgeDataSet);
+    addWeightLabelsToNodes(nodeDataSet);
 
     const currentPartition = {...existingPartition};
     
@@ -623,9 +650,10 @@ export function runMetis(
     animation.push({
         animationCallback: () => () => {
             removeWeightLabelsFromEdges(edgeDataSet);
+            removeWeightLabelsFromNodes(nodeDataSet);
             return true;
         },
-        description: `Remove weight labels from edges after partitioning`,
+        description: `Remove weight labels from nodes and edges after partitioning`,
         timeBeforeNext: 0
     });
 
