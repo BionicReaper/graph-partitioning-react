@@ -834,7 +834,7 @@ export function runFiducciaMattheyses(
 
             const previousNodes = nodeDataSet.get();
 
-            nodeDataSet.remove(previousNodes.map(node => node.id));
+            nodeDataSet.clear();
 
             const allNodes = [...dummyBlackNodes, ...previousNodes];
 

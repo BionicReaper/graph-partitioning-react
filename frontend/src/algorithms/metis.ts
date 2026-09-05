@@ -77,9 +77,7 @@ function removeWeightLabelsFromEdges(edgeDataSet: DataSet<any, "id">): void {
     const edges = edgeDataSet.get();
     const edgesWithoutLabels = edges.map(edge => ({ ...edge, label: null }));
 
-    const originalEdgeIds = edges.map(edge => edge.id);
-
-    edgeDataSet.remove(originalEdgeIds);
+    edgeDataSet.clear();
     edgeDataSet.update(edgesWithoutLabels);
 }
 
