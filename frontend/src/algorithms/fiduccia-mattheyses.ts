@@ -836,9 +836,9 @@ export function runFiducciaMattheyses(
 
             nodeDataSet.remove(previousNodes.map(node => node.id));
 
-            nodeDataSet.add(dummyBlackNodes);
+            const allNodes = [...dummyBlackNodes, ...previousNodes];
 
-            nodeDataSet.add(previousNodes);
+            nodeDataSet.add(allNodes);
             
             network.fit();
             return changeSize(nodeDataSet, dummyBlackNodes.map(node => node.id), 2000, 0, 50, 5);
