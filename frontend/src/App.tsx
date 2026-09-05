@@ -25,6 +25,7 @@ import { useSnackbar } from 'notistack';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useColorMode } from './hooks/useColorMode';
 import LocalizedStatsText from './components/LocalizedSnackbarText/LocallizedStatsText';
+import { isKey } from './utils/hotkeys';
 import { runFiducciaMattheyses } from './algorithms/fiduccia-mattheyses';
 import { changeSize, runStandalone } from './utils/animations';
 import { runMetis } from './algorithms/metis';
@@ -549,41 +550,41 @@ function App() {
   const keysPressed = useRef<Set<string>>(new Set());
 
   const idleKeyDownFunction = useCallback((event: KeyboardEvent) => {
-    const pressedKey = event.key.toLowerCase();
+    const pressedKey = event.code;
     if (keysPressed.current.has(pressedKey)) return; // already pressed, ignore
     keysPressed.current.add(pressedKey);
-    if (pressedKey === 'n') {
+    if (isKey(event, 'KeyN')) {
       event.preventDefault();
       toggleAddNode();
-    } else if (pressedKey === 'e') {
+    } else if (isKey(event, 'KeyE')) {
       event.preventDefault();
       toggleAddEdge();
-    } else if (pressedKey === 'escape') {
+    } else if (isKey(event, 'Escape')) {
       event.preventDefault();
       setActiveMode(null);
       unselectAll();
       networkRef.current?.disableEditMode();
-    } else if (pressedKey === 'delete') {
+    } else if (isKey(event, 'Delete')) {
       event.preventDefault();
       deleteSelected();
     }
   }, [keysPressed, toggleAddNode, toggleAddEdge, setActiveMode, unselectAll, deleteSelected]);
 
   const simulationKeyDownFunction = useCallback((event: KeyboardEvent) => {
-    const pressedKey = event.key.toLowerCase();
+    const pressedKey = event.code;
     if (keysPressed.current.has(pressedKey)) return; // already pressed, ignore
     keysPressed.current.add(pressedKey);
-    if (pressedKey === 'p' || pressedKey === 'f9') {
+    if (isKey(event, 'KeyP', 'F9')) {
       event.preventDefault();
       togglePause();
-    } else if (pressedKey === '-') {
+    } else if (isKey(event, 'Minus', 'NumpadSubtract')) {
       event.preventDefault();
       console.log('Decreasing simulation speed');
       const currentFactor = getSimulationSpeedFactor(true);
       const newFactor = Math.max(0.5, currentFactor / 2);
       setSimulationSpeedFactor(newFactor, true);
       console.log('New simulation speed factor:', newFactor);
-    } else if (pressedKey === '=') {
+    } else if (isKey(event, 'Equal', 'NumpadAdd', 'NumpadEqual')) {
       event.preventDefault();
       console.log('Increasing simulation speed');
       const currentFactor = getSimulationSpeedFactor(true);
@@ -594,7 +595,7 @@ function App() {
   }, [keysPressed]);
 
   const keyUpFunction = useCallback((event: KeyboardEvent) => {
-    const releasedKey = event.key.toLowerCase();
+    const releasedKey = event.code;
     keysPressed.current.delete(releasedKey);
   }, [keysPressed]);
 
