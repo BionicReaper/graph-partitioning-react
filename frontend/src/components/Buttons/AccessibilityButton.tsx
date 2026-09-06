@@ -15,7 +15,7 @@ const positionMap = {
 };
 
 const openAccessibilityMenu = () => {
-  document.querySelector<HTMLElement>('.asw-menu-btn')?.click();
+  document.querySelector<HTMLElement>('.editorim-sidebox-open')?.click();
 };
 
 const AccessibilityButton = ({
