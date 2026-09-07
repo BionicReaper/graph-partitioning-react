@@ -53,7 +53,10 @@
         "Passes": "Passes",
         "PassesUntilNoGain": "Until no gain",
         "DecreasePasses": "Decrease passes",
-        "IncreasePasses": "Increase passes"
+        "IncreasePasses": "Increase passes",
+        "Speed": "Speed",
+        "DecreaseSpeed": "Decrease speed",
+        "IncreaseSpeed": "Increase speed"
     },
     "el": {
         "English": "Αγγλικά",
@@ -109,6 +112,9 @@
         "Passes": "Περάσματα",
         "PassesUntilNoGain": "Μέχρι μηδενικό κέρδος",
         "DecreasePasses": "Μείωση περασμάτων",
-        "IncreasePasses": "Αύξηση περασμάτων"
+        "IncreasePasses": "Αύξηση περασμάτων",
+        "Speed": "Ταχύτητα",
+        "DecreaseSpeed": "Μείωση ταχύτητας",
+        "IncreaseSpeed": "Αύξηση ταχύτητας"
     }
 }

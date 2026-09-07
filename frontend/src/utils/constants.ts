@@ -110,3 +110,15 @@ export const graphGenerationModeLabelKeys: Record<GraphGenerationMode, string> =
 
 export const shouldTriggerOnStep = (mode: StepSettingMode, firstReach: boolean): boolean =>
   mode === 'always' || (mode === 'onFirstReach' && firstReach);
+
+// Simulation speed options
+export const minSimulationSpeed = 0.25;
+
+export const maxSimulationSpeed = 2048;
+
+export const halveSimulationSpeed = (speed: number): number => Math.max(minSimulationSpeed, speed / 2);
+
+export const doubleSimulationSpeed = (speed: number): number => Math.min(maxSimulationSpeed, speed * 2);
+
+export const formatSimulationSpeed = (speed: number): string =>
+  speed < 1 ? `1/${Math.round(1 / speed)}` : String(speed);

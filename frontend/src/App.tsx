@@ -5,10 +5,10 @@ import AddButton from './components/Buttons/AddButton';
 import PlayButton from './components/Buttons/PlayButton';
 import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
-import { algorithms, defaultVisOptions, shouldTriggerOnStep, type StepSettingMode } from './utils/constants';
+import { algorithms, defaultVisOptions, doubleSimulationSpeed, halveSimulationSpeed, shouldTriggerOnStep, type StepSettingMode } from './utils/constants';
 import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRight, X, PersonStanding } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
-import { getPauseStatus, getSimulationSpeedFactor, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
+import { getPauseStatus, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
 import { restoreLabelingOrder } from './utils/ordering';
 import { generateRandomGraph, generateRegionGraph, type GraphGenerationOptions } from './utils/graphGeneration';
@@ -263,8 +263,13 @@ function App() {
   const [shouldOpenStepDialog, setShouldOpenStepDialog] = useLocalStorage<StepSettingMode>('shouldOpenStepDialog', 'onFirstReach');
   const [shouldPause, setShouldPause] = useLocalStorage<StepSettingMode>('shouldPause', 'onFirstReach');
   const [algorithmPasses, setAlgorithmPasses] = useLocalStorage<number>('algorithmPasses', 0);
+  const [simulationSpeed, setSimulationSpeed] = useLocalStorage<number>('simulationSpeed', 1);
   const [isStepDialogOpen, setIsStepDialogOpen] = useState<boolean>(false);
   const [currentAnchor, setCurrentAnchor] = useState<{ index: number, textKey: string, values: { [key: string]: string }, firstReach: boolean } | null>(null);
+
+  useEffect(() => {
+    setSimulationSpeedFactor(simulationSpeed, true);
+  }, [simulationSpeed]);
 
   const navigateToAnchor = useCallback(async (direction: 'left' | 'right'): Promise<void> => {
     const activeNavigation = goingToAnchor();
@@ -590,20 +595,12 @@ function App() {
       togglePause();
     } else if (isKey(event, 'Minus', 'NumpadSubtract')) {
       event.preventDefault();
-      console.log('Decreasing simulation speed');
-      const currentFactor = getSimulationSpeedFactor(true);
-      const newFactor = Math.max(0.5, currentFactor / 2);
-      setSimulationSpeedFactor(newFactor, true);
-      console.log('New simulation speed factor:', newFactor);
+      setSimulationSpeed(halveSimulationSpeed);
     } else if (isKey(event, 'Equal', 'NumpadAdd', 'NumpadEqual')) {
       event.preventDefault();
-      console.log('Increasing simulation speed');
-      const currentFactor = getSimulationSpeedFactor(true);
-      const newFactor = Math.min(1024.0, currentFactor * 2);
-      setSimulationSpeedFactor(newFactor, true);
-      console.log('New simulation speed factor:', newFactor);
+      setSimulationSpeed(doubleSimulationSpeed);
     }
-  }, [keysPressed]);
+  }, [keysPressed, setSimulationSpeed]);
 
   const keyUpFunction = useCallback((event: KeyboardEvent) => {
     const releasedKey = event.code;
@@ -653,6 +650,8 @@ function App() {
         onShouldOpenStepDialogChange={setShouldOpenStepDialog}
         shouldPause={shouldPause}
         onShouldPauseChange={setShouldPause}
+        simulationSpeed={simulationSpeed}
+        onSimulationSpeedChange={setSimulationSpeed}
       />
       <PlayButton
         onRun={runAlgorithm}

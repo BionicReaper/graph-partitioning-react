@@ -18,7 +18,7 @@ import { Menu, GitBranch, Globe, Waypoints, ChevronLeft, ChevronRight, Moon } fr
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
-import { graphGenerationModeLabelKeys, graphGenerationModes, stepSettingLabelKeys, stepSettingModes, type GraphGenerationMode, type StepSettingMode } from '../../utils/constants';
+import { doubleSimulationSpeed, formatSimulationSpeed, graphGenerationModeLabelKeys, graphGenerationModes, halveSimulationSpeed, maxSimulationSpeed, minSimulationSpeed, stepSettingLabelKeys, stepSettingModes, type GraphGenerationMode, type StepSettingMode } from '../../utils/constants';
 import type { GraphGenerationOptions } from '../../utils/graphGeneration';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useColorMode } from '../../hooks/useColorMode';
@@ -38,6 +38,8 @@ interface SidebarProps {
   onShouldOpenStepDialogChange: (value: StepSettingMode) => void;
   shouldPause: StepSettingMode;
   onShouldPauseChange: (value: StepSettingMode) => void;
+  simulationSpeed: number;
+  onSimulationSpeedChange: (value: number) => void;
 }
 
 const algorithms = [
@@ -73,7 +75,9 @@ const Sidebar = ({
   shouldOpenStepDialog,
   onShouldOpenStepDialogChange,
   shouldPause,
-  onShouldPauseChange
+  onShouldPauseChange,
+  simulationSpeed,
+  onSimulationSpeedChange
 }: SidebarProps) => {
   const { t, i18n } = useTranslation();
 
@@ -425,6 +429,42 @@ const Sidebar = ({
                     color={bodyColor}
                     onClick={() => onAlgorithmPassesChange(algorithmPasses + 1)}
                     disabled={disableAlgorithmPassesChange}
+                  >
+                    <ChevronRight size={18} />
+                  </IconButton>
+                </Box>
+
+                <Heading size="md" mb={4} mt={6} color={headingColor} fontWeight="500">
+                  {t('Speed')}
+                </Heading>
+                <Box
+                  p={3}
+                  bg={cardBg}
+                  borderRadius="md"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <IconButton
+                    aria-label={t('DecreaseSpeed')}
+                    size="sm"
+                    variant="ghost"
+                    color={bodyColor}
+                    onClick={() => onSimulationSpeedChange(halveSimulationSpeed(simulationSpeed))}
+                    disabled={simulationSpeed <= minSimulationSpeed}
+                  >
+                    <ChevronLeft size={18} />
+                  </IconButton>
+                  <Text fontSize="sm" color={bodyColor} fontWeight="500" textAlign="center">
+                    {formatSimulationSpeed(simulationSpeed)}×
+                  </Text>
+                  <IconButton
+                    aria-label={t('IncreaseSpeed')}
+                    size="sm"
+                    variant="ghost"
+                    color={bodyColor}
+                    onClick={() => onSimulationSpeedChange(doubleSimulationSpeed(simulationSpeed))}
+                    disabled={simulationSpeed >= maxSimulationSpeed}
                   >
                     <ChevronRight size={18} />
                   </IconButton>
