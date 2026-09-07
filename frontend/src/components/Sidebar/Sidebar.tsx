@@ -110,13 +110,13 @@ const Sidebar = ({
         colorPalette="blue"
         rounded="full"
         bg="blue.600"
-        boxShadow="0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)"
+        boxShadow={'lg'}
         zIndex={1000}
         aria-label={t('ToggleMenu')}
         _hover={{
           bg: 'blue.700',
           transform: 'scale(1.05)',
-          boxShadow: '0 6px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12)',
+          boxShadow: '2xl',
         }}
         _dark={{
           bg: 'blue.700',
