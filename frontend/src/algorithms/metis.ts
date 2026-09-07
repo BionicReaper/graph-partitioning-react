@@ -1,5 +1,5 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { animateReplaceEdgeSet, animateSplitCompoundNodes, discardEdgeUpdates, discardNodeUpdates, highlightEdges, highlightNodes, moveNode, replaceNodesWithCompoundNode, swapNodePositions } from "../utils/animations";
+import { animateReplaceEdgeSet, animateSplitCompoundNodes, highlightEdges, highlightNodes, moveNode, replaceNodesWithCompoundNode, swapNodePositions } from "../utils/animations";
 import { calculateCirclePoint, calculateX, calculateY } from "../utils/positioning";
 import { generateSetAnchorAnimation } from "../utils/anchoring";
 import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons, stashStats, mergeStats } from "../utils/stats";
@@ -110,10 +110,17 @@ function selectEdgeForMatching(node: DatasetNode, matchedNodeIds: Set<string>, e
         const bestEdge = edges.reduce((best: DatasetEdge | null, edge: DatasetEdge) => {
 
             const otherNodeId = (edge.from === node.id) ? edge.to : edge.from;
+
+            incrementReads(3);
+            incrementComparisons(1);
+
+            incrementComparisons(1);
             if (matchedNodeIds.has(otherNodeId)) {
                 return best;
             }
 
+            incrementComparisons(1);
+            incrementReads(2);
             if (!best || (edge.weight ?? 1) > (best.weight ?? 1)) {
                 return edge;
             } else {
@@ -140,10 +147,16 @@ function collapseNodes(
     const newMatchingLevel = matchingLevel + 1;
     const nodeIdsToDelete = Array.from(matchedNodeIds);
 
+    incrementReads(1);
+    incrementAdditions(1);
+
     const newNodes: DatasetNode[] = [];
 
     nodesToCollapse.forEach(([nodeA, nodeB, compoundNodeId]) => {
         const compoundNodeWeight = (nodeA.weight ?? 1) + (nodeB.weight ?? 1);
+
+        incrementReads(2);
+        incrementAdditions(1);
 
         const newNode: DatasetNode = {
             id: compoundNodeId,
@@ -157,7 +170,10 @@ function collapseNodes(
         };
         newNodes.push(newNode);
 
+        incrementWrites(1);
+
         const nodeIdTuple = [nodeA.id, nodeB.id];
+
 
         animation.push({
             animationCallback: () => {
@@ -178,17 +194,32 @@ function collapseNodes(
         const newFrom = nodeRouteMap.get(`${matchingLevel}|${edge.from}`) ?? edge.from;
         const newTo = nodeRouteMap.get(`${matchingLevel}|${edge.to}`) ?? edge.to;
 
+        incrementReads(4);
+
+        incrementComparisons(1);
         if (newFrom !== newTo) {
+            incrementReads(2);
+            incrementComparisons(2);
             if (newFrom === edge.from && newTo === edge.to) {
                 newEdges.push(edge);
 
+                incrementWrites(1);
+
+                incrementReads(1);
+                incrementComparisons(1);
                 if (!edgesMap.has(`${newMatchingLevel}|${newFrom}`)) {
                     edgesMap.set(`${newMatchingLevel}|${newFrom}`, new Map<string, DatasetEdge>());
+                    incrementWrites(1);
                 }
                 edgesMap.get(`${newMatchingLevel}|${newFrom}`)?.set(newTo, edge);
+
+                incrementReads(1);
+                incrementWrites(1);
             } else {
+                const cachedEdge = edgesMap.get(`${newMatchingLevel}|${newFrom}`)?.get(newTo);
+
                 const existingEdge =
-                    edgesMap.get(`${newMatchingLevel}|${newFrom}`)?.get(newTo) ??
+                    cachedEdge ??
                     {
                         id: `edge|${newFrom}|${newTo}`,
                         from: newFrom,
@@ -197,17 +228,38 @@ function collapseNodes(
                         children: []
                     };
                 existingEdge.weight = (existingEdge.weight ?? 0) + (edge.weight ?? 1);
-                newEdges.push(existingEdge);
 
+                incrementReads(1);
+                incrementWrites(1);
+
+                if (!cachedEdge) {
+                    newEdges.push(existingEdge);
+                } else {
+                    incrementReads(1);
+                    incrementAdditions(1);
+                }
+
+                incrementReads(1);
+                incrementComparisons(1);
                 if (!edgesMap.has(`${newMatchingLevel}|${newFrom}`)) {
                     edgesMap.set(`${newMatchingLevel}|${newFrom}`, new Map<string, DatasetEdge>());
+                    incrementWrites(1);
                 }
                 edgesMap.get(`${newMatchingLevel}|${newFrom}`)?.set(newTo, existingEdge);
 
+                incrementReads(1);
+                incrementWrites(1);
+
+                incrementReads(1);
+                incrementComparisons(1);
                 if (!edgesMap.has(`${newMatchingLevel}|${newTo}`)) {
                     edgesMap.set(`${newMatchingLevel}|${newTo}`, new Map<string, DatasetEdge>());
+                    incrementWrites(1);
                 }
                 edgesMap.get(`${newMatchingLevel}|${newTo}`)?.set(newFrom, existingEdge);
+
+                incrementReads(1);
+                incrementWrites(1);
             }
         }
     }
@@ -278,17 +330,31 @@ function coarsenGraph(
             const fromKey = `${matchingLevel}|${edge.from}`;
             const toKey = `${matchingLevel}|${edge.to}`;
 
+            incrementReads(2);
+
+            incrementReads(1);
+            incrementComparisons(1);
             if (!edgesMap.has(fromKey)) {
                 edgesMap.set(fromKey, new Map<string, DatasetEdge>());
+                incrementWrites(1);
             }
 
             edgesMap.get(fromKey)?.set(edge.to, edge);
 
+            incrementReads(2);
+            incrementWrites(1);
+
+            incrementReads(1);
+            incrementComparisons(1);
             if (!edgesMap.has(toKey)) {
                 edgesMap.set(toKey, new Map<string, DatasetEdge>());
+                incrementWrites(1);
             }
 
             edgesMap.get(toKey)?.set(edge.from, edge);
+
+            incrementReads(2);
+            incrementWrites(1);
         });
         
         for (const node of activeNodes) {
@@ -357,6 +423,9 @@ function coarsenGraph(
 
                 nodeRouteMap.set(`${matchingLevel}|${node.id}`, compoundNodeId);
                 nodeRouteMap.set(`${matchingLevel}|${otherNodeId}`, compoundNodeId);
+
+                incrementReads(2);
+                incrementWrites(2);
             } else {
                 animation.push({
                     animationCallback: () => {
@@ -403,8 +472,11 @@ function splitCompoundNodes(
     const splits: Array<{ compoundNodeId: string, childNodes: DatasetNode[] }> = [];
 
     for (const node of allNodes) {
+        incrementReads(2);
+        incrementComparisons(1);
         if (node.children && node.children.length === 2 && node.createdAtLevel === targetLevel) {
             const [childA, childB] = node.children;
+            incrementReads(2);
 
             nodeIdsToDelete.push(node.id);
             nodesToAdd.push(childA, childB);
@@ -416,6 +488,7 @@ function splitCompoundNodes(
 
             currentPartition[childA.id] = currentPartition[node.id];
             currentPartition[childB.id] = currentPartition[node.id];
+            incrementWrites(2);
 
             delete currentPartition[node.id];
         }
@@ -450,13 +523,22 @@ function recoverEdges(
         const nodeKey = `${matchingLevel}|${node.id}`;
         const edgesForNode = edgesMap.get(nodeKey);
 
+        incrementReads(2);
+        incrementComparisons(1);
+
         if (edgesForNode) {
             for (const [neighborId, edge] of edgesForNode.entries()) {
+                incrementReads(1);
+                incrementComparisons(1);
                 if (!recoveredNodeIds.has(neighborId)) {
                     newEdges.push(edge);
+                    incrementWrites(1);
                 }
             }
             recoveredNodeIds.add(node.id);
+
+            incrementReads(1);
+            incrementWrites(1);
         }
     }
 
@@ -594,6 +676,9 @@ export function runMetis(
 
         for (const [nodeId, partitionId] of Object.entries(fmResult.partition)) {
             currentPartition[nodeId] = partitionId;
+
+            incrementReads(1);
+            incrementWrites(1);
         }
         if (currentLevel === matchingLevel) {
             initialCutSize = fmResult.initialCutSize;
