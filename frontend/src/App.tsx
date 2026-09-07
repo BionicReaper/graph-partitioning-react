@@ -437,22 +437,23 @@ function App() {
 
   const updateBackground = useCallback((ctx: CanvasRenderingContext2D) => {
     if (!networkRef.current || !containerRef.current) return;
-    const canvas = ctx.canvas;
     const view = (networkRef.current as any).canvas.body.view;
     const { translation, scale } = view;
 
-    // Each grid cell’s base size
-    const baseGridSize = 40;
-    const gridSize = baseGridSize * scale;
+    const targetPixels = 40;
+    const rawStep = targetPixels / scale;
+    if (!isFinite(rawStep) || rawStep <= 0) return;
 
-    const width = canvas.width;
-    const height = canvas.height;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const mantissa = rawStep / magnitude;
+    const gridStep = (mantissa < 1.5 ? 1 : mantissa < 3.5 ? 2 : mantissa < 7.5 ? 5 : 10) * magnitude;
 
-    const gridColor = isDarkMode ? "#2b2b2b" : "#e0e0e0";
-    const lineWidth = 1 / scale;
+    const width = containerRef.current.clientWidth;
+    const height = containerRef.current.clientHeight;
 
-    const horizontalLines = Math.ceil(height / gridSize);
-    const verticalLines = Math.ceil(width / gridSize);
+    const minorColor = isDarkMode ? "#2b2b2b" : "#e0e0e0";
+    const majorColor = isDarkMode ? "#353535" : "#d2d2d2";
+    const majorEvery = 5;
 
     const startingX = -(translation.x / scale);
     const startingY = -(translation.y / scale);
@@ -460,25 +461,35 @@ function App() {
     const endingX = startingX + (width / scale);
     const endingY = startingY + (height / scale);
 
-    const startingHorizontalLine = Math.ceil(startingY / baseGridSize);
-    const startingVerticalLine = Math.ceil(startingX / baseGridSize);
-    
-    ctx.strokeStyle = gridColor;
-    ctx.lineWidth = lineWidth;
+    const firstHorizontalLine = Math.ceil(startingY / gridStep);
+    const lastHorizontalLine = Math.floor(endingY / gridStep);
+    const firstVerticalLine = Math.ceil(startingX / gridStep);
+    const lastVerticalLine = Math.floor(endingX / gridStep);
 
-    ctx.beginPath();
+    const minorGrid = new Path2D();
+    const majorGrid = new Path2D();
 
-    for (let i = 0; i < horizontalLines; i++) {
-      ctx.moveTo(startingX, (startingHorizontalLine + i) * baseGridSize)
-      ctx.lineTo(endingX, (startingHorizontalLine + i) * baseGridSize)
+    for (let i = firstHorizontalLine; i <= lastHorizontalLine; i++) {
+      const y = i * gridStep;
+      const grid = i % majorEvery === 0 ? majorGrid : minorGrid;
+      grid.moveTo(startingX, y);
+      grid.lineTo(endingX, y);
     }
 
-    for (let j = 0; j < verticalLines; j++) {
-      ctx.moveTo((startingVerticalLine + j) * baseGridSize, startingY)
-      ctx.lineTo((startingVerticalLine + j) * baseGridSize, endingY)
+    for (let j = firstVerticalLine; j <= lastVerticalLine; j++) {
+      const x = j * gridStep;
+      const grid = j % majorEvery === 0 ? majorGrid : minorGrid;
+      grid.moveTo(x, startingY);
+      grid.lineTo(x, endingY);
     }
 
-    ctx.stroke();
+    ctx.strokeStyle = minorColor;
+    ctx.lineWidth = 1 / scale;
+    ctx.stroke(minorGrid);
+
+    ctx.strokeStyle = majorColor;
+    ctx.lineWidth = 2 / scale;
+    ctx.stroke(majorGrid);
 
   }, [networkRef, containerRef, isDarkMode]);
 

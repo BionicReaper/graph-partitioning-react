@@ -588,7 +588,6 @@ export function runMetis(
         mergeStats();
 
 
-        // Avoid spreading: a large animation array exceeds the max argument count
         for (const step of fmResult.animation) {
             animation.push(step);
         }
