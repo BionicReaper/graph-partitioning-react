@@ -242,7 +242,7 @@ const Sidebar = ({
                           onValueChange={(e) => setNodeCount(Number.isNaN(e.valueAsNumber) ? 1 : Math.max(1, Math.floor(e.valueAsNumber)))}
                         >
                           <NumberInput.Control />
-                          <NumberInput.Input />
+                          <NumberInput.Input textAlign="center"/>
                         </NumberInput.Root>
                       </Box>
 
@@ -287,7 +287,7 @@ const Sidebar = ({
                           onValueChange={(e) => setRegionANodes(Number.isNaN(e.valueAsNumber) ? 1 : Math.max(1, Math.floor(e.valueAsNumber)))}
                         >
                           <NumberInput.Control />
-                          <NumberInput.Input />
+                          <NumberInput.Input textAlign="center"/>
                         </NumberInput.Root>
                       </Box>
 
@@ -304,7 +304,7 @@ const Sidebar = ({
                           onValueChange={(e) => setRegionBNodes(Number.isNaN(e.valueAsNumber) ? 1 : Math.max(1, Math.floor(e.valueAsNumber)))}
                         >
                           <NumberInput.Control />
-                          <NumberInput.Input />
+                          <NumberInput.Input textAlign="center"/>
                         </NumberInput.Root>
                       </Box>
 
