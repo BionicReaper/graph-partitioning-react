@@ -588,7 +588,10 @@ export function runMetis(
         mergeStats();
 
 
-        animation.push(...fmResult.animation);
+        // Avoid spreading: a large animation array exceeds the max argument count
+        for (const step of fmResult.animation) {
+            animation.push(step);
+        }
 
         for (const [nodeId, partitionId] of Object.entries(fmResult.partition)) {
             currentPartition[nodeId] = partitionId;
