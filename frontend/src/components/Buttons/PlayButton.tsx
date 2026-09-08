@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Box, IconButton, Text } from '@chakra-ui/react';
 import { Play, ChevronDown, Pause } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -32,18 +32,23 @@ const PlayButton = ({
 }: PlayButtonProps) => {
   const { t } = useTranslation();
 
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  const isBusy = isRunning || animationStarted;
+
+  const isExpanded = !isBusy && (isHovered || showDropdown);
 
   const currentAlgorithm = algorithms.find(alg => alg.id === currentAlgorithmId);
 
   const handleAlgorithmClick = (algorithmId: string) => {
     onSelectAlgorithm(algorithmId);
     setShowDropdown(false);
-    setIsExpanded(false);
+    setIsHovered(false);
   };
 
   const handlePlayClick = () => {
+    setIsHovered(false);
     if (!isRunning && !animationStarted && onRun) {
       onRun();
     } else if (isRunning && animationStarted && onTogglePause) {
@@ -52,17 +57,10 @@ const PlayButton = ({
   };
 
   const toggleDropdown = () => {
-    if (!isRunning && !animationStarted) {
+    if (!isBusy) {
       setShowDropdown(!showDropdown);
     }
   };
-
-  useEffect(() => {
-    if (isRunning || animationStarted) {
-      setShowDropdown(false);
-      setIsExpanded(false);
-    }
-  }, [isRunning, animationStarted]);
 
   return (
     <Box
@@ -71,12 +69,9 @@ const PlayButton = ({
       //right={isRunning ? "-80px" : "20px"}
       right={"20px"}
       zIndex={1001}
-      onMouseEnter={() => !isRunning && !animationStarted && setIsExpanded(true)}
-      onMouseLeave={() => {
-        if (!showDropdown) {
-          setIsExpanded(false);
-        }
-      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseMove={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       transition={"right 1s ease"}
     >
       {/* Dropdown Menu */}
