@@ -118,6 +118,10 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
         resolveCurrentAnimation?.();
         resolveCurrentAnimation = null;
         rejectCurrentAnimation = null;
+        animationSteps = null;
+        nodes = null;
+        edges = null;
+        nextStepIndex = 0;
 
         if (rejectPause) {
             rejectPause(new Error("Animation was stopped."));
