@@ -875,13 +875,13 @@ export function runFiducciaMattheyses(
         animateInitialBucketPlacement(network, nodes, bucketArrayLeft, bucketArrayRight, animation);
         animation.push({
             animationCallback: () => {
+                flushQueues(nodeDataSet, edgeDataSet);
                 network.fit();
                 return () => { return true; };
             },
             description: `Initial partitioning complete`,
             timeBeforeNext: 1000
         });
-        animation[animation.length - 1].timeBeforeNext = 1000;
 
         const exchangeNodes: Array<{ nodeIdx: number; gain: number, balance: number }> = [];
 
