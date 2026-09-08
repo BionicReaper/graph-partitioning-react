@@ -110,7 +110,7 @@ const render = (nextTimestamp: DOMHighResTimeStamp) => {
 
     // Rendering termination/continuation logic
     if (nextStepIndex >= animationSteps.length && steps.length === 0 && (waitUntil === null || usedTimestamp === null || usedTimestamp >= waitUntil)) {
-        console.log("Rendering complete.");
+        // console.log("Rendering complete.");
         isRendering = false;
         isPaused = false;
         waitUntil = null;

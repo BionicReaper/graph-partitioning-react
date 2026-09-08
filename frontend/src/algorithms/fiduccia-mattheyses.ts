@@ -658,7 +658,7 @@ export function runFiducciaMattheyses(
         incrementComparisons(2); // Comparing nodes and edges length to 0
     }
 
-    console.log('Original nodes and edges fetched from DataSet: ', originalNodes, originalEdges);
+    // console.log('Original nodes and edges fetched from DataSet: ', originalNodes, originalEdges);
 
     const totalEdgeWeight: { [key: string]: number } = {};
 
@@ -677,7 +677,7 @@ export function runFiducciaMattheyses(
     incrementComparisons(totalEdgeWeight ? Object.keys(totalEdgeWeight).length : 0);
     incrementWrites(1);
 
-    console.log('Max edge weight sum calculated: ', maxEdgeWeightSum);
+    // console.log('Max edge weight sum calculated: ', maxEdgeWeightSum);
 
     let weightLeft = 0;
     let bestGainLeft;
@@ -1155,7 +1155,7 @@ export function runFiducciaMattheyses(
             const isPartitionBalanced = isBalanced(gain.balance, 0, maxNodeWeight);
             if (!willBeBalanced) {
                 if (isPartitionBalanced) {
-                    console.log('Balanced the partition');
+                    // console.log('Balanced the partition');
                     maxCumulativeGain = gain.totalGain;
                     bestBalance = gain.balance;
                     k = index;

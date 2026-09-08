@@ -64,7 +64,7 @@ export function runKernighanLin(
         ? edgeDataSet.get().filter(edge => activeNodeIdSet.has(edge.from) && activeNodeIdSet.has(edge.to))
         : edgeDataSet.get();
 
-    console.log('Original nodes and edges fetched from DataSet: ', originalNodes, originalEdges);
+    // console.log('Original nodes and edges fetched from DataSet: ', originalNodes, originalEdges);
 
     let currentPass = 0;
     let initialCutSize = 0;

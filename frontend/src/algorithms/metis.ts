@@ -634,7 +634,7 @@ export function runMetis(
     let previousCutSize = 0;
     let finalCutSize = 0;
 
-    console.log('Original nodes and edges fetched from DataSet: ', originalNodes, originalEdges);
+    // console.log('Original nodes and edges fetched from DataSet: ', originalNodes, originalEdges);
 
     // Organize nodes in a circle
 

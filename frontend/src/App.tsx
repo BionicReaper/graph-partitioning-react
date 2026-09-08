@@ -72,7 +72,7 @@ function App() {
               (e.from === data.from && e.to === data.to) || (e.from === data.to && e.to === data.from)
             );
             if (exists) {
-              console.log('Edge already exists, skipping addEdge');
+              // console.log('Edge already exists, skipping addEdge');
               return;
             }
             // No duplicate found — proceed with add
@@ -322,7 +322,7 @@ function App() {
 
   // Run algorithm handler
   const runAlgorithm = useCallback(async (): Promise<void> => {
-    console.log('Running algorithm:', currentAlgorithmId);
+    // console.log('Running algorithm:', currentAlgorithmId);
     if (!networkRef.current || isRunning) return;
 
     const runSelectedAlgorithm =
@@ -359,12 +359,12 @@ function App() {
 
     updateDataSetPositions(networkRef.current, nodesRef.current);
     restoreLabelingOrder(nodesRef.current, edgesRef.current);
-    console.log('Current graph state before algorithm:');
-    console.log(nodesRef.current.get(), edgesRef.current.get());
+    // console.log('Current graph state before algorithm:');
+    // console.log(nodesRef.current.get(), edgesRef.current.get());
 
     const options = { algorithmPasses }
     const result = runSelectedAlgorithm(networkRef.current, nodesRef.current, edgesRef.current, options);
-    console.log('Algorithm result:', result);
+    // console.log('Algorithm result:', result);
 
     const animationPromise = runAnimationSequence(result.animation, nodesRef.current, edgesRef.current);
     setAnimationStarted(true);
@@ -398,7 +398,7 @@ function App() {
         )
       }
     );
-    console.log('Animation sequence completed');
+    // console.log('Animation sequence completed');
 
     networkRef.current?.setOptions(
       {
@@ -416,7 +416,7 @@ function App() {
               (e.from === data.from && e.to === data.to) || (e.from === data.to && e.to === data.from)
             );
             if (exists) {
-              console.log('Edge already exists, skipping addEdge');
+              // console.log('Edge already exists, skipping addEdge');
               return;
             }
             // No duplicate found — proceed with add
@@ -435,7 +435,7 @@ function App() {
   // Select algorithm handler
   const selectAlgorithm = useCallback((algorithmId: string): void => {
     setCurrentAlgorithmId(algorithmId);
-    console.log('Selected algorithm:', algorithmId);
+    // console.log('Selected algorithm:', algorithmId);
   }, [setCurrentAlgorithmId]);
 
   // Grid Moving Background
@@ -544,15 +544,15 @@ function App() {
 
   const togglePause = useCallback((): void => {
     const isPaused = getPauseStatus();
-    console.log('Toggling pause. Currently paused:', isPaused);
+    // console.log('Toggling pause. Currently paused:', isPaused);
     if (isPaused) {
-      console.log('Resuming animation');
+      // console.log('Resuming animation');
       resumeAnimation();
       setIsPaused(false);
     } else {
-      console.log('Pausing animation');
+      // console.log('Pausing animation');
       pauseAnimation().then(() => {
-        console.log('Animation paused');
+        // console.log('Animation paused');
         setIsPaused(true);
       }).catch((err) => {
         console.error('Error pausing animation:', err);
