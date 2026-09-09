@@ -1,7 +1,7 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { highlightEdges, highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
-import { generateSetAnchorAnimation } from "../utils/anchoring";
+import { pushAnchorAnimation } from "../utils/anchoring";
 import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
 import { startNextPass } from "../utils/startNextPass";
 
@@ -36,7 +36,8 @@ export function runKernighanLin(
         algorithmPasses?: number,
         activeNodeIds?: string[],
         existingPartition?: { [key: string]: number },
-        startingAnchorIndex?: number
+        startingAnchorIndex?: number,
+        omitAnchors?: boolean
     } = {}
 ): {
     partition: { [key: string]: number };
@@ -44,7 +45,7 @@ export function runKernighanLin(
     finalCutSize: number;
     animation: Animation[];
 } {
-    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0 } = options;
+    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0, omitAnchors = false } = options;
 
     const animation: Animation[] = [];
 
@@ -219,7 +220,7 @@ export function runKernighanLin(
         if (currentPass === 1) {
             animation[animation.length - 1].timeBeforeNext = 500;
 
-            animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLInitialPartitioning' }, currentPass === 1));
+            pushAnchorAnimation(animation, { anchorIndex: anchorIndex++, textKey: 'KLInitialPartitioning' }, currentPass === 1, omitAnchors);
         }
 
         const dValueUpdates = nodes.map(node => (
@@ -238,12 +239,12 @@ export function runKernighanLin(
             timeBeforeNext: 1000
         });
 
-        animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLFirstSortingStep' }, currentPass === 1));
+        pushAnchorAnimation(animation, { anchorIndex: anchorIndex++, textKey: 'KLFirstSortingStep' }, currentPass === 1, omitAnchors);
 
         for (let i = 0; i < Math.floor(nodes.length / 2); i++) {
 
             if (i > 0) {
-                animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLSortingStep' }, false));
+                pushAnchorAnimation(animation, { anchorIndex: anchorIndex++, textKey: 'KLSortingStep' }, false, omitAnchors);
             }
             let maxGain = undefined;
             partitionA.sort((a, b) => {
@@ -285,7 +286,7 @@ export function runKernighanLin(
 
             animation[animation.length - 1].timeBeforeNext = 1000;
 
-            animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLInitialPair' }, i === 0 && currentPass === 1));
+            pushAnchorAnimation(animation, { anchorIndex: anchorIndex++, textKey: 'KLInitialPair' }, i === 0 && currentPass === 1, omitAnchors);
 
             let idxA = 0;
             let idxB = 0;
@@ -314,7 +315,7 @@ export function runKernighanLin(
                 const nodeB = nodes[partitionB[idxB]];
 
                 if (idxA + idxB === 1 && i === 0) {
-                    animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLComparison' }, currentPass === 1));
+                    pushAnchorAnimation(animation, { anchorIndex: anchorIndex++, textKey: 'KLComparison' }, currentPass === 1, omitAnchors);
                 }
 
                 const gain = nodeA.dValue + nodeB.dValue - 2 * nodeA.cValue[nodeB.index];
@@ -407,7 +408,7 @@ export function runKernighanLin(
                     });
                 }
 
-                animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLNextPair' }, (idxA === 0 && idxB === 0 && i === 0) && currentPass === 1));
+                pushAnchorAnimation(animation, { anchorIndex: anchorIndex++, textKey: 'KLNextPair' }, (idxA === 0 && idxB === 0 && i === 0) && currentPass === 1, omitAnchors);
 
                 // TODO add cancel fn returning
                 if (idxA + 1 < partitionA.length && (idxB + 1 >= partitionB.length || nodeA.dValue - nodes[partitionA[idxA + 1]]?.dValue < nodeB.dValue - nodes[partitionB[idxB + 1]]?.dValue)) {
@@ -468,7 +469,7 @@ export function runKernighanLin(
                     timeBeforeNext: 1000
                 })
 
-            animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLPerformBestSwap' }, i === 0 && currentPass === 1));
+            pushAnchorAnimation(animation, { anchorIndex: anchorIndex++, textKey: 'KLPerformBestSwap' }, i === 0 && currentPass === 1, omitAnchors);
 
             exchangePairs.push({ a: bestSwap!.a, b: bestSwap!.b, gain: maxGain! });
 
@@ -534,7 +535,7 @@ export function runKernighanLin(
             });
         }
 
-        animation.push(generateSetAnchorAnimation({ anchorIndex: anchorIndex++, textKey: 'KLRollbackBestIteration' }, currentPass === 1));
+        pushAnchorAnimation(animation, { anchorIndex: anchorIndex++, textKey: 'KLRollbackBestIteration' }, currentPass === 1, omitAnchors);
 
         // Calculate cumulative gains
         const cumulativeGains: number[] = [];

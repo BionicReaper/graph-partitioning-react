@@ -578,7 +578,8 @@ export function runMetis(
         algorithmPasses?: number,
         activeNodeIds?: string[],
         existingPartition?: { [key: string]: number },
-        startingAnchorIndex?: number
+        startingAnchorIndex?: number,
+        omitAnchors?: boolean
     }
 ): {
     partition: { [key: string]: number };
@@ -586,7 +587,7 @@ export function runMetis(
     finalCutSize: number;
     animation: Animation[];
 } {
-    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0 } = options;
+    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0, omitAnchors = false } = options;
 
     const animation: Animation[] = [];
 

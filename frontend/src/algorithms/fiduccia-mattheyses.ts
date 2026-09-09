@@ -618,7 +618,8 @@ export function runFiducciaMattheyses(
         algorithmPasses?: number,
         activeNodeIds?: string[],
         existingPartition?: { [key: string]: number },
-        startingAnchorIndex?: number
+        startingAnchorIndex?: number,
+        omitAnchors?: boolean
     }
 ): {
     partition: { [key: string]: number };
@@ -626,7 +627,7 @@ export function runFiducciaMattheyses(
     finalCutSize: number;
     animation: Animation[];
 } {
-    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0 } = options;
+    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0, omitAnchors = false } = options;
 
     const animation: Animation[] = [];
     
@@ -1314,7 +1315,8 @@ export function runFiducciaMattheysesWithMetisBalance(
     options: {
         algorithmPasses?: number,
         activeNodeIds?: string[],
-        existingPartition?: { [key: string]: number }
+        existingPartition?: { [key: string]: number },
+        omitAnchors?: boolean
     } = {}
 ): {
     partition: { [key: string]: number };

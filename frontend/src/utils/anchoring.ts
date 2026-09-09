@@ -40,6 +40,17 @@ export const generateSetAnchorAnimation = (_anchor: { anchorIndex: number | null
   }
 }
 
+export const pushAnchorAnimation = (
+  animation: { animationCallback: () => (timestamp: DOMHighResTimeStamp) => boolean, description: string, timeBeforeNext: number }[],
+  _anchor: { anchorIndex: number | null, textKey?: string, values?: {[key: string]: string} },
+  firstReach: boolean = false,
+  omitAnchors: boolean = false
+) => {
+  if (omitAnchors) return;
+
+  animation.push(generateSetAnchorAnimation(_anchor, firstReach));
+}
+
 export const setAnchor = (_anchor: {anchorIndex: number | null, textKey?: string, values?: {[key: string]: string}}, firstReach: boolean) => {
   const { anchorIndex, textKey, values } = _anchor;
   if (anchorIndex === null) {
