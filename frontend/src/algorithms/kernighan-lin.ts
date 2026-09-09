@@ -1,5 +1,5 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { highlightEdges, highlightNodes, moveNode, swapNodePositions } from "../utils/animations";
+import { highlightEdges, highlightNodes, initializeAnimation, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
 import { pushAnchorAnimation } from "../utils/anchoring";
 import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
@@ -47,7 +47,7 @@ export function runKernighanLin(
 } {
     const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0, omitAnchors = false } = options;
 
-    const animation: Animation[] = [];
+    const animation: Animation[] = initializeAnimation(nodeDataSet, edgeDataSet);
 
     const activeNodeIdSet = new Set(activeNodeIds?.filter(Boolean));
 

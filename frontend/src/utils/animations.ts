@@ -177,6 +177,44 @@ export const flushQueues = (
 }
 
 
+export type AnimationStep = {
+    animationCallback: () => (timestamp: DOMHighResTimeStamp) => boolean;
+    description: string;
+    timeBeforeNext: number;
+};
+
+export const discardQueues = () => {
+    extractNodeUpdates();
+    extractEdgeUpdates();
+    extractNodeDeletes();
+    extractEdgeDeletes();
+}
+
+export const initializeAnimation = (
+    nodes: DataSet<any, "id">,
+    edges: DataSet<any, "id">
+): AnimationStep[] => {
+    const nodeSnapshot: any[] = nodes.get().map((node: any) => ({ ...node }));
+    const edgeSnapshot: any[] = edges.get().map((edge: any) => ({ ...edge }));
+
+    return [{
+        animationCallback: () => {
+            discardQueues();
+
+            nodes.clear();
+            edges.clear();
+
+            nodes.add(nodeSnapshot.map(node => ({ ...node })));
+            edges.add(edgeSnapshot.map(edge => ({ ...edge })));
+
+            return () => { return true; };
+        },
+        description: `Restore the graph to its state before the animation`,
+        timeBeforeNext: 0
+    }];
+}
+
+
 export const runStandalone = (
     nodes: DataSet<any, "id">,
     edges: DataSet<any, "id">,

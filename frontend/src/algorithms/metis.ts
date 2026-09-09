@@ -1,5 +1,5 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { animateReplaceEdgeSet, animateSplitCompoundNodes, highlightEdges, highlightNodes, moveNode, replaceNodesWithCompoundNode, swapNodePositions } from "../utils/animations";
+import { animateReplaceEdgeSet, animateSplitCompoundNodes, highlightEdges, highlightNodes, initializeAnimation, moveNode, replaceNodesWithCompoundNode, swapNodePositions } from "../utils/animations";
 import { calculateCirclePoint, calculateX, calculateY } from "../utils/positioning";
 import { generateSetAnchorAnimation } from "../utils/anchoring";
 import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons, stashStats, mergeStats } from "../utils/stats";
@@ -589,7 +589,7 @@ export function runMetis(
 } {
     const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0, omitAnchors = false } = options;
 
-    const animation: Animation[] = [];
+    const animation: Animation[] = initializeAnimation(nodeDataSet, edgeDataSet);
 
     const activeNodeIdSet = new Set(activeNodeIds?.filter(Boolean));
 
