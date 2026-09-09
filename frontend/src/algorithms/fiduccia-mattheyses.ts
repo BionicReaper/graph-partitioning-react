@@ -1,7 +1,7 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { changeSize, flushQueues, highlightEdges, highlightNodes, moveNode, moveNodeRelative } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
-import { generateSetAnchorAnimation } from "../utils/anchoring";
+import { pushAnchorAnimation } from "../utils/anchoring";
 import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
 import { startNextPass } from "../utils/startNextPass";
 
@@ -812,6 +812,16 @@ export function runFiducciaMattheyses(
 
     // Create dummy black nodes for the buckets to point to
 
+    pushAnchorAnimation(
+        animation,
+        {
+            anchorIndex: anchorIndex++,
+            textKey: 'FMBucketInitialization'
+        },
+        true,
+        omitAnchors
+    )
+
     const dummyBlackNodes = Array.from({ length: 4 * (maxEdgeWeightSum) + 2 }, (_, index): DatasetNode => {
         const partition = index % 2;
         const indexInPartition = Math.floor(index / 2);
@@ -873,6 +883,28 @@ export function runFiducciaMattheyses(
 
         incrementWrites(2);
 
+        if (currentPass === 1 && (!existingPartition || Object.keys(existingPartition).length === 0)) {
+            pushAnchorAnimation(
+                animation,
+                {
+                    anchorIndex: anchorIndex++,
+                    textKey: 'FMInitialPartitioning'
+                },
+                true,
+                omitAnchors
+            )
+        } else {
+            pushAnchorAnimation(
+                animation,
+                {
+                    anchorIndex: anchorIndex++,
+                    textKey: 'FMRefillBuckets'
+                },
+                currentPass === 1,
+                omitAnchors
+            )
+        }
+
         animateInitialBucketPlacement(network, nodes, bucketArrayLeft, bucketArrayRight, animation);
         animation.push({
             animationCallback: () => {
@@ -885,6 +917,8 @@ export function runFiducciaMattheyses(
         });
 
         const exchangeNodes: Array<{ nodeIdx: number; gain: number, balance: number }> = [];
+
+        let firstCell: boolean = true;
 
         for (
             let cell = getNextCellToMove(
@@ -913,6 +947,16 @@ export function runFiducciaMattheyses(
                 nodes)
         ) {
             const node = nodes[cell.nodeIdx];
+
+            pushAnchorAnimation(
+                animation,
+                {
+                    anchorIndex: anchorIndex++,
+                    textKey: 'FMSelectAndSwapCell'
+                },
+                firstCell && currentPass === 1,
+                omitAnchors
+            );
 
             incrementReads(1);
 
@@ -1044,6 +1088,18 @@ export function runFiducciaMattheyses(
             });
 
             // Helper function to move the affected nodes to their new buckets
+
+            pushAnchorAnimation(
+                animation,
+                {
+                    anchorIndex: anchorIndex++,
+                    textKey: 'FMUpdateAffectedNodes'
+                },
+                firstCell && currentPass === 1,
+                omitAnchors
+            )
+
+            firstCell = false;
 
             const nodeUpdateCallback = (affectedNode: FMNode, gainDelta: number) => {
                 const partition = affectedNode.partition;
@@ -1241,6 +1297,16 @@ export function runFiducciaMattheyses(
         let currentIndexB = 0;
 
         const nodeIds: string[] = [];
+
+        pushAnchorAnimation(
+            animation,
+            {
+                anchorIndex: anchorIndex++,
+                textKey: 'FMRollbackBestIteration'
+            },
+            currentPass === 1,
+            omitAnchors
+        )
 
         nodes.forEach(node => {
             nodeIds.push(node.id);
