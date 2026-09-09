@@ -2,6 +2,7 @@ import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
 import { highlightEdges, highlightNodes, initializeAnimation, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
 import { pushAnchorAnimation } from "../utils/anchoring";
+import { AlgorithmOptions } from "../types/algorithms";
 import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons } from "../utils/stats";
 import { startNextPass } from "../utils/startNextPass";
 
@@ -32,22 +33,16 @@ export function runKernighanLin(
     network: Network,
     nodeDataSet: DataSet<any, "id">,
     edgeDataSet: DataSet<any, "id">,
-    options: {
-        algorithmPasses?: number,
-        activeNodeIds?: string[],
-        existingPartition?: { [key: string]: number },
-        startingAnchorIndex?: number,
-        omitAnchors?: boolean
-    } = {}
+    options: AlgorithmOptions = {}
 ): {
     partition: { [key: string]: number };
     initialCutSize: number;
     finalCutSize: number;
     animation: Animation[];
 } {
-    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0, omitAnchors = false } = options;
+    const { algorithmPasses = 0, activeNodeIds = [], existingPartition = {}, startingAnchorIndex = 0, omitAnchors = false, omitRestore = false } = options;
 
-    const animation: Animation[] = initializeAnimation(nodeDataSet, edgeDataSet);
+    const animation: Animation[] = omitRestore ? [] : initializeAnimation(nodeDataSet, edgeDataSet);
 
     const activeNodeIdSet = new Set(activeNodeIds?.filter(Boolean));
 
