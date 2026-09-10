@@ -1,10 +1,9 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { animateReplaceEdgeSet, animateSplitCompoundNodes, highlightEdges, highlightNodes, initializeAnimation, moveNode, replaceNodesWithCompoundNode, swapNodePositions } from "../utils/animations";
+import { animateReplaceEdgeSet, animateSplitCompoundNodes, highlightEdges, highlightNodes, initializeAnimation, moveNode, replaceNodesWithCompoundNode } from "../utils/animations";
 import { calculateCirclePoint, calculateX, calculateY } from "../utils/positioning";
-import { generateSetAnchorAnimation } from "../utils/anchoring";
+import { pushAnchorAnimation } from "../utils/anchoring";
 import { AlgorithmOptions } from "../types/algorithms";
-import { resetStats, setInitialCutSize, setFinalCutSize, setPasses, incrementReads, incrementWrites, incrementAdditions, incrementComparisons, stashStats, mergeStats } from "../utils/stats";
-import { startNextPass } from "../utils/startNextPass";
+import { resetStats, setInitialCutSize, setFinalCutSize, incrementReads, incrementWrites, incrementAdditions, incrementComparisons, stashStats, mergeStats } from "../utils/stats";
 import { runFiducciaMattheysesWithMetisBalance } from "./fiduccia-mattheyses";
 import { defaultVisOptions } from "../utils/constants";
 
@@ -296,13 +295,18 @@ function coarsenGraph(
     activeNodeIdSet: Set<string>,
     nodeRouteMap: Map<string, string>,
     edgesMap: Map<string, Map<string, DatasetEdge>>,
-    animation: Animation[]
+    animation: Animation[],
+    anchorIndex: number = 0,
+    anchorCallback: (textKey: string, firstReach: boolean) => void = () => {}
 ): number {
     let compoundNodeIdCounter = 0;
 
     const matchedNodeIds = new Set<string>();
 
     let matchingLevel = 0;
+
+    let nextNodeFirstReach = true;
+    let matchFoundFirstReach = true;
 
     do {
         const nodesToCollapse: Array<[DatasetNode, DatasetNode, string]> = [];
@@ -359,6 +363,10 @@ function coarsenGraph(
         });
         
         for (const node of activeNodes) {
+
+            anchorCallback(`METISCoarseningNextNode`, nextNodeFirstReach);
+            nextNodeFirstReach = false;
+
             if (matchedNodeIds.has(node.id)) {
                 continue;
             }
@@ -394,6 +402,9 @@ function coarsenGraph(
             const selectedEdge = selectEdgeForMatching(node, matchedNodeIds, edges ? Array.from(edges.values()) : []);
 
             if (selectedEdge !== null) {
+
+                anchorCallback(`METISCoarseningMatchFound`, matchFoundFirstReach);
+                matchFoundFirstReach = false;
 
                 animation.push({
                     animationCallback: () => {
@@ -439,6 +450,9 @@ function coarsenGraph(
         }
 
         if (matchedNodeIds.size > 0) {
+
+            anchorCallback(`METISCoarseningCollapseNodes`, true);
+
             collapseNodes(
                 network,
                 nodeDataSet,
@@ -634,9 +648,34 @@ export function runMetis(
 
     // Organize nodes in a circle
 
+    pushAnchorAnimation(
+        animation,
+        {
+            anchorIndex: anchorIndex++,
+            textKey: 'METISCoarsening'
+        },
+        true,
+        omitAnchors
+    );
+
     animateCircleOrganization(network, originalNodes, animation);
 
     animation[animation.length - 1].timeBeforeNext = 500;
+
+    const anchorCallback = omitAnchors ? () => {} : (
+        textKey: string,
+        firstReach: boolean
+    ) => {
+        pushAnchorAnimation(
+            animation,
+            {
+                anchorIndex: anchorIndex++,
+                textKey
+            },
+            firstReach,
+            omitAnchors
+        );
+    }
 
     let matchingLevel = coarsenGraph(
         network,
@@ -645,12 +684,36 @@ export function runMetis(
         activeNodeIdSet,
         nodeRouteMap,
         edgesMap,
-        animation
+        animation,
+        anchorIndex,
+        anchorCallback
     );
 
     for (let currentLevel = matchingLevel; currentLevel >= 0; currentLevel--) {
 
         stashStats();
+
+        if (currentLevel === matchingLevel) {
+            pushAnchorAnimation(
+                animation,
+                {
+                    anchorIndex: anchorIndex++,
+                    textKey: 'METISCoarseningComplete'
+                },
+                true,
+                omitAnchors
+            );
+        } else {
+            pushAnchorAnimation(
+                animation,
+                {
+                    anchorIndex: anchorIndex++,
+                    textKey: 'METISNextLevelPartitioning'
+                },
+                true,
+                omitAnchors
+            );
+        }
 
         const fmResult = runFiducciaMattheysesWithMetisBalance(
             network,
@@ -684,6 +747,17 @@ export function runMetis(
         finalCutSize = fmResult.finalCutSize;
 
         if (currentLevel > 0) {
+
+            pushAnchorAnimation(
+                animation,
+                {
+                    anchorIndex: anchorIndex++,
+                    textKey: 'METISUncoarsening'
+                },
+                true,
+                omitAnchors
+            );
+
             uncoarsenGraph(
                 nodeDataSet,
                 edgeDataSet,
@@ -697,6 +771,16 @@ export function runMetis(
         const partitionCounts = [0, 0];
 
         const nodes = nodeDataSet.get();
+
+        pushAnchorAnimation(
+            animation,
+            {
+                anchorIndex: anchorIndex++,
+                textKey: 'METISFinalPartitioning'
+            },
+            true,
+            omitAnchors
+        );
 
         nodes.forEach(node => {
             partitionCounts[currentPartition[node.id]] += 1;
