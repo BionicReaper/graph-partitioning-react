@@ -248,7 +248,7 @@ export const goToAnchor = async (anchorIndex: number, pauseOnReach: StepSettingM
     while (getAnchor()?.index !== anchorIndex && isRendering && (nextStepIndex < animationSteps.length || steps.length > 0)) {
         lastTimestamp = 0;
         render(nextTimestamp);
-        if (waitUntil !== null && realTimestamp < waitUntil - 1) nextTimestamp = waitUntil - realTimestamp;
+        if (waitUntil !== null && realTimestamp < waitUntil - 0.5) nextTimestamp = waitUntil - realTimestamp;
         else nextTimestamp = 100;
 
         if (frameId !== null) {
