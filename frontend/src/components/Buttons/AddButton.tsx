@@ -9,6 +9,7 @@ interface AddButtonProps {
   colorPalette?: string;
   active?: boolean;
   disabled?: boolean;
+  dataTour?: string;
 }
 
 const positionMap = {
@@ -25,9 +26,11 @@ const AddButton = ({
   colorPalette = 'green',
   active = false,
   disabled = false,
+  dataTour,
 }: AddButtonProps) => {
   return (
     <IconButton
+      data-tour={dataTour}
       onClick={onClick}
       position="fixed"
       bottom={positionMap[position]}

@@ -18,6 +18,7 @@ interface PlayButtonProps {
   isPaused: boolean;
   isRunning: boolean;
   animationStarted: boolean;
+  dataTour?: string;
 }
 
 const PlayButton = ({
@@ -28,7 +29,8 @@ const PlayButton = ({
   currentAlgorithmId,
   isPaused = false,
   isRunning = false,
-  animationStarted = false
+  animationStarted = false,
+  dataTour
 }: PlayButtonProps) => {
   const { t } = useTranslation();
 
@@ -64,6 +66,7 @@ const PlayButton = ({
 
   return (
     <Box
+      data-tour={dataTour}
       position="fixed"
       bottom="180px"
       //right={isRunning ? "-80px" : "20px"}

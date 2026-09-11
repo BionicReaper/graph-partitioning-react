@@ -29,6 +29,7 @@ import { isKey } from './utils/hotkeys';
 import { runFiducciaMattheyses } from './algorithms/fiduccia-mattheyses';
 import { changeSize, runStandalone } from './utils/animations';
 import { runMetis } from './algorithms/metis';
+import OnboardingTour from './components/Onboarding/OnboardingTour';
 type ActiveMode = 'node' | 'edge' | null;
 
 function App() {
@@ -125,6 +126,26 @@ function App() {
   const [animationStarted, setAnimationStarted] = useState<boolean>(false);
   const [physicsEnabled, setPhysicsEnabled] = useLocalStorage<boolean>('physicsEnabled', false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Onboarding tour
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useLocalStorage<boolean>('hasSeenOnboarding', false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (hasSeenOnboarding) return;
+    const timeout = setTimeout(() => setIsOnboardingOpen(true), 700);
+    return () => clearTimeout(timeout);
+  }, [hasSeenOnboarding]);
+
+  const closeOnboarding = useCallback((): void => {
+    setIsOnboardingOpen(false);
+    setHasSeenOnboarding(true);
+  }, [setHasSeenOnboarding]);
+
+  const replayOnboarding = useCallback((): void => {
+    setIsSidebarOpen(false);
+    setTimeout(() => setIsOnboardingOpen(true), 350);
+  }, []);
 
   // Delete handler
 
@@ -652,8 +673,10 @@ function App() {
         onShouldPauseChange={setShouldPause}
         simulationSpeed={simulationSpeed}
         onSimulationSpeedChange={setSimulationSpeed}
+        onReplayOnboarding={replayOnboarding}
       />
       <PlayButton
+        dataTour="play-button"
         onRun={runAlgorithm}
         onTogglePause={togglePause}
         onSelectAlgorithm={selectAlgorithm}
@@ -664,12 +687,14 @@ function App() {
         animationStarted={animationStarted}
       />
       <AccessibilityButton
+        dataTour="accessibility-button"
         icon={PersonStanding}
         label={t('AccessibilityMenu')}
         position="top"
         colorPalette="blue"
       />
       <FullscreenButton
+        dataTour="fullscreen-button"
         onClick={toggleFullscreen}
         icon={isFullscreen ? Minimize : Maximize}
         label={t('ToggleFullscreen')}
@@ -678,6 +703,7 @@ function App() {
         fullscreenColorPalette='cyan'
       />
       <AddButton
+        dataTour="add-edge"
         onClick={toggleAddEdge}
         icon={Cable}
         label={t('AddEdge')}
@@ -687,6 +713,7 @@ function App() {
         disabled={isRunning}
       />
       <AddButton
+        dataTour="add-node"
         onClick={toggleAddNode}
         icon={Plus}
         label={t('AddNode')}
@@ -728,6 +755,10 @@ function App() {
         onOpenChange={() => setIsStepDialogOpen(false)}
         anchor={currentAnchor}
         algorithmId={currentAlgorithmId}
+      />
+      <OnboardingTour
+        isOpen={isOnboardingOpen}
+        onClose={closeOnboarding}
       />
     </Box>
   );

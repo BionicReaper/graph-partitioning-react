@@ -6,6 +6,7 @@ interface AccessibilityButtonProps {
   label: string;
   position: 'top' | 'middle' | 'bottom';
   colorPalette?: string;
+  dataTour?: string;
 }
 
 const positionMap = {
@@ -23,9 +24,11 @@ const AccessibilityButton = ({
   label,
   position,
   colorPalette = 'purple',
+  dataTour,
 }: AccessibilityButtonProps) => {
   return (
     <IconButton
+      data-tour={dataTour}
       onClick={openAccessibilityMenu}
       position="fixed"
       bottom={positionMap[position]}

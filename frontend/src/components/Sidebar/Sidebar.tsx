@@ -14,7 +14,7 @@ import {
   Slider,
   Button
 } from '@chakra-ui/react';
-import { Menu, GitBranch, Globe, Waypoints, ChevronLeft, ChevronRight, Moon } from 'lucide-react';
+import { Menu, GitBranch, Globe, Waypoints, ChevronLeft, ChevronRight, Moon, HelpCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
@@ -40,6 +40,7 @@ interface SidebarProps {
   onShouldPauseChange: (value: StepSettingMode) => void;
   simulationSpeed: number;
   onSimulationSpeedChange: (value: number) => void;
+  onReplayOnboarding: () => void;
 }
 
 const algorithms = [
@@ -77,7 +78,8 @@ const Sidebar = ({
   shouldPause,
   onShouldPauseChange,
   simulationSpeed,
-  onSimulationSpeedChange
+  onSimulationSpeedChange,
+  onReplayOnboarding
 }: SidebarProps) => {
   const { t, i18n } = useTranslation();
 
@@ -104,6 +106,7 @@ const Sidebar = ({
     <>
       {/* Hamburger Button - Bottom Left */}
       <IconButton
+        data-tour="sidebar-toggle"
         onClick={onToggle}
         position="fixed"
         bottom="20px"
@@ -665,6 +668,15 @@ const Sidebar = ({
                   {t('AboutText')}
                 </Text>
               </Box>
+
+              <Button
+                variant="outline"
+                colorPalette="blue"
+                onClick={onReplayOnboarding}
+              >
+                <HelpCircle size={16} />
+                {t('ReplayOnboarding')}
+              </Button>
             </VStack>
           </Drawer.Body>
         </Drawer.Content>

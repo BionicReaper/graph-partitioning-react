@@ -10,6 +10,7 @@ interface FullscreenButtonProps {
   fullscreenColorPalette?: string;
   isFullscreen?: boolean;
   disabled?: boolean;
+  dataTour?: string;
 }
 
 const positionMap = {
@@ -27,9 +28,11 @@ const FullscreenButton = ({
   fullscreenColorPalette = 'green',
   isFullscreen = false,
   disabled = false,
+  dataTour,
 }: FullscreenButtonProps) => {
   return (
     <IconButton
+      data-tour={dataTour}
       onClick={onClick}
       position="fixed"
       bottom={positionMap[position]}
