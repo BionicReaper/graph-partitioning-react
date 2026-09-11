@@ -296,7 +296,6 @@ function coarsenGraph(
     nodeRouteMap: Map<string, string>,
     edgesMap: Map<string, Map<string, DatasetEdge>>,
     animation: Animation[],
-    anchorIndex: number = 0,
     anchorCallback: (textKey: string, firstReach: boolean) => void = () => {}
 ): number {
     let compoundNodeIdCounter = 0;
@@ -451,7 +450,7 @@ function coarsenGraph(
 
         if (matchedNodeIds.size > 0) {
 
-            anchorCallback(`METISCoarseningCollapseNodes`, true);
+            anchorCallback(`METISCoarseningCollapseNodes`, matchingLevel === 0);
 
             collapseNodes(
                 network,
@@ -641,7 +640,7 @@ export function runMetis(
     const edgesMap = new Map<string, Map<string, DatasetEdge>>();
 
     let initialCutSize = 0;
-    let previousCutSize = 0;
+    // let previousCutSize = 0;
     let finalCutSize = 0;
 
     // console.log('Original nodes and edges fetched from DataSet: ', originalNodes, originalEdges);
@@ -685,7 +684,6 @@ export function runMetis(
         nodeRouteMap,
         edgesMap,
         animation,
-        anchorIndex,
         anchorCallback
     );
 
@@ -699,6 +697,16 @@ export function runMetis(
                 {
                     anchorIndex: anchorIndex++,
                     textKey: 'METISCoarseningComplete'
+                },
+                true,
+                omitAnchors
+            );
+        } else if (currentLevel === 0) {
+            pushAnchorAnimation(
+                animation,
+                {
+                    anchorIndex: anchorIndex++,
+                    textKey: 'METISFinalLevelPartitioning'
                 },
                 true,
                 omitAnchors
@@ -723,7 +731,8 @@ export function runMetis(
                 algorithmPasses,
                 activeNodeIds,
                 existingPartition: currentPartition,
-                omitRestore: true
+                omitRestore: true,
+                omitAnchors: true
             }
         );
 
@@ -754,7 +763,7 @@ export function runMetis(
                     anchorIndex: anchorIndex++,
                     textKey: 'METISUncoarsening'
                 },
-                true,
+                currentLevel === matchingLevel,
                 omitAnchors
             );
 
@@ -771,16 +780,6 @@ export function runMetis(
         const partitionCounts = [0, 0];
 
         const nodes = nodeDataSet.get();
-
-        pushAnchorAnimation(
-            animation,
-            {
-                anchorIndex: anchorIndex++,
-                textKey: 'METISFinalPartitioning'
-            },
-            true,
-            omitAnchors
-        );
 
         nodes.forEach(node => {
             partitionCounts[currentPartition[node.id]] += 1;
