@@ -11,3 +11,7 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.notistack-SnackbarContainer {
+  z-index: var(--chakra-z-indices-toast, 1700) !important;
+}

@@ -38,6 +38,7 @@ function App() {
   const { isDarkMode } = useColorMode();
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const statsSnackbarIdRef = useRef<string | number | null>(null);
 
   const nodesRef = useRef(new DataSet<any, "id">([]));
   const edgesRef = useRef(new DataSet<any, "id">([]));
@@ -357,6 +358,14 @@ function App() {
       return;
     }
 
+    if (statsSnackbarIdRef.current !== null) {
+      closeSnackbar(statsSnackbarIdRef.current);
+      statsSnackbarIdRef.current = null;
+    }
+
+    const algorithmName = algorithms.find(a => a.id === currentAlgorithmId)?.name ?? currentAlgorithmId;
+    enqueueSnackbar(t('AlgorithmRunning', { algorithmName }), { variant: 'info', autoHideDuration: 3000 });
+
     setIsRunning(true);
 
     setPhysicsEnabled(false); // Disable physics during and after animation
@@ -395,7 +404,7 @@ function App() {
     await animationPromise;
     setAnimationStarted(false);
     setAnchor({ anchorIndex: null, textKey: '', values: {} }, false); // Clear any remaining anchor state
-    enqueueSnackbar(
+    const statsSnackbarId = enqueueSnackbar(
       <LocalizedStatsText stats={{
           initialCutSize: stats.initialCutSize,
           finalCutSize: stats.finalCutSize,
@@ -403,10 +412,10 @@ function App() {
           reads: stats.reads,
           writes: stats.writes,
           additions: stats.additions,
-          comparisons: stats.comparisons 
+          comparisons: stats.comparisons
         }}
       />
-      , { 
+      , {
         variant: 'success',
         persist: true,
         action: (snackbarId) => (
@@ -414,11 +423,15 @@ function App() {
             aria-label="Close notification"
             bg="green.700"
             children={<X />}
-            onClick={() => closeSnackbar(snackbarId)}
+            onClick={() => {
+              closeSnackbar(snackbarId);
+              if (statsSnackbarIdRef.current === snackbarId) statsSnackbarIdRef.current = null;
+            }}
           />
         )
       }
     );
+    statsSnackbarIdRef.current = statsSnackbarId;
     // console.log('Animation sequence completed');
 
     networkRef.current?.setOptions(
