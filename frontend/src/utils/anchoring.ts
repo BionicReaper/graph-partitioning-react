@@ -67,7 +67,7 @@ export const setAnchor = (_anchor: {anchorIndex: number | null, textKey?: string
       anchorReachedCallback(firstReach, false);
     } else if (anchorIndex === targetAnchorIndex) {
       anchorReachedCleanup();
-      anchorReachedCallback(firstReach, true);
+      anchorReachedCallback(firstReach, false);
     }
   }
 }
