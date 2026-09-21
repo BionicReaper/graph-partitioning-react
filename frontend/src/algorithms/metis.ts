@@ -718,7 +718,7 @@ export function runMetis(
                     anchorIndex: anchorIndex++,
                     textKey: 'METISNextLevelPartitioning'
                 },
-                true,
+                currentLevel === matchingLevel - 1,
                 omitAnchors
             );
         }
