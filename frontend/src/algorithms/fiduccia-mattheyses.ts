@@ -895,7 +895,7 @@ export function runFiducciaMattheyses(
                     anchorIndex: anchorIndex++,
                     textKey: 'FMRefillBuckets'
                 },
-                currentPass === 1,
+                currentPass === 2,
                 omitAnchors
             )
         }
