@@ -292,6 +292,13 @@ export const goToAnchor = async (anchorIndex: number, pauseOnReach: StepSettingM
     let nextTimestamp = 0;
 
     while (getAnchor()?.index !== anchorIndex && isRendering && (nextStepIndex < animationSteps.length || steps.length > 0)) {
+        // Setting simulation speed factors to 1 to prevent overshooting the anchor due to speed adjustments
+        const previousSimulationSpeedFactor = simulationSpeedFactor;
+        const previousUserSpeedFactor = userSpeedFactor;
+
+        simulationSpeedFactor = 1;
+        userSpeedFactor = 1;
+
         lastTimestamp = 0;
         render(nextTimestamp);
         if (waitUntil !== null && realTimestamp < waitUntil - 0.5) nextTimestamp = waitUntil - realTimestamp;
@@ -301,6 +308,10 @@ export const goToAnchor = async (anchorIndex: number, pauseOnReach: StepSettingM
             cancelAnimationFrame(frameId!);
             frameId = null;
         }
+
+        // Restore previous simulation speed factors
+        simulationSpeedFactor = previousSimulationSpeedFactor;
+        userSpeedFactor = previousUserSpeedFactor;
     }
 
     const { firstReach } = getAnchor() || { firstReach: false };
