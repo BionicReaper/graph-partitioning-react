@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { Box, Button, HStack, IconButton, Text } from '@chakra-ui/react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import Logo from '../Logo/Logo';
 
 interface OnboardingStep {
   selector: string | null;
@@ -273,9 +274,16 @@ const OnboardingTour = ({ isOpen, onClose }: OnboardingTourProps) => {
           <X size={14} />
         </IconButton>
 
-        <Text fontSize="lg" fontWeight="600" color={headingColor} mb={2} pr={6}>
-          {t(step.titleKey)}
-        </Text>
+        <HStack justify="space-between" align="center" mb={2} pr={6}>
+          <Text fontSize="lg" fontWeight="600" color={headingColor}>
+            {t(step.titleKey)}
+          </Text>
+          {stepIndex === 0 && (
+            <Box color={bodyColor} flexShrink={0}>
+              <Logo size={44} />
+            </Box>
+          )}
+        </HStack>
         <Text fontSize="sm" color={bodyColor} lineHeight="1.5" mb={4}>
           {t(step.descriptionKey)}
         </Text>

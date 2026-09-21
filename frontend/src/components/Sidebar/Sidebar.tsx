@@ -18,6 +18,7 @@ import { Menu, GitBranch, Globe, Waypoints, ChevronLeft, ChevronRight, Moon, Hel
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
+import Logo from '../Logo/Logo';
 import { doubleSimulationSpeed, formatSimulationSpeed, graphGenerationModeLabelKeys, graphGenerationModes, halveSimulationSpeed, maxSimulationSpeed, minSimulationSpeed, stepSettingLabelKeys, stepSettingModes, type GraphGenerationMode, type StepSettingMode } from '../../utils/constants';
 import type { GraphGenerationOptions } from '../../utils/graphGeneration';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -167,9 +168,12 @@ const Sidebar = ({
             pb={4}
             px={5}
           >
-            <Heading size="xl" color={accentColor} fontWeight="600">
-              {t('GraphPartitioning')}
-            </Heading>
+            <HStack gap={3} align="center" color={headingColor}>
+              <Logo size={36} />
+              <Heading size="xl" color={accentColor} fontWeight="600">
+                {t('GraphPartitioning')}
+              </Heading>
+            </HStack>
           </Drawer.Header>
 
           <Drawer.Body px={5} py={8}>
