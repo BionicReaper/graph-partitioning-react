@@ -466,7 +466,7 @@ function coarsenGraph(
             matchingLevel++;
         }
 
-    } while (matchedNodeIds.size > 0);
+    } while (matchedNodeIds.size > 0 && nodeDataSet.get().length > 3);
 
     return matchingLevel;
 }
