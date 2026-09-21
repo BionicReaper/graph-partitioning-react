@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, HStack, IconButton, Text } from '@chakra-ui/react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -51,29 +51,52 @@ interface Rect {
   height: number;
 }
 
-const TOOLTIP_TRANSITION = 'top 0.35s ease, left 0.35s ease, transform 0.35s ease';
+interface Viewport {
+  width: number;
+  height: number;
+}
+
+const readViewport = (): Viewport => ({ width: window.innerWidth, height: window.innerHeight });
+
+const TOOLTIP_TRANSITION = 'top 0.35s ease, left 0.35s ease';
 const HOLE_TRANSITION = 'top 0.35s ease, left 0.35s ease, width 0.35s ease, height 0.35s ease';
 
-const getTooltipWidth = () => Math.min(320, window.innerWidth * 0.92);
+const getTooltipWidth = (viewport: Viewport) => Math.min(320, viewport.width * 0.92);
 
-const resolvePlacement = (placement: OnboardingStep['placement'], rect: Rect, tooltipWidth: number): OnboardingStep['placement'] => {
+const resolvePlacement = (
+  placement: OnboardingStep['placement'],
+  rect: Rect,
+  tooltipWidth: number,
+  viewport: Viewport,
+): OnboardingStep['placement'] => {
   if (placement !== 'left' && placement !== 'right') return placement;
 
   const needed = tooltipWidth + GAP + MARGIN;
   const spaceLeft = rect.left;
-  const spaceRight = window.innerWidth - rect.right;
+  const spaceRight = viewport.width - rect.right;
 
   if (placement === 'left' && spaceLeft >= needed) return 'left';
   if (placement === 'right' && spaceRight >= needed) return 'right';
   if (spaceLeft >= needed) return 'left';
   if (spaceRight >= needed) return 'right';
 
-  return rect.top + rect.height / 2 > window.innerHeight / 2 ? 'top' : 'bottom';
+  return rect.top + rect.height / 2 > viewport.height / 2 ? 'top' : 'bottom';
 };
 
-const getTooltipStyle = (placement: OnboardingStep['placement'], rect: Rect, tooltipWidth: number) => {
+const clamp = (value: number, size: number, limit: number) => Math.max(MARGIN, Math.min(value, limit - size - MARGIN));
+
+const getTooltipStyle = (
+  placement: OnboardingStep['placement'],
+  rect: Rect,
+  tooltipWidth: number,
+  tooltipHeight: number,
+  viewport: Viewport,
+) => {
   if (placement === 'center') {
-    return { top: `${rect.top}px`, left: `${rect.left}px`, transform: 'translate(-50%, -50%)' };
+    return {
+      top: `${clamp((viewport.height - tooltipHeight) / 2, tooltipHeight, viewport.height)}px`,
+      left: `${clamp((viewport.width - tooltipWidth) / 2, tooltipWidth, viewport.width)}px`,
+    };
   }
 
   let left: number;
@@ -82,31 +105,33 @@ const getTooltipStyle = (placement: OnboardingStep['placement'], rect: Rect, too
   } else if (placement === 'right') {
     left = rect.right + GAP;
   } else {
-    const rightHalf = rect.left + rect.width / 2 > window.innerWidth / 2;
+    const rightHalf = rect.left + rect.width / 2 > viewport.width / 2;
     left = rightHalf ? rect.right - tooltipWidth : rect.left;
   }
-  left = Math.min(Math.max(left, MARGIN), window.innerWidth - tooltipWidth - MARGIN);
 
   let top: number;
-  let translateY = '0%';
   if (placement === 'top') {
-    top = rect.top - GAP;
-    translateY = '-100%';
+    top = rect.top - GAP - tooltipHeight;
   } else if (placement === 'bottom') {
     top = rect.bottom + GAP;
   } else {
-    const lowerHalf = rect.top + rect.height / 2 > window.innerHeight / 2;
-    top = lowerHalf ? rect.bottom : Math.max(rect.top, MARGIN);
-    translateY = lowerHalf ? '-100%' : '0%';
+    const lowerHalf = rect.top + rect.height / 2 > viewport.height / 2;
+    top = lowerHalf ? rect.bottom - tooltipHeight : rect.top;
   }
 
-  return { top: `${top}px`, left: `${left}px`, transform: `translateY(${translateY})` };
+  return {
+    top: `${clamp(top, tooltipHeight, viewport.height)}px`,
+    left: `${clamp(left, tooltipWidth, viewport.width)}px`,
+  };
 };
 
 const OnboardingTour = ({ isOpen, onClose }: OnboardingTourProps) => {
   const { t, i18n } = useTranslation();
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
+  const [viewport, setViewport] = useState<Viewport>(readViewport);
+  const [tooltipHeight, setTooltipHeight] = useState(0);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const step = steps[stepIndex];
   const languageOptions = useMemo(() => (i18n.store.data ? Object.keys(i18n.store.data) : []), [i18n.store.data]);
@@ -116,6 +141,7 @@ const OnboardingTour = ({ isOpen, onClose }: OnboardingTourProps) => {
   }, [isOpen]);
 
   const measure = useCallback(() => {
+    setViewport(readViewport());
     if (!step.selector) {
       setRect(null);
       return;
@@ -128,12 +154,29 @@ const OnboardingTour = ({ isOpen, onClose }: OnboardingTourProps) => {
     if (isOpen) measure();
   }, [isOpen, measure]);
 
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const height = tooltipRef.current?.offsetHeight ?? 0;
+    setTooltipHeight((prev) => (prev === height ? prev : height));
+  });
+
   useEffect(() => {
     if (!isOpen) return;
-    window.addEventListener('resize', measure);
+    let frame = 0;
+    const remeasure = () => {
+      measure();
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    };
+    window.addEventListener('resize', remeasure);
+    window.addEventListener('orientationchange', remeasure);
+    window.visualViewport?.addEventListener('resize', remeasure);
     window.addEventListener('scroll', measure, true);
     return () => {
-      window.removeEventListener('resize', measure);
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', remeasure);
+      window.removeEventListener('orientationchange', remeasure);
+      window.visualViewport?.removeEventListener('resize', remeasure);
       window.removeEventListener('scroll', measure, true);
     };
   }, [isOpen, measure]);
@@ -173,8 +216,8 @@ const OnboardingTour = ({ isOpen, onClose }: OnboardingTourProps) => {
 
   // A zero-size point at the viewport center for the welcome step, so the spotlight
   // has a starting position to animate from instead of popping in on step two.
-  const centerX = window.innerWidth / 2;
-  const centerY = window.innerHeight / 2;
+  const centerX = viewport.width / 2;
+  const centerY = viewport.height / 2;
   const effectiveRect: Rect = rect ?? { top: centerY, left: centerX, right: centerX, bottom: centerY, width: 0, height: 0 };
 
   const holeTop = Math.max(0, effectiveRect.top - PADDING);
@@ -182,8 +225,8 @@ const OnboardingTour = ({ isOpen, onClose }: OnboardingTourProps) => {
   const holeBottom = effectiveRect.bottom + PADDING;
   const holeRight = effectiveRect.right + PADDING;
 
-  const tooltipWidth = getTooltipWidth();
-  const resolvedPlacement = resolvePlacement(step.placement, effectiveRect, tooltipWidth);
+  const tooltipWidth = getTooltipWidth(viewport);
+  const resolvedPlacement = resolvePlacement(step.placement, effectiveRect, tooltipWidth, viewport);
 
   return (
     <>
@@ -204,8 +247,9 @@ const OnboardingTour = ({ isOpen, onClose }: OnboardingTourProps) => {
       />
 
       <Box
+        ref={tooltipRef}
         position="fixed"
-        {...getTooltipStyle(resolvedPlacement, effectiveRect, tooltipWidth)}
+        {...getTooltipStyle(resolvedPlacement, effectiveRect, tooltipWidth, tooltipHeight, viewport)}
         width={`${tooltipWidth}px`}
         maxH="80vh"
         overflowY="auto"
