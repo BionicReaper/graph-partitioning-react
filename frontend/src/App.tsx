@@ -6,9 +6,9 @@ import PlayButton from './components/Buttons/PlayButton';
 import './App.css';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
 import { algorithms, defaultVisOptions, doubleSimulationSpeed, halveSimulationSpeed, shouldTriggerOnStep, type StepSettingMode } from './utils/constants';
-import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRight, X, PersonStanding } from 'lucide-react';
+import { Plus, Cable, Minimize, Maximize, Trash2, Info, ChevronLeft, ChevronRight, X, PersonStanding, Ban } from 'lucide-react';
 import { runKernighanLin } from './algorithms/kernighan-lin';
-import { getPauseStatus, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
+import { AnimationCancelledError, cancelAnimation, getPauseStatus, goToAnchor, pauseAnimation, resumeAnimation, runAnimationSequence, setSimulationSpeedFactor } from './utils/animationRunner';
 import { updateDataSetPositions } from './utils/positioning';
 import { restoreLabelingOrder } from './utils/ordering';
 import { generateRandomGraph, generateRegionGraph, type GraphGenerationOptions } from './utils/graphGeneration';
@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import DeleteButton from './components/Buttons/DeleteButton';
 import InfoButton from './components/Buttons/InfoButton';
 import AnchorNavigationButton from './components/Buttons/AnchorNavigationButton';
+import CancelButton from './components/Buttons/CancelButton';
 import StepDialog from './components/Dialogs/StepDialog';
 import { clearAnchorReachedCallback, getAnchor, goingToAnchor, setAnchor, setAnchorReachedCallback } from './utils/anchoring';
 import { getStats } from './utils/stats';
@@ -401,38 +402,46 @@ function App() {
 
     const stats = getStats();
 
-    await animationPromise;
+    let cancelled = false;
+    try {
+      await animationPromise;
+    } catch (err) {
+      cancelled = true;
+      if (!(err instanceof AnimationCancelledError)) console.error('Animation sequence failed:', err);
+    }
     setAnimationStarted(false);
     setAnchor({ anchorIndex: null, textKey: '', values: {} }, false); // Clear any remaining anchor state
-    const statsSnackbarId = enqueueSnackbar(
-      <LocalizedStatsText algorithmId={currentAlgorithmId} stats={{
-          initialCutSize: stats.initialCutSize,
-          finalCutSize: stats.finalCutSize,
-          passes: stats.passes,
-          reads: stats.reads,
-          writes: stats.writes,
-          additions: stats.additions,
-          comparisons: stats.comparisons
-        }}
-      />
-      , {
-        variant: 'success',
-        persist: true,
-        action: (snackbarId) => (
-          <IconButton
-            aria-label="Close notification"
-            bg="green.700"
-            children={<X />}
-            onClick={() => {
-              closeSnackbar(snackbarId);
-              if (statsSnackbarIdRef.current === snackbarId) statsSnackbarIdRef.current = null;
-            }}
-          />
-        )
-      }
-    );
-    statsSnackbarIdRef.current = statsSnackbarId;
-    // console.log('Animation sequence completed');
+    if (!cancelled) {
+      const statsSnackbarId = enqueueSnackbar(
+        <LocalizedStatsText algorithmId={currentAlgorithmId} stats={{
+            initialCutSize: stats.initialCutSize,
+            finalCutSize: stats.finalCutSize,
+            passes: stats.passes,
+            reads: stats.reads,
+            writes: stats.writes,
+            additions: stats.additions,
+            comparisons: stats.comparisons
+          }}
+        />
+        , {
+          variant: 'success',
+          persist: true,
+          action: (snackbarId) => (
+            <IconButton
+              aria-label="Close notification"
+              bg="green.700"
+              children={<X />}
+              onClick={() => {
+                closeSnackbar(snackbarId);
+                if (statsSnackbarIdRef.current === snackbarId) statsSnackbarIdRef.current = null;
+              }}
+            />
+          )
+        }
+      );
+      statsSnackbarIdRef.current = statsSnackbarId;
+      // console.log('Animation sequence completed');
+    }
 
     networkRef.current?.setOptions(
       {
@@ -465,6 +474,19 @@ function App() {
       });
     setIsRunning(false);
   }, [networkRef, isRunning, setIsRunning, setPhysicsEnabled, nodesRef, edgesRef, currentAlgorithmId, t, enqueueSnackbar, closeSnackbar, LocalizedStatsText, algorithmPasses]);
+
+  // Cancel algorithm handler
+  const cancelAlgorithm = useCallback((): void => {
+    if (!isRunning || !animationStarted) return;
+
+    cancelAnimation();
+
+    setIsStepDialogOpen(false);
+    setCurrentAnchor(null);
+    setIsPaused(false);
+
+    enqueueSnackbar(t('AlgorithmCancelled'), { variant: 'warning', autoHideDuration: 3000 });
+  }, [isRunning, animationStarted, enqueueSnackbar, t]);
 
   // Select algorithm handler
   const selectAlgorithm = useCallback((algorithmId: string): void => {
@@ -752,6 +774,12 @@ function App() {
         onClick={() => { if (isStepDialogOpen) setIsStepDialogOpen(false); else setIsStepDialogOpen(true) }}
         icon={Info}
         label={t('AlgorithmStepInfo')}
+        disabled={!isRunning || !animationStarted}
+      />
+      <CancelButton
+        onClick={cancelAlgorithm}
+        icon={Ban}
+        label={t('CancelAlgorithm')}
         disabled={!isRunning || !animationStarted}
       />
       <AnchorNavigationButton

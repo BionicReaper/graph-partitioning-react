@@ -1,5 +1,5 @@
 import { getAnchor, setTargetAnchor } from "./anchoring";
-import { extractNodeUpdates, extractEdgeUpdates, extractEdgeDeletes, extractNodeDeletes } from "./animations";
+import { extractNodeUpdates, extractEdgeUpdates, extractEdgeDeletes, extractNodeDeletes, discardQueues } from "./animations";
 import { DataSet } from 'vis-network/standalone/esm/vis-network';
 import { StepSettingMode } from "./constants";
 
@@ -210,6 +210,52 @@ const resetNodeEdgeColors = () => {
         const updatedEdges = allEdges.map(edge => ({ id: edge.id, color: null, width: null }));
         edges.update(updatedEdges);
     }
+}
+
+export class AnimationCancelledError extends Error {
+    constructor() {
+        super("Animation was cancelled.");
+        this.name = "AnimationCancelledError";
+    }
+}
+
+export const cancelAnimation = () => {
+    if (!isRendering) return;
+
+    if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+        frameId = null;
+    }
+
+    discardQueues();
+    setTargetAnchor(null);
+
+    // The first step restores the graph to its pre-run state
+    animationSteps?.[0]?.animationCallback();
+
+    isRendering = false;
+    isPaused = false;
+    lostFocus = false;
+    waitUntil = null;
+    nextStepIndex = 0;
+    steps = [];
+    realTimestamp = 0;
+    lastTimestamp = null;
+    animationSteps = null;
+    nodes = null;
+    edges = null;
+
+    if (rejectPause) {
+        rejectPause(new AnimationCancelledError());
+    }
+    resolvePause = null;
+    rejectPause = null;
+    existingPausePromise = null;
+
+    const reject = rejectCurrentAnimation;
+    resolveCurrentAnimation = null;
+    rejectCurrentAnimation = null;
+    reject?.(new AnimationCancelledError());
 }
 
 export const restartRunningAnimation = async (guaranteeSynchronous: boolean = false) => {
