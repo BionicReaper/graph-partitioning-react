@@ -698,6 +698,11 @@ function App() {
         isRunning={isRunning}
         isPaused={isPaused}
         animationStarted={animationStarted}
+        onDropdownOpen={() => {
+          setActiveMode(null);
+          unselectAll();
+          networkRef.current?.disableEditMode();
+        }}
       />
       <AccessibilityButton
         dataTour="accessibility-button"

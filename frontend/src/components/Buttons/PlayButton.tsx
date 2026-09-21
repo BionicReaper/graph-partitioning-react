@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, IconButton, Text } from '@chakra-ui/react';
 import { Play, ChevronDown, Pause } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,7 @@ interface PlayButtonProps {
   isPaused: boolean;
   isRunning: boolean;
   animationStarted: boolean;
+  onDropdownOpen?: () => void;
   dataTour?: string;
 }
 
@@ -30,12 +31,26 @@ const PlayButton = ({
   isPaused = false,
   isRunning = false,
   animationStarted = false,
+  onDropdownOpen,
   dataTour
 }: PlayButtonProps) => {
   const { t } = useTranslation();
 
   const [isHovered, setIsHovered] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    if (!showDropdown) return;
+    const handlePointerDown = (e: PointerEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [showDropdown]);
 
   const isBusy = isRunning || animationStarted;
 
@@ -60,12 +75,14 @@ const PlayButton = ({
 
   const toggleDropdown = () => {
     if (!isBusy) {
+      if (!showDropdown) onDropdownOpen?.();
       setShowDropdown(!showDropdown);
     }
   };
 
   return (
     <Box
+      ref={containerRef}
       data-tour={dataTour}
       position="fixed"
       bottom="180px"
