@@ -405,7 +405,7 @@ function App() {
     setAnimationStarted(false);
     setAnchor({ anchorIndex: null, textKey: '', values: {} }, false); // Clear any remaining anchor state
     const statsSnackbarId = enqueueSnackbar(
-      <LocalizedStatsText stats={{
+      <LocalizedStatsText algorithmId={currentAlgorithmId} stats={{
           initialCutSize: stats.initialCutSize,
           finalCutSize: stats.finalCutSize,
           passes: stats.passes,
