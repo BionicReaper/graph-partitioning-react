@@ -19,6 +19,7 @@ import { useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
 import Logo from '../Logo/Logo';
+import SettingInfo from './SettingInfo';
 import { inlineButtons } from '../Buttons/InlineButtonIcon';
 import { doubleSimulationSpeed, formatSimulationSpeed, graphGenerationModeLabelKeys, graphGenerationModes, halveSimulationSpeed, maxSimulationSpeed, minSimulationSpeed, stepSettingLabelKeys, stepSettingModes, type GraphGenerationMode, type StepSettingMode } from '../../utils/constants';
 import type { GraphGenerationOptions } from '../../utils/graphGeneration';
@@ -244,6 +245,7 @@ const Sidebar = ({
                       <Box p={3} bg={cardBg} borderRadius="md">
                         <Text fontSize="sm" color={bodyColor} fontWeight="500" mb={2}>
                           {t('NodeCount')}
+                          <SettingInfo textKey="NodeCountInfo" />
                         </Text>
                         <NumberInput.Root
                           value={String(nodeCount)}
@@ -262,6 +264,7 @@ const Sidebar = ({
                         <HStack justifyContent="space-between" mb={2}>
                           <Text fontSize="sm" color={bodyColor} fontWeight="500">
                             {t('EdgeChance')}
+                            <SettingInfo textKey="EdgeChanceInfo" />
                           </Text>
                           <Text fontSize="sm" color={mutedColor} fontWeight="500">
                             {edgeChance}%
@@ -289,6 +292,7 @@ const Sidebar = ({
                       <Box p={3} bg={cardBg} borderRadius="md">
                         <Text fontSize="sm" color={bodyColor} fontWeight="500" mb={2}>
                           {t('RegionANodeCount')}
+                          <SettingInfo textKey="RegionANodeCountInfo" />
                         </Text>
                         <NumberInput.Root
                           value={String(regionANodes)}
@@ -306,6 +310,7 @@ const Sidebar = ({
                       <Box p={3} bg={cardBg} borderRadius="md">
                         <Text fontSize="sm" color={bodyColor} fontWeight="500" mb={2}>
                           {t('RegionBNodeCount')}
+                          <SettingInfo textKey="RegionBNodeCountInfo" />
                         </Text>
                         <NumberInput.Root
                           value={String(regionBNodes)}
@@ -324,6 +329,7 @@ const Sidebar = ({
                         <HStack justifyContent="space-between" mb={2}>
                           <Text fontSize="sm" color={bodyColor} fontWeight="500">
                             {t('IntraRegionEdgeChance')}
+                            <SettingInfo textKey="IntraRegionEdgeChanceInfo" />
                           </Text>
                           <Text fontSize="sm" color={mutedColor} fontWeight="500">
                             {intraRegionEdgeChance}%
@@ -350,6 +356,7 @@ const Sidebar = ({
                         <HStack justifyContent="space-between" mb={2}>
                           <Text fontSize="sm" color={bodyColor} fontWeight="500">
                             {t('InterRegionEdgeChance')}
+                            <SettingInfo textKey="InterRegionEdgeChanceInfo" />
                           </Text>
                           <Text fontSize="sm" color={mutedColor} fontWeight="500">
                             {interRegionEdgeChance}%
@@ -408,6 +415,7 @@ const Sidebar = ({
                 {/* Passes */}
                 <Heading size="md" mb={4} mt={6} color={headingColor} fontWeight="500">
                   {t('Passes')}
+                  <SettingInfo textKey="PassesInfo" />
                 </Heading>
                 <Box
                   p={3}
@@ -444,6 +452,7 @@ const Sidebar = ({
 
                 <Heading size="md" mb={4} mt={6} color={headingColor} fontWeight="500">
                   {t('Speed')}
+                  <SettingInfo textKey="SpeedInfo" />
                 </Heading>
                 <Box
                   p={3}
@@ -521,6 +530,7 @@ const Sidebar = ({
                 >
                   <Text fontSize="sm" color={bodyColor} fontWeight="500" mb={3}>
                     {t('OpenStepDialog')}
+                    <SettingInfo textKey="OpenStepDialogInfo" />
                   </Text>
                   <RadioGroup.Root
                     value={shouldOpenStepDialog}
@@ -550,6 +560,7 @@ const Sidebar = ({
                 >
                   <Text fontSize="sm" color={bodyColor} fontWeight="500" mb={3}>
                     {t('PauseOnStep')}
+                    <SettingInfo textKey="PauseOnStepInfo" />
                   </Text>
                   <RadioGroup.Root
                     value={shouldPause}
@@ -571,6 +582,8 @@ const Sidebar = ({
                 </Box>
               </Box>
 
+              <Separator borderColor={dividerColor} />
+
               <Heading size="md" mb={-4} color={headingColor} fontWeight="500">
                 {t('Appearance')} <Moon size={20} style={{ display: 'inline', marginLeft: '4px' }} />
               </Heading>
@@ -585,6 +598,7 @@ const Sidebar = ({
               >
                 <Text fontSize="sm" color={bodyColor} fontWeight="500">
                   {t('DarkMode')}
+                  <SettingInfo textKey="DarkModeInfo" />
                 </Text>
                 <Switch.Root
                   checked={isDarkMode}
