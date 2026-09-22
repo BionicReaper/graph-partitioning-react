@@ -1,5 +1,6 @@
-import { Box, Portal, Tooltip } from '@chakra-ui/react';
+import { Popover, Portal, chakra } from '@chakra-ui/react';
 import { Info } from 'lucide-react';
+import { useState, type PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface SettingInfoProps {
@@ -9,36 +10,55 @@ interface SettingInfoProps {
 const SettingInfo = ({ textKey }: SettingInfoProps) => {
   const { t } = useTranslation();
   const text = t(textKey);
+  const [open, setOpen] = useState(false);
+
+  const onMouseOnly = (value: boolean) => (e: PointerEvent) => {
+    if (e.pointerType === 'mouse') setOpen(value);
+  };
 
   return (
-    <Tooltip.Root openDelay={150} closeDelay={100} positioning={{ placement: 'top' }}>
-      <Tooltip.Trigger asChild>
-        <Box
-          as="span"
+    <Popover.Root
+      open={open}
+      onOpenChange={(e) => setOpen(e.open)}
+      positioning={{ placement: 'top' }}
+      autoFocus={false}
+      lazyMount
+      unmountOnExit
+    >
+      <Popover.Trigger asChild>
+        <chakra.button
+          type="button"
           display="inline-flex"
           verticalAlign="middle"
-          ml={1.5}
+          p={1}
+          m={-1}
+          ml={0.5}
+          bg="transparent"
+          border="none"
           color={{ base: 'gray.500', _dark: 'gray.400' }}
           cursor="help"
-          tabIndex={0}
           aria-label={text}
+          onPointerEnter={onMouseOnly(true)}
+          onPointerLeave={onMouseOnly(false)}
           _hover={{ color: { base: 'blue.600', _dark: 'blue.300' } }}
           _focusVisible={{ outline: '2px solid', outlineColor: 'blue.500', borderRadius: 'sm' }}
         >
           <Info size={14} />
-        </Box>
-      </Tooltip.Trigger>
+        </chakra.button>
+      </Popover.Trigger>
       <Portal>
-        <Tooltip.Positioner>
-          <Tooltip.Content maxW="260px" fontSize="xs" lineHeight="1.4" px={3} py={2}>
-            <Tooltip.Arrow>
-              <Tooltip.ArrowTip />
-            </Tooltip.Arrow>
-            {text}
-          </Tooltip.Content>
-        </Tooltip.Positioner>
+        <Popover.Positioner>
+          <Popover.Content maxW="260px" w="auto">
+            <Popover.Arrow>
+              <Popover.ArrowTip />
+            </Popover.Arrow>
+            <Popover.Body fontSize="xs" lineHeight="1.4" px={3} py={2}>
+              {text}
+            </Popover.Body>
+          </Popover.Content>
+        </Popover.Positioner>
       </Portal>
-    </Tooltip.Root>
+    </Popover.Root>
   );
 };
 
