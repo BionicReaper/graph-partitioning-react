@@ -20,6 +20,7 @@ import InfoButton from './components/Buttons/InfoButton';
 import AnchorNavigationButton from './components/Buttons/AnchorNavigationButton';
 import CancelButton from './components/Buttons/CancelButton';
 import StepDialog from './components/Dialogs/StepDialog';
+import CancelConfirmDialog from './components/Dialogs/CancelConfirmDialog';
 import { clearAnchorReachedCallback, getAnchor, goingToAnchor, setAnchor, setAnchorReachedCallback } from './utils/anchoring';
 import { getStats } from './utils/stats';
 import { useSnackbar } from 'notistack';
@@ -288,6 +289,7 @@ function App() {
   const [algorithmPasses, setAlgorithmPasses] = useLocalStorage<number>('algorithmPasses', 0);
   const [simulationSpeed, setSimulationSpeed] = useLocalStorage<number>('simulationSpeed', 1);
   const [isStepDialogOpen, setIsStepDialogOpen] = useState<boolean>(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState<boolean>(false);
   const [currentAnchor, setCurrentAnchor] = useState<{ index: number, textKey: string, values: { [key: string]: string }, firstReach: boolean } | null>(null);
 
   useEffect(() => {
@@ -481,12 +483,27 @@ function App() {
 
     cancelAnimation();
 
+    setIsCancelDialogOpen(false);
     setIsStepDialogOpen(false);
     setCurrentAnchor(null);
     setIsPaused(false);
 
     enqueueSnackbar(t('AlgorithmCancelled'), { variant: 'warning', autoHideDuration: 3000 });
   }, [isRunning, animationStarted, enqueueSnackbar, t]);
+
+  // Opens the cancel confirmation and pauses the animation (no auto-resume on close)
+  const requestCancelAlgorithm = useCallback((): void => {
+    if (!isRunning || !animationStarted) return;
+
+    setIsCancelDialogOpen(true);
+    if (!getPauseStatus()) {
+      pauseAnimation().then(() => {
+        setIsPaused(true);
+      }).catch((err) => {
+        if (!(err instanceof AnimationCancelledError)) console.error('Error pausing animation:', err);
+      });
+    }
+  }, [isRunning, animationStarted]);
 
   // Select algorithm handler
   const selectAlgorithm = useCallback((algorithmId: string): void => {
@@ -777,7 +794,7 @@ function App() {
         disabled={!isRunning || !animationStarted}
       />
       <CancelButton
-        onClick={cancelAlgorithm}
+        onClick={requestCancelAlgorithm}
         icon={Ban}
         label={t('CancelAlgorithm')}
         disabled={!isRunning || !animationStarted}
@@ -801,6 +818,11 @@ function App() {
         onOpenChange={() => setIsStepDialogOpen(false)}
         anchor={currentAnchor}
         algorithmId={currentAlgorithmId}
+      />
+      <CancelConfirmDialog
+        isOpen={isCancelDialogOpen}
+        onClose={() => setIsCancelDialogOpen(false)}
+        onConfirm={cancelAlgorithm}
       />
       <OnboardingTour
         isOpen={isOnboardingOpen}
