@@ -14,12 +14,12 @@ import {
   Slider,
   Button
 } from '@chakra-ui/react';
-import { Menu, GitBranch, Globe, Waypoints, ChevronLeft, ChevronRight, Moon, HelpCircle, Plus, Cable, Play, Trash2 } from 'lucide-react';
+import { Menu, GitBranch, Globe, Waypoints, ChevronLeft, ChevronRight, Moon, HelpCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
 import Logo from '../Logo/Logo';
-import InlineButtonIcon from '../Buttons/InlineButtonIcon';
+import { inlineButtons } from '../Buttons/InlineButtonIcon';
 import { doubleSimulationSpeed, formatSimulationSpeed, graphGenerationModeLabelKeys, graphGenerationModes, halveSimulationSpeed, maxSimulationSpeed, minSimulationSpeed, stepSettingLabelKeys, stepSettingModes, type GraphGenerationMode, type StepSettingMode } from '../../utils/constants';
 import type { GraphGenerationOptions } from '../../utils/graphGeneration';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -62,14 +62,6 @@ const accentColor = { base: 'blue.600', _dark: 'blue.300' };
 const nativeLanguageLabels: Record<string, string> = {
   en: 'English',
   el: 'Ελληνικά'
-};
-
-// Inline replicas of the floating buttons, referenced by tag name in instruction strings
-const instructionButtons = {
-  plus: <InlineButtonIcon icon={Plus} colorPalette="green" />,
-  cable: <InlineButtonIcon icon={Cable} colorPalette="teal" />,
-  play: <InlineButtonIcon icon={Play} colorPalette="purple" fill />,
-  trash: <InlineButtonIcon icon={Trash2} colorPalette="red" />,
 };
 
 const Sidebar = ({
@@ -647,16 +639,16 @@ const Sidebar = ({
                 </Heading>
                 <VStack gap={2} align="stretch">
                   <Text fontSize="sm" color={mutedColor} lineHeight="1.5">
-                    <Trans i18nKey="AddNodeInstruction" components={instructionButtons} />
+                    <Trans i18nKey="AddNodeInstruction" components={inlineButtons} />
                   </Text>
                   <Text fontSize="sm" color={mutedColor} lineHeight="1.5">
-                    <Trans i18nKey="AddEdgeInstruction" components={instructionButtons} />
+                    <Trans i18nKey="AddEdgeInstruction" components={inlineButtons} />
                   </Text>
                   <Text fontSize="sm" color={mutedColor} lineHeight="1.5">
-                    <Trans i18nKey="RunAlgorithmInstruction" components={instructionButtons} />
+                    <Trans i18nKey="RunAlgorithmInstruction" components={inlineButtons} />
                   </Text>
                   <Text fontSize="sm" color={mutedColor} lineHeight="1.5">
-                    <Trans i18nKey="SelectRemoveInstruction" components={instructionButtons} />
+                    <Trans i18nKey="SelectRemoveInstruction" components={inlineButtons} />
                   </Text>
                   <Text fontSize="sm" color={mutedColor} lineHeight="1.5">
                     {t('RepositionNodesInstruction')}

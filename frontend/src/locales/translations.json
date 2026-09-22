@@ -76,17 +76,17 @@
         "OnboardingWelcomeTitle": "Welcome!",
         "OnboardingWelcomeText": "Here's a quick tour of the basics: placing vertices, connecting them, running an algorithm, and finding the rest of the settings.",
         "OnboardingAddNodeTitle": "Add vertices",
-        "OnboardingAddNodeText": "Press this button (or N on your keyboard) and click anywhere on the canvas to place a vertex.",
+        "OnboardingAddNodeText": "Press the <plus/> button (or N on your keyboard) and click anywhere on the canvas to place a vertex.",
         "OnboardingAddEdgeTitle": "Connect vertices",
-        "OnboardingAddEdgeText": "Press this button (or E on your keyboard) and drag from one vertex to another to connect them.",
+        "OnboardingAddEdgeText": "Press the <cable/> button (or E on your keyboard) and drag from one vertex to another to connect them.",
         "OnboardingPlayTitle": "Run an algorithm",
-        "OnboardingPlayText": "Hover to pick an algorithm from the dropdown, then press play to watch it partition your graph step by step.",
+        "OnboardingPlayText": "Hover the <play/> button to pick an algorithm from the dropdown, then press it to watch it partition your graph step by step.",
         "OnboardingAccessibilityTitle": "Accessibility",
-        "OnboardingAccessibilityText": "Open the accessibility menu to adjust contrast, motion, text size and more.",
+        "OnboardingAccessibilityText": "Press the <accessibility/> button to open the accessibility menu and adjust contrast, motion, text size and more.",
         "OnboardingFullscreenTitle": "Go fullscreen",
-        "OnboardingFullscreenText": "Toggle fullscreen for a bigger, distraction-free canvas.",
+        "OnboardingFullscreenText": "Press the <fullscreen/> button to toggle fullscreen for a bigger, distraction-free canvas.",
         "OnboardingSidebarTitle": "Graph generation & settings",
-        "OnboardingSidebarText": "Open this menu to generate random graphs and tweak algorithm, appearance and language settings. You can replay this tour from here any time."
+        "OnboardingSidebarText": "Press the <menu/> button to generate random graphs and tweak algorithm, appearance and language settings. You can replay this tour from here any time."
     },
     "el": {
         "English": "Αγγλικά",
@@ -165,16 +165,16 @@
         "OnboardingWelcomeTitle": "Καλώς ορίσατε!",
         "OnboardingWelcomeText": "Μια σύντομη περιήγηση στα βασικά: τοποθέτηση κορυφών, σύνδεσή τους, εκτέλεση αλγορίθμου και εύρεση των υπόλοιπων ρυθμίσεων.",
         "OnboardingAddNodeTitle": "Προσθήκη κορυφών",
-        "OnboardingAddNodeText": "Πατήστε αυτό το κουμπί (ή το N στο πληκτρολόγιο) και κάντε κλικ οπουδήποτε στον καμβά για να τοποθετήσετε μία κορυφή.",
+        "OnboardingAddNodeText": "Πατήστε το κουμπί <plus/> (ή το N στο πληκτρολόγιο) και κάντε κλικ οπουδήποτε στον καμβά για να τοποθετήσετε μία κορυφή.",
         "OnboardingAddEdgeTitle": "Σύνδεση κορυφών",
-        "OnboardingAddEdgeText": "Πατήστε αυτό το κουμπί (ή το E στο πληκτρολόγιο) και σύρετε από μία κορυφή σε μία άλλη για να τις συνδέσετε.",
+        "OnboardingAddEdgeText": "Πατήστε το κουμπί <cable/> (ή το E στο πληκτρολόγιο) και σύρετε από μία κορυφή σε μία άλλη για να τις συνδέσετε.",
         "OnboardingPlayTitle": "Εκτέλεση αλγορίθμου",
-        "OnboardingPlayText": "Τοποθετήστε το ποντίκι για να επιλέξετε αλγόριθμο από τη λίστα, στη συνέχεια πατήστε αναπαραγωγή παρακολουθήσετε την εκτέλεση βήμα-βήμα.",
+        "OnboardingPlayText": "Τοποθετήστε το ποντίκι πάνω στο κουμπί <play/> για να επιλέξετε αλγόριθμο από τη λίστα, στη συνέχεια πατήστε το για να παρακολουθήσετε την εκτέλεση βήμα-βήμα.",
         "OnboardingAccessibilityTitle": "Προσβασιμότητα",
-        "OnboardingAccessibilityText": "Ανοίξτε το μενού προσβασιμότητας για να προσαρμόσετε την αντίθεση, την κίνηση, το μέγεθος κειμένου και άλλα.",
+        "OnboardingAccessibilityText": "Πατήστε το κουμπί <accessibility/> για να ανοίξετε το μενού προσβασιμότητας και να προσαρμόσετε την αντίθεση, την κίνηση, το μέγεθος κειμένου και άλλα.",
         "OnboardingFullscreenTitle": "Πλήρης οθόνη",
-        "OnboardingFullscreenText": "Εναλλάξτε σε πλήρη οθόνη για έναν μεγαλύτερο καμβά χωρίς περισπασμούς.",
+        "OnboardingFullscreenText": "Πατήστε το κουμπί <fullscreen/> για εναλλαγή σε πλήρη οθόνη για έναν μεγαλύτερο καμβά χωρίς περισπασμούς.",
         "OnboardingSidebarTitle": "Δημιουργία γραφήματος & ρυθμίσεις",
-        "OnboardingSidebarText": "Ανοίξτε αυτό το μενού για να δημιουργήσετε τυχαία γραφήματα και να προσαρμόσετε ρυθμίσεις αλγορίθμου, εμφάνισης και γλώσσας. Μπορείτε να επαναλάβετε αυτή την περιήγηση από εδώ όποτε θέλετε."
+        "OnboardingSidebarText": "Πατήστε το κουμπί <menu/> για να δημιουργήσετε τυχαία γραφήματα και να προσαρμόσετε ρυθμίσεις αλγορίθμου, εμφάνισης και γλώσσας. Μπορείτε να επαναλάβετε αυτή την περιήγηση από εδώ όποτε θέλετε."
     }
 }

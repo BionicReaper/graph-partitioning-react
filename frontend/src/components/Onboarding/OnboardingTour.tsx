@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, HStack, IconButton, Text } from '@chakra-ui/react';
 import { X } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import Logo from '../Logo/Logo';
+import { inlineButtons } from '../Buttons/InlineButtonIcon';
 
 interface OnboardingStep {
   selector: string | null;
@@ -285,7 +286,7 @@ const OnboardingTour = ({ isOpen, onClose }: OnboardingTourProps) => {
           )}
         </HStack>
         <Text fontSize="sm" color={bodyColor} lineHeight="1.5" mb={4}>
-          {t(step.descriptionKey)}
+          <Trans i18nKey={step.descriptionKey} components={inlineButtons} />
         </Text>
 
         {stepIndex === 0 && (
