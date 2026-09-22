@@ -482,7 +482,7 @@ const Sidebar = ({
                 </Heading>
 
                 {/* Physics Toggle */}
-                <Box
+                {/* <Box
                   p={3}
                   bg={cardBg}
                   borderRadius="md"
@@ -504,7 +504,7 @@ const Sidebar = ({
                     </Switch.Control>
                     <Switch.Label />
                   </Switch.Root>
-                </Box>
+                </Box> */}
 
                 <Heading size="md" mb={4} mt={6} color={headingColor} fontWeight="500">
                   {t('Appearance')} <Moon size={20} style={{ display: 'inline', marginLeft: '4px' }} />
