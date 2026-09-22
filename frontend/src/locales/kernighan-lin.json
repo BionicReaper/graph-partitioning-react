@@ -7,7 +7,7 @@
         "KLSortingStep": "The remaining vertices are sorted again, since their values changed after the last swap.",
         "KLInitialPair": "The best vertex of each set is picked for the first candidate pair to swap.",
         "KLComparison": "The cut reduction (the edges connecting vertices in different sets) of the candidate pair is compared to that of the best pair found so far.",
-        "KLNextPair": "The next candidate pair is picked by moving one step down the sorted order. If no pairs are left or no better pair is possible, the search ends.",
+        "KLNextPair": "The next candidate pair is picked from the immediate worse vertices. If no pairs are left or no better pair is possible, the search ends.",
         "KLPerformBestSwap": "The best pair is swapped and locked for the rest of the pass, and the values of the remaining vertices are updated.",
         "KLRollbackBestIteration": "The pass is over. Swaps are undone back to the best partitioning found during this pass."
     },
@@ -19,7 +19,7 @@
         "KLSortingStep": "Οι υπόλοιπες κορυφές ταξινομούνται ξανά, αφού οι τιμές τους άλλαξαν μετά την τελευταία ανταλλαγή.",
         "KLInitialPair": "Η καλύτερη κορυφή κάθε συνόλου επιλέγεται για το πρώτο υποψήφιο ζεύγος προς ανταλλαγή.",
         "KLComparison": "Η μείωση της τομής (οι ακμές που συνδέουν κορυφές διαφορετικών συνόλων) από το υποψήφιο ζεύγος συγκρίνεται με αυτή του καλύτερου ζεύγους μέχρι στιγμής.",
-        "KLNextPair": "Το επόμενο υποψήφιο ζεύγος επιλέγεται προχωρώντας ένα βήμα στην ταξινομημένη σειρά. Αν δεν απομένουν ζεύγη ή δεν είναι δυνατό καλύτερο ζεύγος, η αναζήτηση τελειώνει.",
+        "KLNextPair": "Το επόμενο υποψήφιο ζεύγος επιλέγεται από τις αμέσως χειρότερες κορυφές. Αν δεν απομένουν ζεύγη ή δεν είναι δυνατό καλύτερο ζεύγος, η αναζήτηση τελειώνει.",
         "KLPerformBestSwap": "Το καλύτερο ζεύγος ανταλλάσσεται και κλειδώνεται για το υπόλοιπο του περάσματος, και οι τιμές των υπόλοιπων κορυφών ενημερώνονται.",
         "KLRollbackBestIteration": "Το πέρασμα ολοκληρώθηκε. Οι ανταλλαγές αναιρούνται μέχρι την καλύτερη διαμέριση που βρέθηκε σε αυτό το πέρασμα."
     }
