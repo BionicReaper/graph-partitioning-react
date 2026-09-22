@@ -84,7 +84,7 @@
         "OnboardingAccessibilityTitle": "Accessibility",
         "OnboardingAccessibilityText": "Press the <accessibility/> button to open the accessibility menu and adjust contrast, motion, text size and more.",
         "OnboardingFullscreenTitle": "Go fullscreen",
-        "OnboardingFullscreenText": "Press the <fullscreen/> button to toggle fullscreen for a bigger, distraction-free canvas.",
+        "OnboardingFullscreenText": "Press the <fullscreen/> button to toggle fullscreen.",
         "OnboardingSidebarTitle": "Graph generation & settings",
         "OnboardingSidebarText": "Press the <menu/> button to generate random graphs and tweak algorithm, appearance and language settings. You can replay this tour from here any time."
     },
@@ -173,7 +173,7 @@
         "OnboardingAccessibilityTitle": "Προσβασιμότητα",
         "OnboardingAccessibilityText": "Πατήστε το κουμπί <accessibility/> για να ανοίξετε το μενού προσβασιμότητας και να προσαρμόσετε την αντίθεση, την κίνηση, το μέγεθος κειμένου και άλλα.",
         "OnboardingFullscreenTitle": "Πλήρης οθόνη",
-        "OnboardingFullscreenText": "Πατήστε το κουμπί <fullscreen/> για εναλλαγή σε πλήρη οθόνη για έναν μεγαλύτερο καμβά χωρίς περισπασμούς.",
+        "OnboardingFullscreenText": "Πατήστε το κουμπί <fullscreen/> για μετάβαση σε πλήρη οθόνη.",
         "OnboardingSidebarTitle": "Δημιουργία γραφήματος & ρυθμίσεις",
         "OnboardingSidebarText": "Πατήστε το κουμπί <menu/> για να δημιουργήσετε τυχαία γραφήματα και να προσαρμόσετε ρυθμίσεις αλγορίθμου, εμφάνισης και γλώσσας. Μπορείτε να επαναλάβετε αυτή την περιήγηση από εδώ όποτε θέλετε."
     }
