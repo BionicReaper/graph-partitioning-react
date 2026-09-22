@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, IconButton, Text } from '@chakra-ui/react';
-import { Play, ChevronDown, Pause } from 'lucide-react';
+import { Box, IconButton, Popover, Portal, Text } from '@chakra-ui/react';
+import { Play, ChevronDown, Pause, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import AlgorithmDialog from '../Dialogs/AlgorithmDialog';
 
 interface AlgorithmOption {
   id: string;
@@ -38,6 +39,8 @@ const PlayButton = ({
 
   const [isHovered, setIsHovered] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [detailsAlgorithm, setDetailsAlgorithm] = useState<string | null>(null);
+  const [hintAlgorithmId, setHintAlgorithmId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on click outside
@@ -94,6 +97,13 @@ const PlayButton = ({
       onMouseLeave={() => setIsHovered(false)}
       transition={"right 1s ease"}
     >
+      {/* Algorithm Description Dialog */}
+      <AlgorithmDialog
+        isOpen={detailsAlgorithm !== null}
+        onOpenChange={() => setDetailsAlgorithm(null)}
+        algorithm={detailsAlgorithm || ''}
+      />
+
       {/* Dropdown Menu */}
       {showDropdown && (
         <Box
@@ -114,6 +124,9 @@ const PlayButton = ({
               key={algorithm.id}
               px={4}
               py={3}
+              display="flex"
+              alignItems="center"
+              gap={2}
               cursor="pointer"
               borderBottom="1px solid"
               borderColor={{ base: 'gray.100', _dark: 'gray.800' }}
@@ -128,14 +141,62 @@ const PlayButton = ({
               transition="all 0.2s"
               onClick={() => handleAlgorithmClick(algorithm.id)}
             >
-              <Text fontSize="sm" fontWeight="500">
-                {algorithm.name}
-              </Text>
-              {algorithm.description && (
-                <Text fontSize="xs" color={{ base: 'gray.600', _dark: 'gray.400' }} mt={1}>
-                  {t(algorithm.description)}
+              <Box flex="1" minW={0}>
+                <Text fontSize="sm" fontWeight="500">
+                  {algorithm.name}
                 </Text>
-              )}
+                {algorithm.description && (
+                  <Text fontSize="xs" color={{ base: 'gray.600', _dark: 'gray.400' }} mt={1}>
+                    {t(algorithm.description)}
+                  </Text>
+                )}
+              </Box>
+
+              {/* Opens the full algorithm description */}
+              <Popover.Root
+                open={hintAlgorithmId === algorithm.id}
+                onOpenChange={(e) => setHintAlgorithmId(e.open ? algorithm.id : null)}
+                positioning={{ placement: 'left' }}
+                autoFocus={false}
+                lazyMount
+                unmountOnExit
+              >
+                <Popover.Trigger asChild>
+                  <IconButton
+                    aria-label={t('ViewAlgorithmDetails')}
+                    variant="ghost"
+                    size="xs"
+                    rounded="full"
+                    flexShrink={0}
+                    color={{ base: 'purple.600', _dark: 'purple.200' }}
+                    borderWidth="1px"
+                    borderColor={{ base: 'purple.200', _dark: 'purple.600' }}
+                    _hover={{ bg: { base: 'purple.100', _dark: 'purple.800' } }}
+                    onPointerEnter={(e) => { if (e.pointerType === 'mouse') setHintAlgorithmId(algorithm.id); }}
+                    onPointerLeave={(e) => { if (e.pointerType === 'mouse') setHintAlgorithmId(null); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setHintAlgorithmId(null);
+                      setShowDropdown(false);
+                      setDetailsAlgorithm(algorithm.name);
+                    }}
+                  >
+                    <Info size={15} />
+                  </IconButton>
+                </Popover.Trigger>
+                <Portal>
+                  <Popover.Positioner>
+                    <Popover.Content maxW="200px" w="auto">
+                      <Popover.Arrow>
+                        <Popover.ArrowTip />
+                      </Popover.Arrow>
+                      <Popover.Body fontSize="xs" lineHeight="1.4" px={3} py={2}>
+                        {t('ViewAlgorithmDetails')}
+                      </Popover.Body>
+                    </Popover.Content>
+                  </Popover.Positioner>
+                </Portal>
+              </Popover.Root>
             </Box>
           ))}
         </Box>
