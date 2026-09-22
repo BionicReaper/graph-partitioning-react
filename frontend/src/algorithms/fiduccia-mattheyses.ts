@@ -1,5 +1,5 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { changeSize, flushQueues, highlightEdges, highlightNodes, initializeAnimation, moveNode, moveNodeRelative } from "../utils/animations";
+import { changeSize, colorPartitions, flushQueues, highlightEdges, highlightNodes, initializeAnimation, moveNode, moveNodeRelative } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
 import { pushAnchorAnimation } from "../utils/anchoring";
 import { AlgorithmOptions } from "../types/algorithms";
@@ -1360,6 +1360,16 @@ export function runFiducciaMattheyses(
     nodes.forEach(node => {
         partitionResult[node.id] = node.partition;
     });
+
+    if (!omitRestore) {
+        animation.push({
+            animationCallback: () => {
+                return colorPartitions(nodeDataSet, edgeDataSet, partitionResult);
+            },
+            description: `Color the final partitions`,
+            timeBeforeNext: 0
+        });
+    }
     
     return {
         partition: partitionResult,

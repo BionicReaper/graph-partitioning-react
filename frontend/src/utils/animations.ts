@@ -12,6 +12,10 @@ type NodeUpdate = {
         highlight: {
             border: string,
             background: string
+        },
+        hover?: {
+            border: string,
+            background: string
         }
     } | null,
     borderWidth?: number | null,
@@ -30,6 +34,7 @@ type EdgeUpdate = {
         color?: string
     } | null,
     width?: number | null,
+    dashes?: boolean | number[],
     label?: string,
     weight?: number,
     children?: any[]
@@ -146,6 +151,9 @@ const queueEdgeUpdate = (update: EdgeUpdate) => {
     }
     if (update.width !== undefined) {
         existing.width = update.width;
+    }
+    if (update.dashes !== undefined) {
+        existing.dashes = update.dashes;
     }
     if (update.label !== undefined) {
         existing.label = update.label;
@@ -338,6 +346,12 @@ export const highlightNodes = (
     // Default width
     const defaultWidth = defaultVisOptions.nodes.borderWidth || 2;
 
+    const hoverLightenFactor = 0.57;
+    const hoverBgRed = Math.floor(targetBgRed + hoverLightenFactor * (255 - targetBgRed));
+    const hoverBgGreen = Math.floor(targetBgGreen + hoverLightenFactor * (255 - targetBgGreen));
+    const hoverBgBlue = Math.floor(targetBgBlue + hoverLightenFactor * (255 - targetBgBlue));
+    const hoverBackgroundColor = `#${hoverBgRed.toString(16).padStart(2, '0')}${hoverBgGreen.toString(16).padStart(2, '0')}${hoverBgBlue.toString(16).padStart(2, '0')}`;
+
     function step(timestamp: DOMHighResTimeStamp) {
         if (!startTime) startTime = timestamp;
 
@@ -355,11 +369,11 @@ export const highlightNodes = (
 
             if (ids.length > 0) {
                 ids.forEach((nodeId) => {
-                    queueNodeUpdate({ id: nodeId, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: animationEnd ? null : width});
+                    queueNodeUpdate({ id: nodeId, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: hoverBackgroundColor }, hover: { border: highlightBorderColor, background: hoverBackgroundColor } }, borderWidth: animationEnd ? null : width});
                 });
             } else {
                 nodes.get().forEach((node) => {
-                    queueNodeUpdate({ id: node.id, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: highlightBackgroundColor } }, borderWidth: animationEnd ? null : width});
+                    queueNodeUpdate({ id: node.id, color: { border: highlightBorderColor, background: highlightBackgroundColor, highlight: { border: highlightBorderColor, background: hoverBackgroundColor }, hover: { border: highlightBorderColor, background: hoverBackgroundColor } }, borderWidth: animationEnd ? null : width});
                 });
             }
 
@@ -422,6 +436,51 @@ export const highlightNodes = (
 
     // Return a cancel function
     return step;
+}
+
+export const colorPartitions = (
+    nodes: DataSet<any, "id">,
+    edges: DataSet<any, "id">,
+    partition: Record<string, number>,
+    partitionABorderColor: string = '#E65100',
+    partitionABackgroundColor: string = '#FFB74D',
+    partitionBBorderColor: string = '#C2185B',
+    partitionBBackgroundColor: string = '#F48FB1',
+    duration: number = 1000,
+    ids: string[] = []
+) => {
+    const nodeIds: string[] = ids.length > 0
+        ? ids
+        : nodes.get().map((node) => node.id);
+
+    const partitionAIds = nodeIds.filter((nodeId) => partition[nodeId] === 0);
+    const partitionBIds = nodeIds.filter((nodeId) => partition[nodeId] === 1);
+
+    const partitionASet = new Set(partitionAIds);
+    const partitionBSet = new Set(partitionBIds);
+
+    edges.get().forEach((edge) => {
+        const isCutEdge =
+            (partitionASet.has(edge.from) && partitionBSet.has(edge.to)) ||
+            (partitionBSet.has(edge.from) && partitionASet.has(edge.to));
+
+        if (isCutEdge) {
+            queueEdgeUpdate({ id: edge.id, dashes: [18, 30] });
+        }
+    });
+
+    const colorDuration = { color: { highlight: duration, hold: 0, fade: 0 }, width: { highlight: 0, hold: 0, fade: 0 } };
+
+    const stepFnA = highlightNodes(nodes, partitionAIds, partitionABorderColor, partitionABackgroundColor, 1, colorDuration, true);
+    const stepFnB = highlightNodes(nodes, partitionBIds, partitionBBorderColor, partitionBBackgroundColor, 1, colorDuration, true);
+
+    // Return combined step function
+    return (timestamp: DOMHighResTimeStamp) => {
+        const stepADone = partitionAIds.length === 0 || stepFnA(timestamp);
+        const stepBDone = partitionBIds.length === 0 || stepFnB(timestamp);
+
+        return stepADone && stepBDone;
+    };
 }
 
 export const highlightEdges = (

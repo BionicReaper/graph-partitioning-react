@@ -1,5 +1,5 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { highlightEdges, highlightNodes, initializeAnimation, moveNode, swapNodePositions } from "../utils/animations";
+import { colorPartitions, highlightEdges, highlightNodes, initializeAnimation, moveNode, swapNodePositions } from "../utils/animations";
 import { calculateX, calculateY } from "../utils/positioning";
 import { pushAnchorAnimation } from "../utils/anchoring";
 import { AlgorithmOptions } from "../types/algorithms";
@@ -629,6 +629,16 @@ export function runKernighanLin(
     nodes.forEach(node => {
         partitionResult[node.id] = node.partition;
     });
+
+    if (!omitRestore) {
+        animation.push({
+            animationCallback: () => {
+                return colorPartitions(nodeDataSet, edgeDataSet, partitionResult);
+            },
+            description: `Color the final partitions`,
+            timeBeforeNext: 0
+        });
+    }
 
     return {
         partition: partitionResult,

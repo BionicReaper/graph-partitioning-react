@@ -1,5 +1,5 @@
 import { DataSet, Network } from "vis-network/standalone/esm/vis-network";
-import { animateReplaceEdgeSet, animateSplitCompoundNodes, highlightEdges, highlightNodes, initializeAnimation, moveNode, replaceNodesWithCompoundNode } from "../utils/animations";
+import { animateReplaceEdgeSet, animateSplitCompoundNodes, colorPartitions, highlightEdges, highlightNodes, initializeAnimation, moveNode, replaceNodesWithCompoundNode } from "../utils/animations";
 import { calculateCirclePoint, calculateX, calculateY } from "../utils/positioning";
 import { pushAnchorAnimation } from "../utils/anchoring";
 import { AlgorithmOptions } from "../types/algorithms";
@@ -823,6 +823,16 @@ export function runMetis(
         description: `Remove weight labels from nodes and edges after partitioning`,
         timeBeforeNext: 0
     });
+
+    if (!omitRestore) {
+        animation.push({
+            animationCallback: () => {
+                return colorPartitions(nodeDataSet, edgeDataSet, currentPartition);
+            },
+            description: `Color the final partitions`,
+            timeBeforeNext: 0
+        });
+    }
 
     setFinalCutSize(finalCutSize);
 

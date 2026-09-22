@@ -392,6 +392,9 @@ function App() {
 
     updateDataSetPositions(networkRef.current, nodesRef.current);
     restoreLabelingOrder(nodesRef.current, edgesRef.current);
+    // Clear partition coloring left by a previous run before the algorithm snapshots the graph
+    nodesRef.current.update(nodesRef.current.getIds().map(id => ({ id, color: null, borderWidth: null })));
+    edgesRef.current.update(edgesRef.current.getIds().map(id => ({ id, dashes: false })));
     // console.log('Current graph state before algorithm:');
     // console.log(nodesRef.current.get(), edgesRef.current.get());
 
