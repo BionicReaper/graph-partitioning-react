@@ -2,6 +2,12 @@ import { useTranslation } from 'react-i18next';
 
 type Stats = { initialCutSize: number, finalCutSize: number, passes: number, reads: number, writes: number, additions: number, comparisons: number };
 
+const algorithmNames: Record<string, string> = {
+    'kernighan-lin': 'Kernighan-Lin',
+    'fiduccia-mattheyses': 'Fiduccia-Mattheyses',
+    'metis': 'METIS',
+};
+
 const LocalizedStatsText = ({ stats, algorithmId }: { algorithmId: string, stats: Stats }) => {
     const { t } = useTranslation();
     const lines: [string, number][] = [
@@ -15,7 +21,7 @@ const LocalizedStatsText = ({ stats, algorithmId }: { algorithmId: string, stats
     ];
     return (
         <div>
-            <div style={{ fontWeight: 'bold' }}>{t('AlgorithmCompleted')}</div>
+            <div style={{ fontWeight: 'bold' }}>{t('AlgorithmCompleted', { name: algorithmNames[algorithmId] ?? algorithmId })}</div>
             {lines.map(([key, value]) => (
                 <div key={key}>{t(key)}: {value}</div>
             ))}
