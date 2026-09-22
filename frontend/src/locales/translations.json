@@ -139,7 +139,7 @@
         "StatComparisons": "Συγκρίσεις μεταξύ δύο τιμών",
         "AlgorithmRunning": "Εκτέλεση {{algorithmName}}...",
         "AlgorithmCancelled": "Ο αλγόριθμος ακυρώθηκε",
-        "Graph": "Γράφος",
+        "Graph": "Γράφημα",
         "GraphGeneration": "Δημιουργία γραφήματος",
         "GraphGenerationUniform": "Ομοιόμορφη",
         "GraphGenerationRegions": "Με περιοχές",
