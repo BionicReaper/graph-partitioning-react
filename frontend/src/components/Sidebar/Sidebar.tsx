@@ -584,6 +584,11 @@ const Sidebar = ({
 
               <Separator borderColor={dividerColor} />
 
+              {/* Interface Section */}
+              <Heading size="lg" mb={-4} color={headingColor} fontWeight="500">
+                {t('Interface')}
+              </Heading>
+
               <Heading size="md" mb={-4} color={headingColor} fontWeight="500">
                 {t('Appearance')} <Moon size={20} style={{ display: 'inline', marginLeft: '4px' }} />
               </Heading>
