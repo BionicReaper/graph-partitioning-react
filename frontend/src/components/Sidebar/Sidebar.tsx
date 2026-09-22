@@ -506,65 +506,6 @@ const Sidebar = ({
                   </Switch.Root>
                 </Box> */}
 
-                <Heading size="md" mb={4} mt={6} color={headingColor} fontWeight="500">
-                  {t('Appearance')} <Moon size={20} style={{ display: 'inline', marginLeft: '4px' }} />
-                </Heading>
-
-                <Box
-                  p={3}
-                  bg={cardBg}
-                  borderRadius="md"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Text fontSize="sm" color={bodyColor} fontWeight="500">
-                    {t('DarkMode')}
-                  </Text>
-                  <Switch.Root
-                    checked={isDarkMode}
-                    onCheckedChange={toggleDarkMode}
-                  >
-                    <Switch.HiddenInput />
-                    <Switch.Control>
-                      <Switch.Thumb />
-                    </Switch.Control>
-                    <Switch.Label />
-                  </Switch.Root>
-                </Box>
-
-                <Heading size="md" mb={4} mt={6} color={headingColor} fontWeight="500">
-                  {t('Language')} <Globe size={20} style={{ display: 'inline', marginLeft: '4px' }} />
-                </Heading>
-
-                {/* Language Select */}
-                <Box
-                  p={3}
-                  px={6}
-                  bg={cardBg}
-                  borderRadius="md"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <RadioGroup.Root
-                    value={i18n.language}
-                    onValueChange={(e) => i18n.changeLanguage(e.value || undefined)}
-                    w={"100%"}
-                    colorPalette={"blue"}
-                  >
-                    <HStack gap="6" justifyContent={"space-between"}>
-                      {languageOptions.map((language) => (
-                        <RadioGroup.Item key={language} value={language}>
-                          <RadioGroup.ItemHiddenInput />
-                          <RadioGroup.ItemIndicator />
-                          <RadioGroup.ItemText>{nativeLanguageLabels[language]}</RadioGroup.ItemText>
-                        </RadioGroup.Item>
-                      ))}
-                    </HStack>
-                  </RadioGroup.Root>
-                </Box>
-
                 {/* Info settings */}
 
                 <Heading size="md" mb={4} mt={6} color={headingColor} fontWeight="500">
@@ -628,6 +569,65 @@ const Sidebar = ({
                   </RadioGroup.Root>
                 </Box>
               </Box>
+
+              <Heading size="md" mb={4} mt={6} color={headingColor} fontWeight="500">
+                  {t('Appearance')} <Moon size={20} style={{ display: 'inline', marginLeft: '4px' }} />
+                </Heading>
+
+                <Box
+                  p={3}
+                  bg={cardBg}
+                  borderRadius="md"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Text fontSize="sm" color={bodyColor} fontWeight="500">
+                    {t('DarkMode')}
+                  </Text>
+                  <Switch.Root
+                    checked={isDarkMode}
+                    onCheckedChange={toggleDarkMode}
+                  >
+                    <Switch.HiddenInput />
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                    <Switch.Label />
+                  </Switch.Root>
+                </Box>
+
+                <Heading size="md" mb={4} mt={6} color={headingColor} fontWeight="500">
+                  {t('Language')} <Globe size={20} style={{ display: 'inline', marginLeft: '4px' }} />
+                </Heading>
+
+                {/* Language Select */}
+                <Box
+                  p={3}
+                  px={6}
+                  bg={cardBg}
+                  borderRadius="md"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <RadioGroup.Root
+                    value={i18n.language}
+                    onValueChange={(e) => i18n.changeLanguage(e.value || undefined)}
+                    w={"100%"}
+                    colorPalette={"blue"}
+                  >
+                    <HStack gap="6" justifyContent={"space-between"}>
+                      {languageOptions.map((language) => (
+                        <RadioGroup.Item key={language} value={language}>
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemIndicator />
+                          <RadioGroup.ItemText>{nativeLanguageLabels[language]}</RadioGroup.ItemText>
+                        </RadioGroup.Item>
+                      ))}
+                    </HStack>
+                  </RadioGroup.Root>
+                </Box>
 
               <Separator borderColor={dividerColor} />
 
