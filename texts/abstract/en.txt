@@ -1,0 +1,27 @@
+Graph partitioning is the process of dividing a graph into multiple smaller sub graphs, typically with as few edges between subgraphs as possible. The amount of
+edges between subgraphs is referred to as the cut size. The minimum cut graph partitioning problem has significant applications in fields such as VLSI design and task
+scheduling for parallel processing, where reducing the inter-chip wiring and the inter-processor communications leads to a multitude of optimizations.
+
+The minimum cut graph partitioning problem falls under the NP-hard category of problems and as such there is no known polynomial time solution.
+Hence, graph partitioning algorithms employ heuristic solutions. Each algorithm starts with a given or randomized partition and iteratively mutates it to reduce the cut size.
+Many passes, recursive applications of the algorithm, are ran until either no more gains can be achieved or a satisfactory cut size has been reached.
+
+Kernighan-Lin is one of the first graph partitioning algorithms introduced in 1970. Given an initial partition, it greedily swaps vertices between the subgraphs such that the
+reduction in cut size is highest. While fundamentally simple, it runs in quadratic-logarithmic time due to requiring sorting to find the greatest reduction in cut size, it
+doesn't take vertex weights into account, and requires that partitions differ by at most one vertex.
+
+Fiduccia-Mattheyses is an improvement to the Kernighan-Lin algorithm, proposed in 1982. Instead of swapping vertex pairs between partitions, it moves individual vertices
+between partitions. It addresses Kernighan-Lin's inability to account for vertex weights, it extends the algorithm to hypergraphs, adds the ability to handle unbalanced partitions,
+and most importantly reduces the running time to linear by utilizing a specialized data structure.
+
+METIS is a multilevel graph partitioning scheme first published in 1998. It first coarsens the graph to a smaller graph by collapsing highly connected vertices to a single vertex. Then, a partitioning
+algorithm pass is ran on the coarser graph. The result is uncoarsened and further refined by a partitioning algorithm. For the partitioning algorithm the authors suggest multiple
+variations of the Fiduccia-Mattheyses algorithm. By taking advantage of the structure of the graphs, METIS produces better partitions while keeping the running time linear.
+
+These algorithms are fundamental to the graph partitioning problem, however the teaching material is very limited. Inspired by existing applications for visualizing graph
+algorithms like BFS, we developed a web application for visualizing the aforementioned partitioning algorithms. The goal of the application is to support students learning about
+graph partitioning. Students can use the application to either generate or create a graph of their own and then run an animated example for one of the implemented algorithms,
+with on screen explanations for each step. After each run performance metrics are printed so students can compare how each algorithm scales with graph size. The application
+also supports accessibility features.
+
+The application currently supports both greek and english, and was developed using the React open-source JavaScript library and Vis.js, a library for visualizing graphs and managing datasets.
