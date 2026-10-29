@@ -24,4 +24,4 @@ graph partitioning. Students can use the application to either generate or creat
 with on screen explanations for each step. After each run performance metrics are printed so students can compare how each algorithm scales with graph size. The application
 also supports accessibility features.
 
-The application currently supports both greek and english, and was developed using the React open-source JavaScript library and Vis.js, a library for visualizing graphs and managing datasets.
+The application currently supports both greek and english, and was developed using the React open-source JavaScript library, and Vis.js a library for visualizing graphs and managing datasets.
